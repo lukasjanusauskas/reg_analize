@@ -1,0 +1,25 @@
+---
+output:
+  pdf_document:
+    fig_caption: true
+    number_sections: true
+    toc: false
+lang: lt
+bibliography: bibliografija.bib
+link-citations: true
+csl: "harvard-cite-them-right.csl"
+fig_caption: true
+extra_dependencies: float
+header-includes:
+- \renewcommand{\contentsname}{Turinys}
+- \usepackage{float}
+- \usepackage{booktabs}
+- \usepackage{multicol}
+- \usepackage{amsthm}
+- \floatplacement{figure}{H}
+- \newtheorem*{proposition}{Teiginys}
+- \newtheorem*{definition}{Apibrėžimas}
+editor_options:
+  markdown:
+    wrap: sentence
+---
