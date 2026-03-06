@@ -97,12 +97,12 @@ summary_tbl <- df %>%
     names_to = c("Kintamasis", "Kintamasis / Statistika"),
     names_pattern = "^(.*)__(.*)$"
   ) %>%
-  pivot_wider(names_from = Kintamasis, values_from = value)
+  pivot_wider(names_from = Kintamasis, values_from = value) %>%
+  mutate(across(where(is.numeric), ~round(.x, 2)))
 
 knitr::kable(
   t(summary_tbl),
   caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}",
-  digits = 2,
   format.args = list(decimal.mark = ",", big.mark = " ")
 )
 ```
