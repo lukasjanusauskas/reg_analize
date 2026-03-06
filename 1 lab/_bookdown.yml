@@ -1,3 +1,5 @@
-rmd_files: ["index.Rmd", "0-titulinis.Rmd", "1-duomenu-paruosimas.Rmd",
-            "2-tiriamoji-analize.Rmd", "3-prielaidu-tikrinimas.Rmd",
-            "4-anova-modelis.Rmd", "6-kontrastai.Rmd", "5-interpretacija.Rmd"]
+rmd_files: [
+  "index.Rmd",
+  "0-titulinis.Rmd",
+  "1-duomenu-paruosimas.Rmd"
+]

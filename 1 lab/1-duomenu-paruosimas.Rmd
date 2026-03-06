@@ -7,10 +7,39 @@ library(corrplot)
 library(GGally)
 ```
 
+Paruošimo etapas:
+
+1. Duomenų paruošimas faktoriais
+2. Praleistų reikšmių tyrimas: parašyti, kad nebuvo nereikia tos lentelės
+3. Loginių išskirčių tyrimas: požymių min-max ir t.t.
+
+Duomenų analizė:
+
+1. Klasės reikšmių pasiskirstymas;
+2. Kategorinių kintamųjų dažniausia vertė, unikalių verčių skaičius;
+3. Histogramos natūralių skaičių duomenims;
+4. Kategorinių užkoduotų kintamųjų požymių dažnių lentelės pagal sėkmingo apsilankymo reikšmes ir bendrai;
+5. Smuiko grafikai;
+6. Stulpeliniai grafikai;
+
 ```{r}
 # duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
 
-df <- read.csv("data\\online_shoppers_intention.csv", header=TRUE, stringsAsFactors=FALSE)
+df <- read.csv(
+  "data\\online_shoppers_intention.csv",
+  header=TRUE,
+  stringsAsFactors=FALSE
+)
+
+
+int_faktoriai <- c(
+  "SpecialDay",
+  "OperatingSystems",
+  "Browser",
+  "Region",
+  "TrafficType"
+)
+df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
 
@@ -32,16 +61,21 @@ knitr::kable(missing_table, caption="Praleistų reikšmių skaičiai\\label{tab:
 ```{r}
 # manau reikės aprašyti, kad pas mus 0 reikšmių (FALSE) yra daug daugiau nei 1 reikšmių (TRUE)
 # duomenų disbalansas
+weekend_freq <- df %>%
+  group_by(Revenue) %>%
+  summarise(Dažnis = n()) %>%
+  mutate(`Santykinis dažnis` = round(Dažnis / sum(Dažnis) * 100, 2))
 
-
-print(df["Revenue"] %>% group_by_all %>% count)
-
-print(1908/(10422+1908)*100)
+knitr::kable(
+  weekend_freq,
+  caption = "Weekend dažnių lentelė\\label{tab:weekend}",
+  align = c("l", "r", "r"),
+  col.names = c('Pelningas apsilankymas', 'Dažnis', 'Santykinis dažnis, %')
+)
 ```
 
 ```{r}
-# reikės truputi perdėlioti lentelę, nes dabar labai plati gavosi
-# reikės nuimti SpecialDay	OperatingSystems	Browser	Region	TrafficType, nes jie labiau kategoriniai manau
+# čia reikėtų paklausti, ar galima skaičiuoti vidurkį integer duomenims pvz. informational
 
 summary_tbl <- df %>%
   summarise(
@@ -60,13 +94,13 @@ summary_tbl <- df %>%
   ) %>%
   pivot_longer(
     cols = everything(),
-    names_to = c("Kintamasis", "Statistika"),
+    names_to = c("Kintamasis", "Kintamasis / Statistika"),
     names_pattern = "^(.*)__(.*)$"
   ) %>%
   pivot_wider(names_from = Kintamasis, values_from = value)
 
 knitr::kable(
-  summary_tbl,
+  t(summary_tbl),
   caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}",
   digits = 2,
   format.args = list(decimal.mark = ",", big.mark = " ")
@@ -78,7 +112,7 @@ knitr::kable(
 ```{r}
 # BounceRates ir ExitRates pakylimas ant 0.20 keistai atrodo
 
-numeric_cols <- names(df)[sapply(df, is.numeric)]
+numeric_cols <- c("Administrative", "Informational", "ProductRelated")
 
 for (col in numeric_cols) {
   p <- ggplot(df, aes(x = !!rlang::sym(col))) +
@@ -88,7 +122,7 @@ for (col in numeric_cols) {
       x = "Reikšmė",
       y = "Dažnis"
     ) +
-    theme_minimal(base_size = 11)
+    theme_minimal(base_size = 20)
   
   print(p)
 }
@@ -103,145 +137,79 @@ categorical_cols <- names(df)[!sapply(df, is.numeric)]
 categorical_cols <- setdiff(categorical_cols, "Revenue")
 
 for (col in categorical_cols) {
-  p <- ggplot(df, aes(x = !!rlang::sym(col), fill = !!rlang::sym(col))) +
-    geom_bar() +
+  p <- df %>%
+    group_by(!!rlang::sym(col)) %>% 
+    summarize(Rev = mean(Revenue)) %>% 
+    ggplot(aes(x = !!rlang::sym(col), y=Rev, fill = !!rlang::sym(col))) +
+    geom_bar(stat='identity') +
     labs(
       title = paste(col),
       x = col,
       y = "Dažnis"
     ) +
-    theme_minimal(base_size = 11) +
+    theme_minimal(base_size = 20) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "none")
-  
+
   print(p)
 }
 ```
 
-## Tankio diagramos pagal Revenue
+## Tankio diagramos pagal Revenue (galim alternatyviai smuiko grafikus)
 
 ```{r fig.width=12, fig.height=6}
-df_with_revenue <- df %>% mutate(Revenue = factor(Revenue))
+df_with_revenue <- df %>% mutate(Revenue = factor(Revenue)) %>% 
+  select( -c("Informational", "ProductRelated", "Administrative") )
 
-for (col in numeric_cols) {
-  p <- ggplot(df_with_revenue, aes(x = !!rlang::sym(col), fill = Revenue, color = Revenue)) +
-    geom_density(alpha = 0.5) +
-    labs(
-      title = paste("Skirstinys pagal Revenue:", col),
-      x = col,
-      y = "Tankis"
-    ) +
-    theme_minimal(base_size = 11)
-  
-  print(p)
-}
-```
+num_cols <- names(df_with_revenue)[sapply(df_with_revenue, is.numeric)]
 
-
-
-## Smuikinės diagramos pagal Revenue
-
-```{r fig.width=12, fig.height=8}
-# per pratybas buvo paminėti violin plots
-
-df_long <- df %>%
-  mutate(Revenue = factor(Revenue)) %>%
+df_long <- df_with_revenue %>%
   pivot_longer(
-    cols = all_of(numeric_cols),
-    names_to = "Variable",
-    values_to = "Value"
+    cols = all_of(num_cols),
+    names_to = "variable",
+    values_to = "value"
   )
 
-for (col in numeric_cols) {
-  p <- ggplot(df %>% mutate(Revenue = factor(Revenue)), 
-              aes(x = Revenue, y = !!rlang::sym(col), fill = Revenue)) +
-    geom_violin(alpha = 0.6) +
-    geom_boxplot(width = 0.1, alpha = 0.8) +
-    labs(
-      title = paste("Skirstinys pagal Revenue:", col),
-      x = "Revenue",
-      y = col
-    ) +
-    theme_minimal(base_size = 9) +
-    theme(legend.position = "none")
-  
-  print(p)
-}
+ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
+  geom_violin(alpha = 0.6, trim = FALSE) +
+  geom_boxplot(alpha = 0.1, trim = FALSE) +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(
+    title = "Pasiskirstymas pagal Revenue",
+    x = NULL,
+    y = "Value"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank()
+  )
 ```
-
 
 ## Kategorinių kintamųjų dažnių lentelės
 
 ```{r}
-# other yra labai mažai, tai gal vertėtų išimti
-
-visitor_freq <- df %>%
-  group_by(VisitorType) %>%
-  summarise(Dažnis = n()) %>%
-  mutate(Procentai = round(Dažnis / sum(Dažnis) * 100, 2))
-
-knitr::kable(
-  visitor_freq,
-  caption = "VisitorType dažnių lentelė\\label{tab:visitor}",
-  align = c("l", "r", "r")
-)
+make_cross_table <- function(data, column) {
+  result <- data %>%
+    group_by(!!sym(column), Revenue) %>%
+    summarise(Dažnis = n(), .groups = "drop_last") %>%
+    pivot_wider(names_from = Revenue, values_from = Dažnis, values_fill = 0) %>%
+    mutate(Bendrai = `FALSE` + `TRUE`)
+  
+  knitr::kable(
+    result,
+    caption = paste0(deparse(substitute(column)), 
+                     " ir Revenue kryžminė lentelė")
+  )
+}
 ```
 
 ```{r}
-weekend_freq <- df %>%
-  group_by(Weekend) %>%
-  summarise(Dažnis = n()) %>%
-  mutate(Procentai = round(Dažnis / sum(Dažnis) * 100, 2))
-
-knitr::kable(
-  weekend_freq,
-  caption = "Weekend dažnių lentelė\\label{tab:weekend}",
-  align = c("l", "r", "r")
-)
+make_cross_table( df, "SpecialDay" )
+make_cross_table( df, "Month" )
+make_cross_table( df, "OperatingSystems" )
+make_cross_table( df, "Browser" )
+make_cross_table( df, "Region" )
+make_cross_table( df, "TrafficType" )
+make_cross_table( df, "VisitorType" )
 ```
-
-```{r}
-revenue_freq <- df %>%
-  group_by(Revenue) %>%
-  summarise(Dažnis = n()) %>%
-  mutate(Procentai = round(Dažnis / sum(Dažnis) * 100, 2))
-
-knitr::kable(
-  revenue_freq,
-  caption = "Revenue dažnių lentelė\\label{tab:revenue}",
-  align = c("l", "r", "r")
-)
-```
-
-```{r}
-visitor_revenue <- df %>%
-  group_by(VisitorType, Revenue) %>%
-  summarise(Dažnis = n(), .groups = "drop_last") %>%
-  pivot_wider(names_from = Revenue, values_from = Dažnis, values_fill = 0)
-
-knitr::kable(
-  visitor_revenue,
-  caption = "VisitorType ir Revenue kryžminė lentelė\\label{tab:visitor_revenue}"
-)
-```
-
-```{r}
-weekend_revenue <- df %>%
-  group_by(Weekend, Revenue) %>%
-  summarise(Dažnis = n(), .groups = "drop_last") %>%
-  pivot_wider(names_from = Revenue, values_from = Dažnis, values_fill = 0)
-
-knitr::kable(
-  weekend_revenue,
-  caption = "Weekend ir Revenue kryžminė lentelė\\label{tab:weekend_revenue}"
-)
-```
-
-
-
-
-
-
-
-
-

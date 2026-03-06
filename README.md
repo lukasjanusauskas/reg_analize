@@ -2,10 +2,21 @@
 
 ### 1 laboratorinis
 
+Paleidimo instrukcijos:
+
+Norint padaryti pdf'ą (ar word'ą):
+
+```
+setwd('<path'as į 1 lab direktoriją, ne reg_analize>')
+bookdown::render_book()
+```
+
+Norint paleisti - leidžiasi iš abiejų direktorijų tai funkcijos `setwd` neturėtų prireikti.
+
 Padaryti: 
--	Šablonų paruošimas, github’as (Martynas)
--	Duomenų aprašymas (Lukas),
--	Pradinė analizė - bent 5 stebėjimai kiekvienai kateogrijų kombinacijai, išrinkti kategorinius kintamuosius (Lukas? ir Martynas),
+-	Šablonų paruošimas, github’as (Martynas - padaryta)
+-	Duomenų aprašymas (Lukas - šeštadienį),
+-	Pradinė analizė - bent 5 stebėjimai kiekvienai kateogrijų kombinacijai, išrinkti kategorinius kintamuosius (Lukas ir Martynas - daroma),
 -	Klasių balansavimo problema (Lukas),
 -	Prielaidų tikrinimas kiekvienam modeliui - vienas žmogus vienam modeliui (Edvin - Logit, Lukas - Probit, Nikita - log-log),
 -	Multikolinearumas (Martynas),
