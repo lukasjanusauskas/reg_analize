@@ -1,5 +1,8 @@
 rmd_files: [
   "index.Rmd",
   "0-titulinis.Rmd",
-  "1-duomenu-paruosimas.Rmd"
+  "1-duomenu-paruosimas.Rmd",
+  
+  
+  "appendix.Rmd"
 ]

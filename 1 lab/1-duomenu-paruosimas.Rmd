@@ -7,20 +7,16 @@ library(corrplot)
 library(GGally)
 ```
 
-Paruošimo etapas:
 
-1. Duomenų paruošimas faktoriais
-2. Praleistų reikšmių tyrimas: parašyti, kad nebuvo nereikia tos lentelės
-3. Loginių išskirčių tyrimas: požymių min-max ir t.t.
+# Tyrimas
 
-Duomenų analizė:
+## Duomenų paruošimas
 
-1. Klasės reikšmių pasiskirstymas;
-2. Kategorinių kintamųjų dažniausia vertė, unikalių verčių skaičius;
-3. Histogramos natūralių skaičių duomenims;
-4. Kategorinių užkoduotų kintamųjų požymių dažnių lentelės pagal sėkmingo apsilankymo reikšmes ir bendrai;
-5. Smuiko grafikai;
-6. Stulpeliniai grafikai;
+Kintamieji „OperatingSystems“, „Browser“, „Region“, „TraficType“ yra kategoriniai 
+kintamieji, užkoduoti natūraliais skaičiais.
+Todėl juos pakeičiame atitinkamais faktoriais ir vėliau iš jų formuosime fiktyvius kintamuosius.
+Kintamasis „SpecialDay“, sprendžiant pagal reikšmes ir aprašymą yra ranginis kitamasis įgaunantis 
+6 skirtingas reikšmes: $\{0;\ 0,2;\ \dots;\ 1\}$.
 
 ```{r}
 # duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
@@ -33,7 +29,6 @@ df <- read.csv(
 
 
 int_faktoriai <- c(
-  "SpecialDay",
   "OperatingSystems",
   "Browser",
   "Region",
@@ -42,37 +37,27 @@ int_faktoriai <- c(
 df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
+Duomenų aprašyme, esančiame *UCI Irvine Machine Learning Repository* duomenų 
+portale, autoriai teigia, kad praleistų reikšmių nėra.
+Mes pasitikslinome, pasileidę atitinkamą \verb|R| kodą - praleistų reikšmių nėra.
 
-```{r}
+```{r, echo=FALSE, include=FALSE}
 missing_table <- data.frame(
   Praleista = colSums(is.na(df))
 )
 
-missing_table <- data.frame(
-  Kintamasis = rownames(missing_table),
-  missing_table,
-  row.names = NULL
-)
-
-knitr::kable(missing_table, caption="Praleistų reikšmių skaičiai\\label{tab:missing}")
+missing_table
 ```
 
-
-```{r}
-# manau reikės aprašyti, kad pas mus 0 reikšmių (FALSE) yra daug daugiau nei 1 reikšmių (TRUE)
-# duomenų disbalansas
-weekend_freq <- df %>%
-  group_by(Revenue) %>%
-  summarise(Dažnis = n()) %>%
-  mutate(`Santykinis dažnis` = round(Dažnis / sum(Dažnis) * 100, 2))
-
-knitr::kable(
-  weekend_freq,
-  caption = "Weekend dažnių lentelė\\label{tab:weekend}",
-  align = c("l", "r", "r"),
-  col.names = c('Pelningas apsilankymas', 'Dažnis', 'Santykinis dažnis, %')
-)
-```
+Loginių išskirčių tyrimas yra būtina dalis tyrimo, kadangi kai kurios iš duomenų 
+rinkinyje esančios sesijos gali būti informacijos surinkimo robotai (*angl. web-scrapers*).
+Kad ištirtume logines išskirtis sudarėme skaitinių charakteristikų lentelę kiekybiniams
+kintamiesiems (\ref{tab:char} lentelė).
+Joje naudojami standartiniai skaitinių charakteristikų žymėjimai: Min - minimumas, 
+$Q_n$ - $n$-tasis kvartilis, $\mu$ - vidurkis, Max - maximumas.
+\ref{tab:char} lentelėje matome, jog nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose 
+nesusijusiuose su apsilankymo trukme.
+Tačiau kintamiesiems, susijisiems su bendra apsilankymo trukme  
 
 ```{r}
 # čia reikėtų paklausti, ar galima skaičiuoti vidurkį integer duomenims pvz. informational
@@ -82,12 +67,12 @@ summary_tbl <- df %>%
     across(
       where(is.numeric),
       list(
-        Minimumas = ~min(.x, na.rm = TRUE),
-        `1-asis kvartilis` = ~quantile(.x, 0.25, na.rm = TRUE),
-        Mediana = ~median(.x, na.rm = TRUE),
-        Vidurkis = ~mean(.x, na.rm = TRUE),
-        `3-iasis kvartilis` = ~quantile(.x, 0.75, na.rm = TRUE),
-        Maksimumas = ~max(.x, na.rm = TRUE)
+        Min = ~min(.x, na.rm = TRUE),
+        `$Q_1$` = ~quantile(.x, 0.25, na.rm = TRUE),
+        `$Q_2$` = ~median(.x, na.rm = TRUE),
+        `$\\mu$` = ~mean(.x, na.rm = TRUE),
+        `$Q_3$` = ~quantile(.x, 0.75, na.rm = TRUE),
+        Max = ~max(.x, na.rm = TRUE)
       ),
       .names = "{.col}__{.fn}"
     )
@@ -107,86 +92,50 @@ knitr::kable(
 )
 ```
 
+Kad toliau tirtume trukmės kintamųjų logines išskirtis, **( šitą gal ir išimsiu, reikia
+pagal straipsnį gal būt pažiūrėti i guess )**
 
+Toliau tirsime klasių disbalanso problemą, nes iš dažnio lentelės (\ref{tab:revenue_freq} lentelė)
+matome, jog turime šią problemą.
+Šią problemą vėliau taikysime dominuojančios klasės mažinimo būdu, kadangi turime didelį duomenų
+rinkinį ir taikysime statistinius metodus, kuriems paprastai užtenka nedaug duomenų.
 
 ```{r}
-# BounceRates ir ExitRates pakylimas ant 0.20 keistai atrodo
+# manau reikės aprašyti, kad pas mus 0 reikšmių (FALSE) yra daug daugiau nei 1 reikšmių (TRUE)
+# duomenų disbalansas
+weekend_freq <- df %>%
+  group_by(Revenue) %>%
+  summarise(Dažnis = n()) %>%
+  mutate(`Santykinis dažnis` = round(Dažnis / sum(Dažnis) * 100, 2))
 
-numeric_cols <- c("Administrative", "Informational", "ProductRelated")
-
-for (col in numeric_cols) {
-  p <- ggplot(df, aes(x = !!rlang::sym(col))) +
-    geom_histogram(bins = 30, fill = "#2C7FB8", color = "white") +
-    labs(
-      title = paste(col),
-      x = "Reikšmė",
-      y = "Dažnis"
-    ) +
-    theme_minimal(base_size = 20)
-  
-  print(p)
-}
+knitr::kable(
+  weekend_freq,
+  caption = "Pelningų sesijų dažnių lentelė\\label{tab:revenue_freq}",
+  align = c("l", "r", "r"),
+  col.names = c('Pelningas apsilankymas', 'Dažnis', 'Santykinis dažnis, %')
+)
 ```
 
-## Kategorinių kintamųjų stulpelinės diagramos
+## Duomenų pradinė analizė
 
-```{r fig.width=12, fig.height=6}
-# Mėnesius reikės išrikiuoti pagal kalendorių ir lankytojo tipą pagal dažnį
+Šioje aprašymo dalyje pateikiame tik svarbiausius akcentus, kurie mums bus svarbus, 
+kitus grafikus, išbrėžtus duomenų pradinei tyrybai, pateiksime A priede.
 
-categorical_cols <- names(df)[!sapply(df, is.numeric)]
-categorical_cols <- setdiff(categorical_cols, "Revenue")
+Prieš taikant binarinę regresiją labai svarbu įsitikinti, kad kategorinio kintamojo lygmenų
+kartotinumas yra pakankamai didelis, esant visoms klasifikuojamo kintamojo reikšmėms. 
 
-for (col in categorical_cols) {
-  p <- df %>%
-    group_by(!!rlang::sym(col)) %>% 
-    summarize(Rev = mean(Revenue)) %>% 
-    ggplot(aes(x = !!rlang::sym(col), y=Rev, fill = !!rlang::sym(col))) +
-    geom_bar(stat='identity') +
-    labs(
-      title = paste(col),
-      x = col,
-      y = "Dažnis"
-    ) +
-    theme_minimal(base_size = 20) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          legend.position = "none")
+Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių lygmenų.
+Kintamasis „VisitorType“ turi lygmenį „Other“, kuris gali būti problemiškas, padarius
+dominuojančios klasės sumažinimą, taigi šį faktoriaus lygmenį pašalinsime.
 
-  print(p)
-}
-```
-
-## Tankio diagramos pagal Revenue (galim alternatyviai smuiko grafikus)
-
-```{r fig.width=12, fig.height=6}
-df_with_revenue <- df %>% mutate(Revenue = factor(Revenue)) %>% 
-  select( -c("Informational", "ProductRelated", "Administrative") )
-
-num_cols <- names(df_with_revenue)[sapply(df_with_revenue, is.numeric)]
-
-df_long <- df_with_revenue %>%
-  pivot_longer(
-    cols = all_of(num_cols),
-    names_to = "variable",
-    values_to = "value"
-  )
-
-ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
-  geom_violin(alpha = 0.6, trim = FALSE) +
-  geom_boxplot(alpha = 0.1, trim = FALSE) +
-  facet_wrap(~variable, scales = "free_y") +
-  labs(
-    title = "Pasiskirstymas pagal Revenue",
-    x = NULL,
-    y = "Value"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    axis.ticks.x = element_blank(),
-    axis.text.x = element_blank()
-  )
-```
-
-## Kategorinių kintamųjų dažnių lentelės
+Pašalinsime „OperatingSystems“, „Browser“ faktorių lygmenis, kurie
+turi mažiau arba lygiai 5 stebėjimus, esant pelningai sesijai.
+Faktorius „TrafficType“ turi daug probleminių lygmenų, taigi juos šalinant išmesime daug duomenų, todėl mes šį faktorių pašalinsime.
+Šių trijų minėtų faktorių dažnių lentelės pateiktos atitinkamai \ref{tab:OperatingSystems}, 
+\ref{tab:Browser} ir \ref{tab:TrafficType} lentelėse.
+Taip pat kintamojo „Month“ lygmuo „Feb“ (atitinkantis vasario mėnesį) turi tik tris stebėjimus,
+taigi pašalinsime ir vasario mėnesio stebėjimus.
+Kitos kryžminės dažnių lentelės pateiktos priede A. 
 
 ```{r}
 make_cross_table <- function(data, column) {
@@ -198,18 +147,163 @@ make_cross_table <- function(data, column) {
   
   knitr::kable(
     result,
-    caption = paste0(deparse(substitute(column)), 
-                     " ir Revenue kryžminė lentelė")
+    caption = paste0(
+      deparse(substitute(column)), 
+      " ir pelningumo kryžminė lentelė\\label{tab:",
+      column, "}"),
+    col.names = c("", "Pelninga", "Nepelninga", "Bendrai")
   )
 }
 ```
 
+```{r echo=FALSE}
+make_cross_table(df, "OperatingSystems")
+make_cross_table(df, "Browser")
+make_cross_table(df, "TrafficType")
+```
+
 ```{r}
-make_cross_table( df, "SpecialDay" )
-make_cross_table( df, "Month" )
-make_cross_table( df, "OperatingSystems" )
-make_cross_table( df, "Browser" )
-make_cross_table( df, "Region" )
-make_cross_table( df, "TrafficType" )
-make_cross_table( df, "VisitorType" )
+df <- df %>% 
+  filter( !OperatingSystems %in% c(5, 6, 7)) %>% 
+  filter( !Browser %in% c(3, 9, 11, 12) ) %>% 
+  filter( Month != 'Feb' ) %>% 
+  select( -c("TrafficType") ) 
+```
+
+Žiūrint iš stulpelinių grafikų (žr. \ref{fig:pelningo_stulpel} pav.), kuriuose pavaizduota tikimybė,
+jog sesijoje įvyks pirkimas, pagal skirtingus kategorinius požymius.
+Čia pateikiame parinktus kategorinius požymius, ne visus, kadangi kiti kategoriniai 
+požymiai buvo nereikšmingi arba trivialūs.
+
+Matome, kad sesijos pelningumo santykinis dažnis skiriasi skirtingais mėnesiais,
+tai priklauso nuo internetinės parduotuvės pobūdžio, produktų kokybės, asortimento.
+Taip pat matome, jog naudotojai, naudojantys skirtingas operacines sistemas, turi
+skirtingus skonius, požiūrį, taigi ir sesijos pelningumo tikimybė skiriasi.
+Pakartotiniai lankytojai turi mažesnę tikimybę atlikti užsakymą, kas, gali būti 
+paaiškinama dvejomis priežastimis:
+1) pakartotiniai lankytojai gali lankytis skiltyse skirtose sekti vežamas prekes, 
+2) internetinės parduotuvės prekių kokybė prasta.
+Taip pat, svarbu paminėti, kad apsilankymai savaitgalį dažniau baigiasi užsakymu,
+nei darbo dienomis.
+
+```{r fig.width=10, fig.height=6, fig.cap="Pelningo apsilankymo santykinis dažnis pagal skirtingus sesiją apibūdinančius požymius\\label{fig:pelningo_stulpel}"}
+# Mėnesius reikės išrikiuoti pagal kalendorių ir lankytojo tipą pagal dažnį
+
+categorical_cols <- c("Month", "OperatingSystems", "Weekend", "VisitorType")
+
+df$Month <- factor(
+  df$Month,
+  levels = c("Jan","Feb","Mar","Apr","May","June","Jul","Aug","Sep","Oct","Nov","Dec")
+)
+
+df <- df %>%
+  mutate(across(all_of(categorical_cols), as.factor))
+
+df_long <- df %>%
+  pivot_longer(
+    cols = all_of(categorical_cols),
+    names_to = "Variable",
+    values_to = "Category"
+  )
+
+df_summary <- df_long %>%
+  group_by(Variable, Category) %>%
+  summarise(Rev = mean(Revenue), .groups = "drop")
+
+ggplot(df_summary, aes(x = Rev, y = Category)) +
+  geom_col(fill="#2C7FB8") +
+  facet_wrap(~Variable, scales = "free_y") +
+  labs(
+    x = "Pelningo apsilankymo tikimybė",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(legend.position = "none")
+```
+
+
+
+\ref{fig:violinplots} grafike iš kintamųjų „Administrative_Duration“, „Informational_Duration“
+ir „ProductRelated_Duration“ smuiko formos ir stačiakampių grafikų matome, kad apsilankymo 
+administraciniuose ir informaciniuose puslapiuose trukmė nedaro didelės įtakos užsakymo atlikimo tikimybei.
+Svarbu paminėti, kad grafike skalė logaritminė, taigi nedideli skirtumai grafike gali sąlygoti 
+reikšmingus skirtumus pradiniuose duomenyse.
+Už tat, sprendžiant pagal kvartilius, matome, kad laikas, praleistas produktų puslapiuose
+turėtų daryti didesnę įtaką užsakymo atlikimo tikimybei.
+
+```{r fig.width=10, fig.height=4, fig.cap="Sesijos trukmės požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots}"}
+df_with_revenue <- df %>% mutate(Revenue = factor(Revenue)) %>% 
+  select( -c("Informational", "ProductRelated", "Administrative") )
+
+num_cols <- c(
+  'Administrative_Duration',
+  'Informational_Duration',
+  'ProductRelated_Duration'
+)
+
+df_long <- df_with_revenue %>%
+  pivot_longer(
+    cols = all_of(num_cols),
+    names_to = "variable",
+    values_to = "value"
+  )
+
+ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
+  geom_violin(alpha = 0.6, trim = FALSE, color = NA) +  # thinner violin outline
+  geom_boxplot(alpha = 0.1, linewidth = 0.3) +               # thinner boxplot outline
+  facet_wrap(~variable, scales = "free_y", ncol=3) +
+  scale_y_log10() +
+  labs(
+    title = "Logaritmuotų trukmių pasiskirtymas pagal pelningumą",
+    x = NULL,
+    y = "Trukmė"
+  ) +
+  theme_minimal(base_size = 18) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+„Google analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui sesijos metu,
+labiau įtakoja pasirinkimą atliksti užsakymą (žr. \ref{fig:violinplots_metrics} pav.).
+„BounceRates“, kas yra dalis puslapių dalis, kuriuos naudotojai ,
+neigiamai įtakoja pasirinkimą užsisakyti prekę iš parduotuvės.
+Taip pat neigiamai įtakoja ir „ExitRates“, kurį aprašėme duomenų aprašyme.
+Užtat vidutinis sesijos metu aplankytų puslapių „Google analytics“ įvertis („PageValues“)
+teigiamai įtakoja sesijos pelningumą.
+
+```{r fig.width=10, fig.height=4, fig.cap="Sesijos metu aplankytų puslapių požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots_metrics}"}
+df_with_revenue <- df %>% mutate(Revenue = factor(Revenue)) %>% 
+  select( -c("Informational", "ProductRelated", "Administrative") )
+
+# Automatically select numeric columns
+num_cols <- c(
+  "BounceRates", "ExitRates", "PageValues"
+)
+
+df_long <- df_with_revenue %>%
+  pivot_longer(
+    cols = all_of(num_cols),
+    names_to = "variable",
+    values_to = "value"
+  )
+
+ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
+  geom_violin(alpha = 0.6, trim = FALSE, color = NA) +  # thinner violin outline
+  geom_boxplot(alpha = 0.1, linewidth = 0.3) +               # thinner boxplot outline
+  facet_wrap(~variable, scales = "free_y", ncol=3) +
+  scale_y_log10() +
+  labs(
+    title = "Logaritmuotų reikšmių pasiskirtymas pagal pelningumą",
+    x = NULL,
+    y = "Logaritmuota reikšmė"
+  ) +
+  theme_minimal(base_size = 18) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank(),
+    legend.position = "bottom"
+  )
 ```

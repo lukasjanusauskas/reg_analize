@@ -9,13 +9,15 @@ bibliography: bibliografija.bib
 link-citations: true
 csl: "harvard-cite-them-right.csl"
 fig_caption: true
-extra_dependencies: float
+extra_dependencies: ["float", "multicol"]
 header-includes:
 - \renewcommand{\contentsname}{Turinys}
 - \usepackage{float}
 - \usepackage{booktabs}
 - \usepackage{multicol}
 - \usepackage{amsthm}
+- \usepackage[utf8]{inputenc}
+- \usepackage[T1]{fontenc}
 - \floatplacement{figure}{H}
 - \newtheorem*{proposition}{Teiginys}
 - \newtheorem*{definition}{Apibrėžimas}

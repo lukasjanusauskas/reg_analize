@@ -29,3 +29,20 @@ Padaryti:
 -	Klasifikavimo matrica po kiekvieno modelio (Kiekvienas savo modelį),
 -	ROC kreivė (Kiekvienas savo modelį),
 -	Interpretacija - geriausiam modeliui (Lukas).
+
+### Pradinė analizė ir duomenų paruošimas
+
+Paruošimo etapas:
+
+1. Duomenų paruošimas faktoriais
+2. Praleistų reikšmių tyrimas: parašyti, kad nebuvo nereikia tos lentelės
+3. Loginių išskirčių tyrimas: požymių min-max ir t.t.
+
+Duomenų analizė:
+
+1. Klasės reikšmių pasiskirstymas;
+2. Kategorinių kintamųjų dažniausia vertė, unikalių verčių skaičius;
+3. Histogramos natūralių skaičių duomenims;
+4. Kategorinių užkoduotų kintamųjų požymių dažnių lentelės pagal sėkmingo apsilankymo reikšmes ir bendrai;
+5. Smuiko grafikai;
+6. Stulpeliniai grafikai;
