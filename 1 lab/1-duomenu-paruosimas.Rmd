@@ -1,3 +1,9 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
 ```{r}
 library(dplyr)
 library(tidyr)
@@ -7,16 +13,16 @@ library(corrplot)
 library(GGally)
 ```
 
-
 # Tyrimas
 
 ## Duomenų paruošimas
 
-Kintamieji „OperatingSystems“, „Browser“, „Region“, „TraficType“ yra kategoriniai 
-kintamieji, užkoduoti natūraliais skaičiais.
-Todėl juos pakeičiame atitinkamais faktoriais ir vėliau iš jų formuosime fiktyvius kintamuosius.
-Kintamasis „SpecialDay“, sprendžiant pagal reikšmes ir aprašymą yra ranginis kitamasis įgaunantis 
-6 skirtingas reikšmes: $\{0;\ 0,2;\ \dots;\ 1\}$.
+Kintamieji „OperatingSystems“, „Browser“, „Region“, „TraficType“ yra
+kategoriniai kintamieji, užkoduoti natūraliais skaičiais. Todėl juos
+pakeičiame atitinkamais faktoriais ir vėliau iš jų formuosime fiktyvius
+kintamuosius. Kintamasis „SpecialDay“, sprendžiant pagal reikšmes ir
+aprašymą yra ranginis kitamasis įgaunantis 6 skirtingas reikšmes:
+$\{0;\ 0,2;\ \dots;\ 1\}$.
 
 ```{r}
 # duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
@@ -37,9 +43,10 @@ int_faktoriai <- c(
 df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
-Duomenų aprašyme, esančiame *UCI Irvine Machine Learning Repository* duomenų 
-portale, autoriai teigia, kad praleistų reikšmių nėra.
-Mes pasitikslinome, pasileidę atitinkamą \verb|R| kodą - praleistų reikšmių nėra.
+Duomenų aprašyme, esančiame *UCI Irvine Machine Learning Repository*
+duomenų portale, autoriai teigia, kad praleistų reikšmių nėra. Mes
+pasitikslinome, pasileidę atitinkamą \\verb\|R\| kodą - praleistų
+reikšmių nėra.
 
 ```{r, echo=FALSE, include=FALSE}
 missing_table <- data.frame(
@@ -49,15 +56,16 @@ missing_table <- data.frame(
 missing_table
 ```
 
-Loginių išskirčių tyrimas yra būtina dalis tyrimo, kadangi kai kurios iš duomenų 
-rinkinyje esančios sesijos gali būti informacijos surinkimo robotai (*angl. web-scrapers*).
-Kad ištirtume logines išskirtis sudarėme skaitinių charakteristikų lentelę kiekybiniams
-kintamiesiems (\ref{tab:char} lentelė).
-Joje naudojami standartiniai skaitinių charakteristikų žymėjimai: Min - minimumas, 
-$Q_n$ - $n$-tasis kvartilis, $\mu$ - vidurkis, Max - maximumas.
-\ref{tab:char} lentelėje matome, jog nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose 
-nesusijusiuose su apsilankymo trukme.
-Tačiau kintamiesiems, susijisiems su bendra apsilankymo trukme  
+Loginių išskirčių tyrimas yra būtina dalis tyrimo, kadangi kai kurios iš
+duomenų rinkinyje esančios sesijos gali būti informacijos surinkimo
+robotai (*angl. web-scrapers*). Kad ištirtume logines išskirtis sudarėme
+skaitinių charakteristikų lentelę kiekybiniams kintamiesiems
+(\ref{tab:char} lentelė). Joje naudojami standartiniai skaitinių
+charakteristikų žymėjimai: Min - minimumas, $Q_n$ - $n$-tasis kvartilis,
+$\mu$ - vidurkis, Max - maximumas. \ref{tab:char} lentelėje matome, jog
+nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose
+nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijisiems
+su bendra apsilankymo trukme
 
 ```{r}
 # čia reikėtų paklausti, ar galima skaičiuoti vidurkį integer duomenims pvz. informational
@@ -92,13 +100,14 @@ knitr::kable(
 )
 ```
 
-Kad toliau tirtume trukmės kintamųjų logines išskirtis, **( šitą gal ir išimsiu, reikia
-pagal straipsnį gal būt pažiūrėti i guess )**
+Kad toliau tirtume trukmės kintamųjų logines išskirtis, **( šitą gal ir
+išimsiu, reikia pagal straipsnį gal būt pažiūrėti i guess )**
 
-Toliau tirsime klasių disbalanso problemą, nes iš dažnio lentelės (\ref{tab:revenue_freq} lentelė)
-matome, jog turime šią problemą.
-Šią problemą vėliau taikysime dominuojančios klasės mažinimo būdu, kadangi turime didelį duomenų
-rinkinį ir taikysime statistinius metodus, kuriems paprastai užtenka nedaug duomenų.
+Toliau tirsime klasių disbalanso problemą, nes iš dažnio lentelės
+(\ref{tab:revenue_freq} lentelė) matome, jog turime šią problemą. Šią
+problemą vėliau taikysime dominuojančios klasės mažinimo būdu, kadangi
+turime didelį duomenų rinkinį ir taikysime statistinius metodus, kuriems
+paprastai užtenka nedaug duomenų.
 
 ```{r}
 # manau reikės aprašyti, kad pas mus 0 reikšmių (FALSE) yra daug daugiau nei 1 reikšmių (TRUE)
@@ -118,24 +127,28 @@ knitr::kable(
 
 ## Duomenų pradinė analizė
 
-Šioje aprašymo dalyje pateikiame tik svarbiausius akcentus, kurie mums bus svarbus, 
-kitus grafikus, išbrėžtus duomenų pradinei tyrybai, pateiksime A priede.
+Šioje aprašymo dalyje pateikiame tik svarbiausius akcentus, kurie mums
+bus svarbus, kitus grafikus, išbrėžtus duomenų pradinei tyrybai,
+pateiksime A priede.
 
-Prieš taikant binarinę regresiją labai svarbu įsitikinti, kad kategorinio kintamojo lygmenų
-kartotinumas yra pakankamai didelis, esant visoms klasifikuojamo kintamojo reikšmėms. 
+Prieš taikant binarinę regresiją labai svarbu įsitikinti, kad
+kategorinio kintamojo lygmenų kartotinumas yra pakankamai didelis, esant
+visoms klasifikuojamo kintamojo reikšmėms.
 
-Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių lygmenų.
-Kintamasis „VisitorType“ turi lygmenį „Other“, kuris gali būti problemiškas, padarius
-dominuojančios klasės sumažinimą, taigi šį faktoriaus lygmenį pašalinsime.
+Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių
+lygmenų. Kintamasis „VisitorType“ turi lygmenį „Other“, kuris gali būti
+problemiškas, padarius dominuojančios klasės sumažinimą, taigi šį
+faktoriaus lygmenį pašalinsime.
 
-Pašalinsime „OperatingSystems“, „Browser“ faktorių lygmenis, kurie
-turi mažiau arba lygiai 5 stebėjimus, esant pelningai sesijai.
-Faktorius „TrafficType“ turi daug probleminių lygmenų, taigi juos šalinant išmesime daug duomenų, todėl mes šį faktorių pašalinsime.
-Šių trijų minėtų faktorių dažnių lentelės pateiktos atitinkamai \ref{tab:OperatingSystems}, 
-\ref{tab:Browser} ir \ref{tab:TrafficType} lentelėse.
-Taip pat kintamojo „Month“ lygmuo „Feb“ (atitinkantis vasario mėnesį) turi tik tris stebėjimus,
-taigi pašalinsime ir vasario mėnesio stebėjimus.
-Kitos kryžminės dažnių lentelės pateiktos priede A. 
+Pašalinsime „OperatingSystems“, „Browser“ faktorių lygmenis, kurie turi
+mažiau arba lygiai 5 stebėjimus, esant pelningai sesijai. Faktorius
+„TrafficType“ turi daug probleminių lygmenų, taigi juos šalinant
+išmesime daug duomenų, todėl mes šį faktorių pašalinsime. Šių trijų
+minėtų faktorių dažnių lentelės pateiktos atitinkamai
+\ref{tab:OperatingSystems}, \ref{tab:Browser} ir \ref{tab:TrafficType}
+lentelėse. Taip pat kintamojo „Month“ lygmuo „Feb“ (atitinkantis vasario
+mėnesį) turi tik tris stebėjimus, taigi pašalinsime ir vasario mėnesio
+stebėjimus. Kitos kryžminės dažnių lentelės pateiktos priede A.
 
 ```{r}
 make_cross_table <- function(data, column) {
@@ -151,7 +164,7 @@ make_cross_table <- function(data, column) {
       deparse(substitute(column)), 
       " ir pelningumo kryžminė lentelė\\label{tab:",
       column, "}"),
-    col.names = c("", "Pelninga", "Nepelninga", "Bendrai")
+    col.names = c("", "Nepelninga", "Pelninga", "Bendrai")
   )
 }
 ```
@@ -170,21 +183,22 @@ df <- df %>%
   select( -c("TrafficType") ) 
 ```
 
-Žiūrint iš stulpelinių grafikų (žr. \ref{fig:pelningo_stulpel} pav.), kuriuose pavaizduota tikimybė,
-jog sesijoje įvyks pirkimas, pagal skirtingus kategorinius požymius.
-Čia pateikiame parinktus kategorinius požymius, ne visus, kadangi kiti kategoriniai 
-požymiai buvo nereikšmingi arba trivialūs.
+Žiūrint iš stulpelinių grafikų (žr. \ref{fig:pelningo_stulpel} pav.),
+kuriuose pavaizduota tikimybė, jog sesijoje įvyks pirkimas, pagal
+skirtingus kategorinius požymius. Čia pateikiame parinktus kategorinius
+požymius, ne visus, kadangi kiti kategoriniai požymiai buvo nereikšmingi
+arba trivialūs.
 
-Matome, kad sesijos pelningumo santykinis dažnis skiriasi skirtingais mėnesiais,
-tai priklauso nuo internetinės parduotuvės pobūdžio, produktų kokybės, asortimento.
-Taip pat matome, jog naudotojai, naudojantys skirtingas operacines sistemas, turi
-skirtingus skonius, požiūrį, taigi ir sesijos pelningumo tikimybė skiriasi.
-Pakartotiniai lankytojai turi mažesnę tikimybę atlikti užsakymą, kas, gali būti 
-paaiškinama dvejomis priežastimis:
-1) pakartotiniai lankytojai gali lankytis skiltyse skirtose sekti vežamas prekes, 
-2) internetinės parduotuvės prekių kokybė prasta.
-Taip pat, svarbu paminėti, kad apsilankymai savaitgalį dažniau baigiasi užsakymu,
-nei darbo dienomis.
+Matome, kad sesijos pelningumo santykinis dažnis skiriasi skirtingais
+mėnesiais, tai priklauso nuo internetinės parduotuvės pobūdžio, produktų
+kokybės, asortimento. Taip pat matome, jog naudotojai, naudojantys
+skirtingas operacines sistemas, turi skirtingus skonius, požiūrį, taigi
+ir sesijos pelningumo tikimybė skiriasi. Pakartotiniai lankytojai turi
+mažesnę tikimybę atlikti užsakymą, kas, gali būti paaiškinama dvejomis
+priežastimis: 1) pakartotiniai lankytojai gali lankytis skiltyse
+skirtose sekti vežamas prekes, 2) internetinės parduotuvės prekių kokybė
+prasta. Taip pat, svarbu paminėti, kad apsilankymai savaitgalį dažniau
+baigiasi užsakymu, nei darbo dienomis.
 
 ```{r fig.width=10, fig.height=6, fig.cap="Pelningo apsilankymo santykinis dažnis pagal skirtingus sesiją apibūdinančius požymius\\label{fig:pelningo_stulpel}"}
 # Mėnesius reikės išrikiuoti pagal kalendorių ir lankytojo tipą pagal dažnį
@@ -221,15 +235,15 @@ ggplot(df_summary, aes(x = Rev, y = Category)) +
   theme(legend.position = "none")
 ```
 
-
-
-\ref{fig:violinplots} grafike iš kintamųjų „Administrative_Duration“, „Informational_Duration“
-ir „ProductRelated_Duration“ smuiko formos ir stačiakampių grafikų matome, kad apsilankymo 
-administraciniuose ir informaciniuose puslapiuose trukmė nedaro didelės įtakos užsakymo atlikimo tikimybei.
-Svarbu paminėti, kad grafike skalė logaritminė, taigi nedideli skirtumai grafike gali sąlygoti 
-reikšmingus skirtumus pradiniuose duomenyse.
-Už tat, sprendžiant pagal kvartilius, matome, kad laikas, praleistas produktų puslapiuose
-turėtų daryti didesnę įtaką užsakymo atlikimo tikimybei.
+\ref{fig:violinplots} grafike iš kintamųjų „Administrative_Duration“,
+„Informational_Duration“ ir „ProductRelated_Duration“ smuiko formos ir
+stačiakampių grafikų matome, kad apsilankymo administraciniuose ir
+informaciniuose puslapiuose trukmė nedaro didelės įtakos užsakymo
+atlikimo tikimybei. Svarbu paminėti, kad grafike skalė logaritminė,
+taigi nedideli skirtumai grafike gali sąlygoti reikšmingus skirtumus
+pradiniuose duomenyse. Už tat, sprendžiant pagal kvartilius, matome, kad
+laikas, praleistas produktų puslapiuose turėtų daryti didesnę įtaką
+užsakymo atlikimo tikimybei.
 
 ```{r fig.width=10, fig.height=4, fig.cap="Sesijos trukmės požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots}"}
 df_with_revenue <- df %>% mutate(Revenue = factor(Revenue)) %>% 
@@ -266,12 +280,13 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   )
 ```
 
-„Google analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui sesijos metu,
-labiau įtakoja pasirinkimą atliksti užsakymą (žr. \ref{fig:violinplots_metrics} pav.).
-„BounceRates“, kas yra dalis puslapių dalis, kuriuos naudotojai ,
-neigiamai įtakoja pasirinkimą užsisakyti prekę iš parduotuvės.
-Taip pat neigiamai įtakoja ir „ExitRates“, kurį aprašėme duomenų aprašyme.
-Užtat vidutinis sesijos metu aplankytų puslapių „Google analytics“ įvertis („PageValues“)
+„Google analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui
+sesijos metu, labiau įtakoja pasirinkimą atliksti užsakymą (žr.
+\ref{fig:violinplots_metrics} pav.). „BounceRates“, kas yra dalis
+puslapių dalis, kuriuos naudotojai , neigiamai įtakoja pasirinkimą
+užsisakyti prekę iš parduotuvės. Taip pat neigiamai įtakoja ir
+„ExitRates“, kurį aprašėme duomenų aprašyme. Užtat vidutinis sesijos
+metu aplankytų puslapių „Google analytics“ įvertis („PageValues“)
 teigiamai įtakoja sesijos pelningumą.
 
 ```{r fig.width=10, fig.height=4, fig.cap="Sesijos metu aplankytų puslapių požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots_metrics}"}
