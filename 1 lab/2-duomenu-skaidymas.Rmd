@@ -1,10 +1,22 @@
-
 ```{r}
 library(caret)
+library(tidymodels)
+library(themis)
 set.seed(10)
 train_index <- createDataPartition(df_with_revenue$Revenue, p = 0.8, list = FALSE)
 
 train_df <- df[train_index, ]
 test_df  <- df[-train_index, ]
+
+train_df$Revenue <- as.factor(train_df$Revenue)
+test_df$Revenue <- as.factor(test_df$Revenue)
 ```
 
+```{r}
+rec <- recipe(Revenue ~ ., data = train_df) %>%
+  step_smotenc(Revenue)
+rec_prep <- prep(rec)
+train_df_smote <- bake(rec_prep, new_data = NULL)
+train_df_smote <- train_df_smote[sample(nrow(train_df_smote)), ]
+table(train_df_smote$Revenue)
+```
