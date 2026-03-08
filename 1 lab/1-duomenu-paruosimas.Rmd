@@ -28,7 +28,7 @@ $\{0;\ 0,2;\ \dots;\ 1\}$.
 # duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
 
 df <- read.csv(
-  "data\\online_shoppers_intention.csv",
+  "data//online_shoppers_intention.csv",
   header=TRUE,
   stringsAsFactors=FALSE
 )
@@ -179,7 +179,8 @@ make_cross_table(df, "TrafficType")
 df <- df %>% 
   filter( !OperatingSystems %in% c(5, 6, 7)) %>% 
   filter( !Browser %in% c(3, 9, 11, 12) ) %>% 
-  filter( Month != 'Feb' ) %>% 
+  filter( Month != 'Feb' ) %>%
+  filter(VisitorType != "Other") %>%
   select( -c("TrafficType") ) 
 ```
 
