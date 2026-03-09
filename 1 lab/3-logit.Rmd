@@ -1,0 +1,56 @@
+# Išskirtys su logit modeliu
+
+```{r}
+library(lubridate)
+
+train_df_smote_test <- train_df_smote
+
+train_df_smote_test <- train_df_smote %>%
+  mutate(
+    VisitorType = ifelse(VisitorType == "Returning_Visitor", 1, 0),
+    Weekend = ifelse(Weekend == TRUE, 1, 0),
+    Revenue = ifelse(Revenue == TRUE, 1, 0)
+  )
+
+# This works for both abbreviations and full names
+train_df_smote_test$Month <- month(parse_date_time(train_df_smote$Month, "b"))
+```
+
+```{r}
+logit <- glm(formula = Revenue ~ ., data = train_df_smote_test, family = binomial(link = 'logit'))
+
+```
+
+Išskirtis tikrinsime pasitelkę Kuko matą ir Pirsono liekanas.
+
+Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių. Visos reikšmės neviršija 0,05.
+
+```{r fig.width=10, fig.height=6, fig.cap="Kuko matas su logit modeliu\\label{fig:kuko_logit}"}
+cooksd <- cooks.distance(logit)
+
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks
+distance")
+```
+
+```{r fig.width=10, fig.height=6, fig.cap="Prisono liekanos su logit modeliu\\label{fig:Pirsono_logit}"}
+library(boot)
+pearson_residuals <- glm.diag(logit)$rp
+isskirtis_0 <- train_df_smote_test[pearson_residuals >= 3, ]
+isskirtis_1 <- train_df_smote_test[pearson_residuals <= -3, ]
+plot(pearson_residuals, pch="*", cex=2, main="Pearson
+residuals")
+
+```
+
+Ištyrę stebėjimus, kurių \|Pirsono liekanos\| \> 3 (žr. \ref{fig:Pirsono_logit} pav.), pastebėjome, kad kai kurie stebėjimai turi 0 praleisto laiko svetainėje. Taip pat turime atvejų, kai yra nurodytas konkretus praleistas laikas svetainėje, tačiau svetainių skaičius yra 0, todėl tokius stebėjimus pašalinsime. Kiti stebėjimai su didelėmis Pearsono liekanomis nebuvo pašalinti iš analizės, kadangi duomenų patikrinimo metu nebuvo pastebėta jokių akivaizdžių duomenų įvedimo ar matavimo klaidų. Todėl daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
+
+```{r}
+train_df_smote_without_outlier <- train_df_smote_test %>%
+  filter(
+    Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
+    !(Administrative == 0 & Administrative_Duration != 0),
+    !(Informational == 0 & Informational_Duration != 0),
+    !(ProductRelated == 0 & ProductRelated_Duration != 0)
+  )
+
+```
