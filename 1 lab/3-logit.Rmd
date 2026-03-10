@@ -50,7 +50,29 @@ train_df_smote_without_outlier <- train_df_smote_test %>%
     Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
     !(Administrative == 0 & Administrative_Duration != 0),
     !(Informational == 0 & Informational_Duration != 0),
-    !(ProductRelated == 0 & ProductRelated_Duration != 0)
+    !(ProductRelated == 0 & ProductRelated_Duration != 0),
+    !(Administrative > 0 & Administrative_Duration == 0),
+    !(Informational > 0 & Informational_Duration == 0),
+    !(ProductRelated > 0 & ProductRelated_Duration == 0)
   )
 
+```
+
+# Sąveikos
+
+Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti trys nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
+
+```{r}
+# Pridedu sąveikas
+
+train_df <- train_df_smote_without_outlier %>%
+  mutate(Average_Administrative = Administrative / Administrative_Duration) %>%
+  mutate(Average_Informational = Informational / Informational_Duration) %>%
+  mutate(Average_ProductRelated = ProductRelated / ProductRelated_Duration) %>%
+  mutate(PageValues_x_Pages = (Administrative + Informational + ProductRelated) * PageValues) %>%
+  replace_na(list(
+    Average_Administrative = 0,
+    Average_Informational = 0,
+    Average_ProductRelated = 0
+  ))
 ```
