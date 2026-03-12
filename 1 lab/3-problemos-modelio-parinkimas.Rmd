@@ -44,6 +44,8 @@ Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jok
 
 Ištirus stebėjimus, kurių \|Pirsono liekanos\| \> 3, nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų (visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0), todėl šie stebėjimai nebuvo pašalinti, daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
 
+# Multikolinearumas
+
 ```{r}
 vif(logit)
 
@@ -69,8 +71,35 @@ sum1$deviance/sum1$df[2]
 sum2$deviance/sum2$df[2]
 sum3$deviance/sum3$df[2]
 ```
+# Modelio parinkimas
 ```{r}
+probs1 <- predict(logit, newdata = test_df, type = "response")
+probs2 <- predict(probit, newdata = test_df, type = "response")
+probs3 <- predict(cloglog, newdata = test_df, type = "response")
 
+pred1 <- ifelse(probs1 > 0.5, 1, 0)
+pred2 <- ifelse(probs2 > 0.5, 1, 0)
+pred3 <- ifelse(probs3 > 0.5, 1, 0)
+
+
+
+confusionMatrix(
+  factor(pred1),
+  factor(test_df$Revenue),
+  positive = "1"
+)
+
+confusionMatrix(
+  factor(pred2),
+  factor(test_df$Revenue),
+  positive = "1"
+)
+
+confusionMatrix(
+  factor(pred3),
+  factor(test_df$Revenue),
+  positive = "1"
+)
 ```
 
 ```{r}

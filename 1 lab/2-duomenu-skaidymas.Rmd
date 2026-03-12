@@ -18,6 +18,8 @@ train_index <- createDataPartition(df$Revenue, p = 0.8, list = FALSE)
 train_df <- df[train_index, ]
 test_df  <- df[-train_index, ]
 
+train_df$Revenue <- ifelse(train_df$Revenue == TRUE,1,0)
+test_df$Revenue <- ifelse(test_df$Revenue == TRUE,1,0)
 train_df$Revenue <- as.factor(train_df$Revenue)
 test_df$Revenue <- as.factor(test_df$Revenue)
 ```
