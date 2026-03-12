@@ -46,10 +46,13 @@ Ištirus stebėjimus, kurių \|Pirsono liekanos\| \> 3, nepastebėjome jokių ak
 
 # Multikolinearumas
 
+Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. Iš lentelės matyti, kad egzistuoja multikolinearumas tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
+
 ```{r}
 vif(logit)
 
 ```
+
 ```{r}
 train_df_smote <- train_df_smote %>% 
   select(-c(ProductRelated))
@@ -62,7 +65,9 @@ cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(l
 vif(logit)
 
 ```
-Residual deviance / df kikvienam modeliui
+
+Residual deviance / df kiekvienam modeliui
+
 ```{r}
 sum1 <- summary(logit)
 sum2 <- summary(probit)
@@ -71,7 +76,33 @@ sum1$deviance/sum1$df[2]
 sum2$deviance/sum2$df[2]
 sum3$deviance/sum3$df[2]
 ```
+
+# Sąveikų ir kitų kintamųjų pridėjimas
+
+Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti du nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
+
+```{r}
+train_df <- train_df_smote %>%
+  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
+  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
+  mutate(Average_Informational = Informational_Duration / Informational ) %>%
+   replace_na(list(
+     Average_Administrative = 0,
+     Average_Informational = 0
+   ))
+
+test_df <- test_df %>%
+  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
+  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
+  mutate(Average_Informational = Informational_Duration / Informational ) %>%
+   replace_na(list(
+     Average_Administrative = 0,
+     Average_Informational = 0
+   ))
+```
+
 # Modelio parinkimas
+
 ```{r}
 probs1 <- predict(logit, newdata = test_df, type = "response")
 probs2 <- predict(probit, newdata = test_df, type = "response")
@@ -100,20 +131,4 @@ confusionMatrix(
   factor(test_df$Revenue),
   positive = "1"
 )
-```
-
-```{r}
-# Sąveikos (Po VIFo pridėsim)
-# Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti trys nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (PageValues), siekiant geriau įvertinti vartotojo įsitraukimą.
-
-# train_df <- train_df_smote %>%
-#   mutate(Average_Administrative = Administrative / Administrative_Duration) %>%
-#   mutate(Average_Informational = Informational / Informational_Duration) %>%
-#   mutate(Average_ProductRelated = ProductRelated / ProductRelated_Duration) %>%
-#   mutate(PageValues_x_Pages = (Administrative + Informational + ProductRelated) * PageValues) %>%
-#   replace_na(list(
-#     Average_Administrative = 0,
-#     Average_Informational = 0,
-#     Average_ProductRelated = 0
-#   ))
 ```
