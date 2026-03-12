@@ -1,10 +1,9 @@
 # Išskirtys
 
 ```{r}
-logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
-             control = glm.control(maxit = 50, epsilon = 1e-8))
-probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 50, epsilon = 1e-8))
-cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
+logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"))
+probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'))
+cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'))
 
 ```
 
