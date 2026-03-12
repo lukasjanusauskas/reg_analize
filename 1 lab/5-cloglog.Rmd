@@ -1,10 +1,10 @@
 ```{r}
 library(car)
+library(QuantPsyc)
+
 cloglog_model <- glm(formula = Revenue ~ (.),
 family = binomial(link = "cloglog"),
 data = train_df_smote)
-
-summary(cloglog_model)
 
 ```
 
@@ -22,4 +22,14 @@ data = train_df_smote)
 
 vif(cloglog_model)
 
+```
+
+```{r}
+summary(cloglog_model)
+
+```
+
+```{r}
+library(QuantPsyc)
+ClassLog(cloglog_model, train_df_smote$Revenue)
 ```
