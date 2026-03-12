@@ -1,0 +1,68 @@
+```{r}
+library(pROC)
+library(caret)
+
+```
+
+```{r}
+predicted_prob_logit <- predict(logit, newdata = test_df, type = "response")
+predicted_prob_probit <- predict(probit, newdata = test_df, type = "response")
+predicted_prob_cloglog <- predict(cloglog, newdata = test_df, type = "response")
+
+```
+
+
+```{r}
+
+roc_curve_logit <- roc(test_df$Revenue, predicted_prob_logit)
+roc_curve_probit <- roc(test_df$Revenue, predicted_prob_probit)
+roc_curve_cloglog <- roc(test_df$Revenue, predicted_prob_cloglog)
+
+plot(roc_curve_logit)
+plot(roc_curve_probit)
+plot(roc_curve_cloglog)
+```
+
+```{r}
+coords_logit <- coords(roc_curve_logit, "best", best.method = "closest.topleft")
+coords_probit <- coords(roc_curve_probit, "best", best.method = "closest.topleft")
+coords_cloglog <- coords(roc_curve_cloglog, "best", best.method = "closest.topleft")
+
+best_threshold_logit <- coords_logit$threshold
+best_threshold_probit <- coords_probit$threshold
+best_threshold_cloglog <- coords_cloglog$threshold
+
+cat("Optimal threshold based on ROC curve:", best_threshold_logit, "\n")
+cat("Optimal threshold based on ROC curve:", best_threshold_probit, "\n")
+cat("Optimal threshold based on ROC curve:", best_threshold_cloglog, "\n")
+
+predicted_class_logit <- ifelse(predicted_prob_logit >= best_threshold_logit, 1, 0)
+predicted_class_probit <- ifelse(predicted_prob_probit >= best_threshold_probit, 1, 0)
+predicted_class_cloglog <- ifelse(predicted_prob_cloglog >= best_threshold_cloglog, 1, 0)
+
+confusion_matrix <- table(test_df$Revenue, predicted_class_logit)
+confusion_matrix
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+cat("Accuracy:", accuracy, "\n")
+
+confusion_matrix <- table(test_df$Revenue, predicted_class_probit)
+confusion_matrix
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+cat("Accuracy:", accuracy, "\n")
+
+confusion_matrix <- table(test_df$Revenue, predicted_class_cloglog)
+print(confusion_matrix)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+cat("Accuracy:", accuracy, "\n")
+```
+
+
+
+
+
+
+
+
+
+
+
