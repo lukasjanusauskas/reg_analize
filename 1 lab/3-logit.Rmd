@@ -2,9 +2,9 @@
 
 ```{r}
 logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
-             control = glm.control(maxit = 100, epsilon = 1e-8,trace = TRUE))
-probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 100, epsilon = 1e-8, trace = TRUE))
-cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 100, epsilon = 1e-8, trace = TRUE))
+             control = glm.control(maxit = 50, epsilon = 1e-8))
+probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 50, epsilon = 1e-8))
+cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
 
 ```
 
@@ -45,17 +45,46 @@ Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jok
 Ištirus stebėjimus, kurių \|Pirsono liekanos\| \> 3, nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų (visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0), todėl šie stebėjimai nebuvo pašalinti, daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
 
 ```{r}
+vif(logit)
+
+```
+```{r}
+train_df_smote <- train_df_smote %>% 
+  select(-c(ProductRelated))
+
+logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
+             control = glm.control(maxit = 50, epsilon = 1e-8))
+probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 50, epsilon = 1e-8))
+cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
+
+vif(logit)
+
+```
+Residual deviance / df kikvienam modeliui
+```{r}
+sum1 <- summary(logit)
+sum2 <- summary(probit)
+sum3 <- summary(cloglog)
+sum1$deviance/sum1$df[2]
+sum2$deviance/sum2$df[2]
+sum3$deviance/sum3$df[2]
+```
+```{r}
+
+```
+
+```{r}
 # Sąveikos (Po VIFo pridėsim)
 # Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti trys nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (PageValues), siekiant geriau įvertinti vartotojo įsitraukimą.
 
-train_df <- train_df_smote %>%
-  mutate(Average_Administrative = Administrative / Administrative_Duration) %>%
-  mutate(Average_Informational = Informational / Informational_Duration) %>%
-  mutate(Average_ProductRelated = ProductRelated / ProductRelated_Duration) %>%
-  mutate(PageValues_x_Pages = (Administrative + Informational + ProductRelated) * PageValues) %>%
-  replace_na(list(
-    Average_Administrative = 0,
-    Average_Informational = 0,
-    Average_ProductRelated = 0
-  ))
+# train_df <- train_df_smote %>%
+#   mutate(Average_Administrative = Administrative / Administrative_Duration) %>%
+#   mutate(Average_Informational = Informational / Informational_Duration) %>%
+#   mutate(Average_ProductRelated = ProductRelated / ProductRelated_Duration) %>%
+#   mutate(PageValues_x_Pages = (Administrative + Informational + ProductRelated) * PageValues) %>%
+#   replace_na(list(
+#     Average_Administrative = 0,
+#     Average_Informational = 0,
+#     Average_ProductRelated = 0
+#   ))
 ```
