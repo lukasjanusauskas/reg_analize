@@ -1,71 +1,54 @@
-# Išskirtys su logit modeliu
+# Išskirtys
 
 ```{r}
-library(lubridate)
-
-train_df_smote_test <- train_df_smote
-
-train_df_smote_test <- train_df_smote %>%
-  mutate(
-    VisitorType = ifelse(VisitorType == "Returning_Visitor", 1, 0),
-    Weekend = ifelse(Weekend == TRUE, 1, 0),
-    Revenue = ifelse(Revenue == TRUE, 1, 0)
-  )
-
-# This works for both abbreviations and full names
-train_df_smote_test$Month <- month(parse_date_time(train_df_smote$Month, "b"))
-```
-
-```{r}
-logit <- glm(formula = Revenue ~ ., data = train_df_smote_test, family = binomial(link = 'logit'))
+logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
+             control = glm.control(maxit = 100, epsilon = 1e-8))
+probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 100, epsilon = 1e-8))
+cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 100, epsilon = 1e-8))
 
 ```
 
 Išskirtis tikrinsime pasitelkę Kuko matą ir Pirsono liekanas.
 
-Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių. Visos reikšmės neviršija 0,05.
+```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
+par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=1.5, cex.lab=1.2, cex.axis=1.1)
 
-```{r fig.width=10, fig.height=6, fig.cap="Kuko matas su logit modeliu\\label{fig:kuko_logit}"}
-cooksd <- cooks.distance(logit)
+# Logit
+cooksd_logit <- cooks.distance(logit)
+plot(cooksd_logit, pch="*", cex=1.5, main="Logit: Kuko matas", ylab="Reikšmė")
 
-plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks
-distance")
+pearson_logit <- glm.diag(logit)$rp
+plot(log(abs(pearson_logit)+1e-6), pch="*", cex=1.5, 
+     main="Logit: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
+
+# Probit
+cooksd_probit <- cooks.distance(probit)
+plot(cooksd_probit, pch="*", cex=1.5, main="Probit: Kuko matas", ylab="Reikšmė")
+
+pearson_probit <- glm.diag(probit)$rp
+plot(log(abs(pearson_probit)+1e-6), pch="*", cex=1.5, 
+     main="Probit: log(Pirson liekanos)", ylab="log(|Pirson liekanos|)")
+
+# Cloglog
+cooksd_cloglog <- cooks.distance(cloglog)
+plot(cooksd_cloglog, pch="*", cex=1.5, main="Cloglog: Kuko matas", ylab="Reikšmė")
+
+pearson_cloglog <- glm.diag(cloglog)$rp
+isskirtis_0 <- train_df_smote[pearson_cloglog >= 3, ]
+isskirtis_1 <- train_df_smote[pearson_cloglog <= -3, ]
+plot(log(abs(pearson_cloglog)+1e-6), pch="*", cex=1.5, 
+     main="Cloglog: log(Pirson liekanos)", ylab="log(|Pirson liekanos|)")
 ```
 
-```{r fig.width=10, fig.height=6, fig.cap="Prisono liekanos su logit modeliu\\label{fig:Pirsono_logit}"}
-library(boot)
-pearson_residuals <- glm.diag(logit)$rp
-isskirtis_0 <- train_df_smote_test[pearson_residuals >= 3, ]
-isskirtis_1 <- train_df_smote_test[pearson_residuals <= -3, ]
-plot(pearson_residuals, pch="*", cex=2, main="Pearson
-residuals")
+Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija 0,05.
 
-```
-
-Ištyrę stebėjimus, kurių \|Pirsono liekanos\| \> 3 (žr. \ref{fig:Pirsono_logit} pav.), pastebėjome, kad kai kurie stebėjimai turi 0 praleisto laiko svetainėje. Taip pat turime atvejų, kai yra nurodytas konkretus praleistas laikas svetainėje, tačiau svetainių skaičius yra 0, todėl tokius stebėjimus pašalinsime. Kiti stebėjimai su didelėmis Pearsono liekanomis nebuvo pašalinti iš analizės, kadangi duomenų patikrinimo metu nebuvo pastebėta jokių akivaizdžių duomenų įvedimo ar matavimo klaidų. Todėl daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
+Ištirus stebėjimus, kurių \|Pirsono liekanos\| \> 3, nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų (visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0), todėl šie stebėjimai nebuvo pašalinti, daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
 
 ```{r}
-train_df_smote_without_outlier <- train_df_smote_test %>%
-  filter(
-    Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
-    !(Administrative == 0 & Administrative_Duration != 0),
-    !(Informational == 0 & Informational_Duration != 0),
-    !(ProductRelated == 0 & ProductRelated_Duration != 0),
-    !(Administrative > 0 & Administrative_Duration == 0),
-    !(Informational > 0 & Informational_Duration == 0),
-    !(ProductRelated > 0 & ProductRelated_Duration == 0)
-  )
+# Sąveikos (Po VIFo pridėsim)
+# Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti trys nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (PageValues), siekiant geriau įvertinti vartotojo įsitraukimą.
 
-```
-
-# Sąveikos
-
-Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti trys nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
-
-```{r}
-# Pridedu sąveikas
-
-train_df <- train_df_smote_without_outlier %>%
+train_df <- train_df_smote %>%
   mutate(Average_Administrative = Administrative / Administrative_Duration) %>%
   mutate(Average_Informational = Informational / Informational_Duration) %>%
   mutate(Average_ProductRelated = ProductRelated / ProductRelated_Duration) %>%
