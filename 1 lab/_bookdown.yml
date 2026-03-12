@@ -3,7 +3,7 @@ rmd_files: [
   "0-titulinis.Rmd",
   "1-duomenu-paruosimas.Rmd",
   "2-duomenu-skaidymas.Rmd",
-  "3-logit.Rmd",
+  "3-problemos-modelio-parinkimas.Rmd",
   
   "appendix.Rmd"
 ]
