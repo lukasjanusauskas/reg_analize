@@ -1,0 +1,25 @@
+```{r}
+library(car)
+cloglog_model <- glm(formula = Revenue ~ (.),
+family = binomial(link = "cloglog"),
+data = train_df_smote)
+
+summary(cloglog_model)
+
+```
+
+```{r}
+vif(cloglog_model)
+```
+
+```{r}
+train_df_smote <- train_df_smote %>% 
+  select(-c(ProductRelated))
+
+cloglog_model <- glm(formula = Revenue ~ .,
+family = binomial(link = "cloglog"),
+data = train_df_smote)
+
+vif(cloglog_model)
+
+```

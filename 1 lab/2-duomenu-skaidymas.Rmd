@@ -3,7 +3,19 @@ library(caret)
 library(tidymodels)
 library(themis)
 set.seed(10)
-train_index <- createDataPartition(df_with_revenue$Revenue, p = 0.8, list = FALSE)
+
+df <- df %>%
+  filter(
+    Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
+    !(Administrative == 0 & Administrative_Duration != 0),
+    !(Informational == 0 & Informational_Duration != 0),
+    !(ProductRelated == 0 & ProductRelated_Duration != 0),
+    !(Administrative > 0 & Administrative_Duration == 0),
+    !(Informational > 0 & Informational_Duration == 0),
+    !(ProductRelated > 0 & ProductRelated_Duration == 0)
+  )
+
+train_index <- createDataPartition(df$Revenue, p = 0.8, list = FALSE)
 
 train_df <- df[train_index, ]
 test_df  <- df[-train_index, ]
