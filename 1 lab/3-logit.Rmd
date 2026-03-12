@@ -2,9 +2,9 @@
 
 ```{r}
 logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
-             control = glm.control(maxit = 100, epsilon = 1e-8))
-probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 100, epsilon = 1e-8))
-cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 100, epsilon = 1e-8))
+             control = glm.control(maxit = 100, epsilon = 1e-8,trace = TRUE))
+probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 100, epsilon = 1e-8, trace = TRUE))
+cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 100, epsilon = 1e-8, trace = TRUE))
 
 ```
 
