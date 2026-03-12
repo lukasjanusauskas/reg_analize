@@ -11,6 +11,15 @@ library(knitr)
 library(ggplot2)
 library(corrplot)
 library(GGally)
+library(caret)
+library(tidymodels)
+library(themis)
+library(boot)
+library(car)
+library(QuantPsyc)
+library(conflicted)
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
 ```
 
 # Tyrimas

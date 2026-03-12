@@ -1,6 +1,5 @@
 ```{r}
-library(car)
-library(QuantPsyc)
+
 
 cloglog_model <- glm(formula = Revenue ~ (.),
 family = binomial(link = "cloglog"),

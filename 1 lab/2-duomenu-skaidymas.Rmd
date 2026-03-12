@@ -1,7 +1,5 @@
 ```{r}
-library(caret)
-library(tidymodels)
-library(themis)
+
 set.seed(10)
 
 df <- df %>%
