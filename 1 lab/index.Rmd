@@ -6,8 +6,9 @@ output:
     toc: false
 lang: lt
 bibliography: bibliografija.bib
+csl: harvard-cite-them-right.csl
+suppress-bibliography: true
 link-citations: true
-csl: "harvard-cite-them-right.csl"
 fig_caption: true
 extra_dependencies: ["float", "multicol"]
 header-includes:
@@ -18,7 +19,6 @@ header-includes:
 - \usepackage{amsthm}
 - \usepackage[utf8]{inputenc}
 - \usepackage[T1]{fontenc}
-- \floatplacement{figure}{H}
 - \newtheorem*{proposition}{Teiginys}
 - \newtheorem*{definition}{Apibrėžimas}
 editor_options:

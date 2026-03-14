@@ -1,55 +1,109 @@
+```{r}
+library(car)
+library(patchwork)
+```
+
 # Išskirtys
 
 ```{r}
 logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"))
 probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'))
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'))
-
 ```
 
-Išskirtis tikrinsime pasitelkę Kuko matą ir Pirsono liekanas.
+Išskirtis tikrinsime pasitelkę Kuko matą (*angl. Cook's distance*) ir Pirsono 
+liekanas (*angl. Pearson residuals*). Kad identifikuotume potencialias išskirtis, 
+tiriant Kuko matą $D_i$ naudosime vieną iš empirinių taisyklių $D_i < 1$, t.y. 
+stebėjimą žymėsime kaip išskirtį, jei Kuko matas didesnis už 1.
+Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę:  $|Pirsono\ liekana| > 3$.
 
 ```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
-par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=1.5, cex.lab=1.2, cex.axis=1.1)
+par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=2, cex.lab=1.8, cex.axis=1.6)
 
 # Logit
 cooksd_logit <- cooks.distance(logit)
-plot(cooksd_logit, pch="*", cex=1.5, main="Logit: Kuko matas", ylab="Reikšmė")
-
+plot(cooksd_logit, pch="*", cex=2, main="Logit: Kuko matas", ylab="Reikšmė")
 pearson_logit <- glm.diag(logit)$rp
-plot(log(abs(pearson_logit)+1e-6), pch="*", cex=1.5, 
+plot(log(abs(pearson_logit)+1e-6), pch="*", cex=2,
      main="Logit: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
 
 # Probit
 cooksd_probit <- cooks.distance(probit)
-plot(cooksd_probit, pch="*", cex=1.5, main="Probit: Kuko matas", ylab="Reikšmė")
-
+plot(cooksd_probit, pch="*", cex=2, main="Probit: Kuko matas", ylab="Reikšmė")
 pearson_probit <- glm.diag(probit)$rp
-plot(log(abs(pearson_probit)+1e-6), pch="*", cex=1.5, 
-     main="Probit: log(Pirson liekanos)", ylab="log(|Pirson liekanos|)")
+plot(log(abs(pearson_probit)+1e-6), pch="*", cex=2,
+     main="Probit: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
 
 # Cloglog
 cooksd_cloglog <- cooks.distance(cloglog)
-plot(cooksd_cloglog, pch="*", cex=1.5, main="Cloglog: Kuko matas", ylab="Reikšmė")
-
+plot(cooksd_cloglog, pch="*", cex=2, main="Cloglog: Kuko matas", ylab="Reikšmė")
 pearson_cloglog <- glm.diag(cloglog)$rp
 isskirtis_0 <- train_df_smote[pearson_cloglog >= 3, ]
 isskirtis_1 <- train_df_smote[pearson_cloglog <= -3, ]
-plot(log(abs(pearson_cloglog)+1e-6), pch="*", cex=1.5, 
-     main="Cloglog: log(Pirson liekanos)", ylab="log(|Pirson liekanos|)")
+plot(log(abs(pearson_cloglog)+1e-6), pch="*", cex=2,
+     main="Cloglog: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
 ```
 
-Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija 0,05.
+Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą empirinę ribą.
 
-Ištirus stebėjimus, kurių \|Pirsono liekanos\| \> 3, nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų (visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0), todėl šie stebėjimai nebuvo pašalinti, daroma prielaida, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus.
+Ištyrus stebėjimus, kurių \|Pirsono liekanos\| \> 3, pastebėjome gana panašų skaičių 
+išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į 
+stebėjimų skaičių išskirtys sudaro vos 0,7 - 1,6 \%.
+Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, 
+užtat visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 
+ir dažnai trumpu, kai pajamos \> 0.
+Todėl manome, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas 
+galėtų iškreipti analizės rezultatus, todėl išskirčių nešalinsime.
+
+```{r}
+outlier_table <- data.frame(
+  Modelis = c("Logit", "Probit", "Cloglog"),
+  Išskirtys = c(
+    sum(abs(pearson_logit) >= 3),
+    sum(abs(pearson_probit) >= 3),
+    sum(abs(pearson_cloglog) >= 3)
+  )
+)
+
+n <- nobs(logit)
+outlier_table$Dalis <- paste0(round(outlier_table$Išskirtys / n * 100, 2), "%")
+
+kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinės paruodutvės duomenimis išskirtys mokymo aibėje, identifikuotos pagal Pirsono liekanų kriterijų\\label{tab:pearson_counts}")
+```
 
 # Multikolinearumas
 
-Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. Iš lentelės matyti, kad egzistuoja multikolinearumas tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
+Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius 
+kaip GVIF ir koreguotas GVIF.
+GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums 
+leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse.
+Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai 
+kolineariomis, 2,2 - išskirtimis \cite{mlr_collinearity}.
+Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas.
+Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb|ProductRelated| 
+ir \verb|ProductRelated_Duration|) GVIF ir koreguoto GVIF reikšmės yra pateiktos 
+\ref{tab:agvif_product} lentelėje.
+Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
 
 ```{r}
-vif(logit)
+vif_table <- data.frame(
+  Modelis = c("Logit", "Probit", "Cloglog"),
+  ProductRelated = c(
+    vif(logit)["ProductRelated", "GVIF^(1/(2*Df))"],
+    vif(probit)["ProductRelated", "GVIF^(1/(2*Df))"],
+    vif(cloglog)["ProductRelated", "GVIF^(1/(2*Df))"]
+  ),
+  ProductRelated_Duration = c(
+    vif(logit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
+    vif(probit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
+    vif(cloglog)["ProductRelated_Duration", "GVIF^(1/(2*Df))"]
+  )
+)
 
+kable(vif_table,
+      digits = 4,
+      caption = "Koreguoto GVIF reikšmės kintamiesiems ProductRelated ir ProductRelated\\_Duration \\label{tab:agvif_product}",
+      col.names = c("Modelis", "ProductRelated", "ProductRelated\\_Duration"))
 ```
 
 ```{r}
@@ -60,20 +114,30 @@ logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
              control = glm.control(maxit = 50, epsilon = 1e-8))
 probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 50, epsilon = 1e-8))
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
-
-vif(logit)
-
 ```
 
-Residual deviance / df kiekvienam modeliui
+Residual deviance / df kiekvienam modeliui pateikta \ref{tab:deviance} lentelėje.
 
 ```{r}
 sum1 <- summary(logit)
 sum2 <- summary(probit)
 sum3 <- summary(cloglog)
-sum1$deviance/sum1$df[2]
-sum2$deviance/sum2$df[2]
-sum3$deviance/sum3$df[2]
+
+dispersion_table <- data.frame(
+  Modelis = c("Logit", "Probit", "Cloglog"),
+  `Deviance / df` = c(
+    sum1$deviance / sum1$df[2],
+    sum2$deviance / sum2$df[2],
+    sum3$deviance / sum3$df[2]
+  )
+)
+
+kable(dispersion_table,
+      digits = 4,
+      caption = "Modelių deviance
+      \\label{tab:deviance}",
+      format = "latex",
+      booktabs = TRUE)
 ```
 
 # Sąveikų ir kitų kintamųjų pridėjimas
@@ -102,7 +166,7 @@ test_df <- test_df %>%
 
 # Modelio parinkimas
 
-```{r}
+```{r, fig.height=3}
 probs1 <- predict(logit, newdata = test_df, type = "response")
 probs2 <- predict(probit, newdata = test_df, type = "response")
 probs3 <- predict(cloglog, newdata = test_df, type = "response")
@@ -111,23 +175,72 @@ pred1 <- ifelse(probs1 > 0.5, 1, 0)
 pred2 <- ifelse(probs2 > 0.5, 1, 0)
 pred3 <- ifelse(probs3 > 0.5, 1, 0)
 
+cm_to_df <- function(cm, model_name) {
+  tbl <- as.data.frame(cm$table)
+  colnames(tbl) <- c("Predicted", "Actual", "Freq")
+  tbl$Model <- model_name
+  tbl
+}
 
+cm1 <- confusionMatrix(factor(pred1), factor(test_df$Revenue), positive = "1")
+cm2 <- confusionMatrix(factor(pred2), factor(test_df$Revenue), positive = "1")
+cm3 <- confusionMatrix(factor(pred3), factor(test_df$Revenue), positive = "1")
 
-confusionMatrix(
-  factor(pred1),
-  factor(test_df$Revenue),
-  positive = "1"
-)
+df1 <- cm_to_df(cm1, "Logit")
+df2 <- cm_to_df(cm2, "Probit")
+df3 <- cm_to_df(cm3, "Cloglog")
 
-confusionMatrix(
-  factor(pred2),
-  factor(test_df$Revenue),
-  positive = "1"
-)
+plot_cm <- function(df, title, incl_ylab) {
+  
+  if (incl_ylab) {
+    
+  ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), size = 20 / .pt) +
+    scale_y_discrete(limits = rev) +
+    scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
+    labs(
+      title = title,
+      y = "Prognozuotas\npelningumas",
+      x = "Tikrasis\npelningumas",
+      fill = "Dažnis"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 14),
+      legend.position = "none"
+    )
+    
+  } else {
+    
+  ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), size = 20 / .pt) +
+    scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
+    scale_y_discrete(limits = rev) +
+    labs(
+      title = title,
+      x = "Tikrasis\npelningumas",
+      fill = "Dažnis"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 14),
+      axis.title.y = element_text(size = 0),
+      legend.position = "none"
+    )
 
-confusionMatrix(
-  factor(pred3),
-  factor(test_df$Revenue),
-  positive = "1"
-)
+  }
+  
+}
+
+p1 <- plot_cm(df1, "Logit", TRUE)
+p2 <- plot_cm(df2, "Probit", FALSE)
+p3 <- plot_cm(df3, "Cloglog", FALSE)
+
+p1 + p2 + p3
 ```

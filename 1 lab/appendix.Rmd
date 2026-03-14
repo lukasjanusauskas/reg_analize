@@ -1,9 +1,12 @@
+
+# Šaltinių sąrašas
+
 # A priedas {-}
 \renewcommand{\thetable}{A.\arabic{table}}
 \setcounter{table}{0}                    
 
 \renewcommand{\thefigure}{A.\arabic{figure}}
-\setcounter{figure}{0}                      
+\setcounter{figure}{0}
 
 ```{r, fig.height=4, fig.width=12, fig.cap='Sesijos metu aplankytų puslapių skaičiaus pasiskirtymas kiekviename puslapio tipui'}
 # BounceRates ir ExitRates pakylimas ant 0.20 keistai atrodo

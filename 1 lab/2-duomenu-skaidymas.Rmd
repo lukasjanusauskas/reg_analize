@@ -1,3 +1,10 @@
+## Klasių disbalanso sprendimas
+
+Kadangi skirtumas tarp klasių stebėjimų skaičiaus yra labai didelis, spręsime šią
+problemą sugeneruodami daugiau mažesnės klasės (pelninga sesija) duomenų.
+Tam naudosime SMOTE-NC (*angl. Synthetic Minority Over-sampling TEchnique-Nominal Continuous*) algoritmą \cite{chawla2002smote}, kuris leidžia atlikti SMOTE tiek nominaliems tiek kiekybiniams kintamiesiems.
+Galiausiai gavome duomenų rinkinį, kuriame kiekviena klasė turi po 7300stebėjimų
+
 ```{r}
 
 set.seed(10)
@@ -24,7 +31,7 @@ train_df$Revenue <- as.factor(train_df$Revenue)
 test_df$Revenue <- as.factor(test_df$Revenue)
 ```
 
-```{r}
+```{r, include=FALSE}
 rec <- recipe(Revenue ~ ., data = train_df) %>%
   step_smotenc(Revenue)
 rec_prep <- prep(rec)
