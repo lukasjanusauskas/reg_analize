@@ -18,8 +18,8 @@ stebėjimą žymėsime kaip išskirtį, jei Kuko matas didesnis už 1.
 Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę:  $|Pirsono\ liekana| > 3$.
 
 ```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
-par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=2, cex.lab=1.8, cex.axis=1.6)
-
+par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=3, cex.lab=2.5, cex.axis=2)
+ 
 # Logit
 cooksd_logit <- cooks.distance(logit)
 plot(cooksd_logit, pch="*", cex=2, main="Logit: Kuko matas", ylab="Reikšmė")
