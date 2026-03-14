@@ -1,9 +1,9 @@
+# Išskirtys
+
 ```{r}
 library(car)
 library(patchwork)
 ```
-
-# Išskirtys
 
 ```{r}
 logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"))
@@ -77,99 +77,6 @@ outlier_table$Dalis <- paste0(round(outlier_table$Išskirtys / n * 100, 2), "%")
 kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinės paruodutvės duomenimis išskirtys mokymo aibėje, identifikuotos pagal Pirsono liekanų kriterijų\\label{tab:pearson_counts}")
 ```
 
-# Multikolinearumas
-
-Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius 
-kaip GVIF ir koreguotas GVIF.
-GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums 
-leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse.
-Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai 
-kolineariomis, 2,2 - išskirtimis \cite{mlr_collinearity}.
-Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas.
-Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb|ProductRelated| 
-ir \verb|ProductRelated_Duration|) GVIF ir koreguoto GVIF reikšmės yra pateiktos 
-\ref{tab:agvif_product} lentelėje.
-Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
-
-```{r}
-vif_table <- data.frame(
-  Modelis = c("Logit", "Probit", "Cloglog"),
-  ProductRelated = c(
-    vif(logit)["ProductRelated", "GVIF^(1/(2*Df))"],
-    vif(probit)["ProductRelated", "GVIF^(1/(2*Df))"],
-    vif(cloglog)["ProductRelated", "GVIF^(1/(2*Df))"]
-  ),
-  ProductRelated_Duration = c(
-    vif(logit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
-    vif(probit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
-    vif(cloglog)["ProductRelated_Duration", "GVIF^(1/(2*Df))"]
-  )
-)
-
-kable(vif_table,
-      digits = 4,
-      caption = "Koreguoto GVIF reikšmės kintamiesiems ProductRelated ir ProductRelated\\_Duration \\label{tab:agvif_product}",
-      col.names = c("Modelis", "ProductRelated", "ProductRelated\\_Duration"))
-```
-
-```{r}
-train_df_smote <- train_df_smote %>% 
-  select(-c(ProductRelated))
-
-logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
-             control = glm.control(maxit = 50, epsilon = 1e-8))
-probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'), control = glm.control(maxit = 50, epsilon = 1e-8))
-cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
-```
-
-Residual deviance / df kiekvienam modeliui pateikta \ref{tab:deviance} lentelėje.
-
-```{r}
-sum1 <- summary(logit)
-sum2 <- summary(probit)
-sum3 <- summary(cloglog)
-
-dispersion_table <- data.frame(
-  Modelis = c("Logit", "Probit", "Cloglog"),
-  `Deviance / df` = c(
-    sum1$deviance / sum1$df[2],
-    sum2$deviance / sum2$df[2],
-    sum3$deviance / sum3$df[2]
-  )
-)
-
-kable(dispersion_table,
-      digits = 4,
-      caption = "Modelių deviance
-      \\label{tab:deviance}",
-      format = "latex",
-      booktabs = TRUE)
-```
-
-# Sąveikų ir kitų kintamųjų pridėjimas
-
-Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti du nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
-
-```{r}
-train_df <- train_df_smote %>%
-  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
-  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
-  mutate(Average_Informational = Informational_Duration / Informational ) %>%
-   replace_na(list(
-     Average_Administrative = 0,
-     Average_Informational = 0
-   ))
-
-test_df <- test_df %>%
-  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
-  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
-  mutate(Average_Informational = Informational_Duration / Informational ) %>%
-   replace_na(list(
-     Average_Administrative = 0,
-     Average_Informational = 0
-   ))
-```
-
 # Modelio parinkimas
 
 Renkantis tiksliausią modelį spręsime pagal keletą skirtingų metrikų, pateiktų \ref{tab:metrikos_tikslumo}
@@ -181,6 +88,17 @@ lentelėje:
 4. Jautrumą ($\frac{TP}{TP+FN}$);
 5. Preciziškumą ($\frac{TP}{TP+FP}$);
 6. F1 matą - harmoninį vidurkį jautrumo ir preciziškumo.
+
+Sprendžiant pagal bendrą klasifikavimo tikslumą, *logit* modelis yra tiksliausias, tačiau
+žiūrint į pasikliovimo intervalus, *logit* modelis ir *probit* yra lygiaverčiai, kadangi jų 
+tikslumo 95 \% pasikliovimo intervalai persidengia, tačiau *probit* ir *cloglog* - ne, taip
+pat persidengimas tarp *probit* ir *cloglog* modelio yra mažas, taigi matome, jog *cloglog*
+yra prastesnis.
+Taip pat hipotezė, kad modelis nėra tikslesnis už dominuojančios klasės spėjimą,
+atmesta visiems modeliams, išskyrus *cloglog*, taigi darome išvadą, kad *cloglog* 
+yra  netinkamas modelis.
+Visi kiti matai (specifiškumas, preciziškumas ir F1 matas) rodo, kad *logit* modelis 
+yra pranašesnis už kitus tirtus binarinio atsako modelius.
 
 ```{r}
 probs1 <- predict(logit, newdata = test_df, type = "response")
@@ -240,21 +158,39 @@ kable(comparison_df,
       escape = FALSE)
 ```
 
+Turint klasių disbalanso problemą ypatingai svarbu ištirti klasifikavimo matricą.
+Nors jau nusprendėme, kad *logit* modelis yra pranašiausias iš atrinktų statistinių 
+binarinio atsako modelių, ištirsime kodėl būtent ir kokias ydas turi šie modeliai.
 
-Klasifikavimo matricos.
+Iš klasifikavimo matricų (žr. \ref{fig:klasifikavimo_matricos} pav.) matome, 
+kad logistinės regresijos modelis (kaip ir *probit*) teisingai prognozuoja teigiamą 
+(pelningą sesiją), nei neigiamą (sesijos metu neįvykdytas užsakymas).
+Todėl, manome, šiems modeliams atmetėme hipotezę, jog jų tikslumas lygus modeliui,
+visada išvedančiam neigiamą.
+Nedidelis *logit* pranašumas klasifikavimo tikslumo atžvilgiu, lyginant su *probit*
+kyla iš to, jog teisingų teigiamų skaičius *logit* klasifikavimo matricoje
+yra kiek didesnis nei *probit*.
+Tačiau matome, kad klaidingų neigiamų skaičius yra artimas teisingų teigiamų skaičiui,
+taigi šis modelis turi panašią tikimybę išvesti teigiamą, kaip ir neigiamą, kai 
+sesija iš tiesų yra pelninga.
+Tuo tarpu modelio *cloglog*, kurio tikslumas ir kitos metrikos buvo prasčiausios,  
+klasifikavimo matricoje matome, kad klaidingų neigiamų yra mažiau, nei teisingų teigiamų,
+kas paaiškiną tikslumą, mažesnį už dominuojančios klasės santykinį dažnį.
 
-```{r, fig.height=3}
+```{r, fig.height=3, fig.cap="Klasifikavimo matricos statistiniams binarinio atsako modeliams \\label{fig:klasifikavimo_matricos}"}
 df1 <- cm_to_df(cm1, "Logit")
 df2 <- cm_to_df(cm2, "Probit")
 df3 <- cm_to_df(cm3, "Cloglog")
 
 plot_cm <- function(df, title, incl_ylab) {
   
+  df$Pct <- df$Freq / sum(df$Freq) * 100
+  
   if (incl_ylab) {
     
-    ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+    ggplot(df, aes(y = Predicted, x = Actual, fill = Pct)) +
       geom_tile(color = "white") +
-      geom_text(aes(label = Freq), size = 20 / .pt) +
+      geom_text(aes(label = sprintf("%.1f%%", Pct)), size = 16 / .pt) +
       scale_y_discrete(limits = rev) +
       scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
       labs(
@@ -267,15 +203,15 @@ plot_cm <- function(df, title, incl_ylab) {
       theme(
         plot.title = element_text(hjust = 0.5, size = 20),
         axis.title = element_text(size = 16),
-        axis.text = element_text(size = 14),
+        axis.text  = element_text(size = 14),
         legend.position = "none"
       )
     
   } else {
     
-    ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+    ggplot(df, aes(y = Predicted, x = Actual, fill = Pct)) +
       geom_tile(color = "white") +
-      geom_text(aes(label = Freq), size = 20 / .pt) +
+      geom_text(aes(label = sprintf("%.1f%%", Pct)), size = 16 / .pt) +
       scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
       scale_y_discrete(limits = rev) +
       labs(
@@ -285,13 +221,12 @@ plot_cm <- function(df, title, incl_ylab) {
       ) +
       theme_minimal() +
       theme(
-        plot.title = element_text(hjust = 0.5, size = 20),
-        axis.title = element_text(size = 16),
-        axis.text = element_text(size = 14),
+        plot.title  = element_text(hjust = 0.5, size = 20),
+        axis.title  = element_text(size = 16),
+        axis.text   = element_text(size = 14),
         axis.title.y = element_text(size = 0),
         legend.position = "none"
       )
-
   }
   
 }
@@ -301,6 +236,41 @@ p2 <- plot_cm(df2, "Probit", FALSE)
 p3 <- plot_cm(df3, "Cloglog", FALSE)
 
 p1 + p2 + p3
+```
+
+```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje"}
+pred_logit   <- predict(logit,   newdata = test_df, type = "response")
+pred_probit  <- predict(probit,  newdata = test_df, type = "response")
+pred_cloglog <- predict(cloglog, newdata = test_df, type = "response")
+
+roc_logit   <- roc(test_df$Revenue, pred_logit,   quiet = TRUE)
+roc_probit  <- roc(test_df$Revenue, pred_probit,  quiet = TRUE)
+roc_cloglog <- roc(test_df$Revenue, pred_cloglog, quiet = TRUE)
+
+# ── Font size via par() ───────────────────────────────────────────────────────
+par(cex.main = 1.5,   # title
+    cex.axis = 1.3,   # axis tick labels
+    cex.lab  = 1.3)   # axis titles
+
+plot(roc_logit,
+     col  = "steelblue",
+     lwd  = 2,
+     main = "ROC kreivės binarinio atsako modeliams",
+     xlim = c(1, 0),
+     xlab = "Specifiškumas",
+     ylab = "Jautrumas")
+plot(roc_probit,  col = "darkorange",  lwd = 2, add = TRUE)
+plot(roc_cloglog, col = "forestgreen", lwd = 2, add = TRUE)
+
+legend("bottomright",
+       legend = c(
+         paste0("Logit   (AUC=", round(auc(roc_logit),   3), ")"),
+         paste0("Probit  (AUC=", round(auc(roc_probit),  3), ")"),
+         paste0("Cloglog (AUC=", round(auc(roc_cloglog), 3), ")")
+       ),
+       col    = c("steelblue", "darkorange", "forestgreen"),
+       lwd    = 2,
+       cex    = 1.1)   # legend text size
 ```
 
 
