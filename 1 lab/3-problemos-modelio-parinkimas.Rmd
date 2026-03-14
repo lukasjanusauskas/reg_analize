@@ -19,7 +19,7 @@ Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę:  $|Pirsono\ liekana|
 
 ```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
 par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=3, cex.lab=2.5, cex.axis=2)
- 
+
 # Logit
 cooksd_logit <- cooks.distance(logit)
 plot(cooksd_logit, pch="*", cex=2, main="Logit: Kuko matas", ylab="Reikšmė")
@@ -172,7 +172,17 @@ test_df <- test_df %>%
 
 # Modelio parinkimas
 
-```{r, fig.height=3}
+Renkantis tiksliausią modelį spręsime pagal keletą skirtingų metrikų, pateiktų \ref{tab:metrikos_tikslumo}
+lentelėje:
+
+1. Bendrą tikslumą;
+2. Tikslumo parametrinį 95 \% pasikliautinį intervalą;
+3. P reikšmė hipotezės, kad modelis tikslesnis už spėjimą, jog stebėjimas priklauso dominuojančiai klasei;
+4. Jautrumą ($\frac{TP}{TP+FN}$);
+5. Preciziškumą ($\frac{TP}{TP+FP}$);
+6. F1 matą - harmoninį vidurkį jautrumo ir preciziškumo.
+
+```{r}
 probs1 <- predict(logit, newdata = test_df, type = "response")
 probs2 <- predict(probit, newdata = test_df, type = "response")
 probs3 <- predict(cloglog, newdata = test_df, type = "response")
@@ -191,7 +201,49 @@ cm_to_df <- function(cm, model_name) {
 cm1 <- confusionMatrix(factor(pred1), factor(test_df$Revenue), positive = "1")
 cm2 <- confusionMatrix(factor(pred2), factor(test_df$Revenue), positive = "1")
 cm3 <- confusionMatrix(factor(pred3), factor(test_df$Revenue), positive = "1")
+comparison_df <- data.frame(
+  Metric = c("Tikslumas", "Tikslumo PI",
+             "p-reikšmė", "Jautrumas", "Preciziškumas", "F1 matas"),
+  Logit = c(
+    paste0("\\textbf{", formatC(cm1$overall[["Accuracy"]], digits = 4, format = "f", decimal.mark = ","), "}"),
+    paste0("\\textbf{(", formatC(cm1$overall[["AccuracyLower"]], digits = 4, format = "f", decimal.mark = ","), ", ",
+               formatC(cm1$overall[["AccuracyUpper"]], digits = 4, format = "f", decimal.mark = ","), ")}"),
+    paste0("\\textbf{", formatC(cm1$overall[["AccuracyPValue"]], digits = 4, format = "f", decimal.mark = ","), "}"),
+    paste0("\\textbf{", formatC(cm1$byClass[["Sensitivity"]], digits = 4, format = "f", decimal.mark = ","), "}"),
+    paste0("\\textbf{", formatC(cm1$byClass[["Precision"]], digits = 4, format = "f", decimal.mark = ","), "}"),
+    paste0("\\textbf{", formatC(cm1$byClass[["F1"]], digits = 4, format = "f", decimal.mark = ","), "}")
+  ),
+  Probit = c(
+    formatC(cm2$overall[["Accuracy"]], digits = 4, format = "f", decimal.mark = ","),
+    paste0("(", formatC(cm2$overall[["AccuracyLower"]], digits = 4, format = "f", decimal.mark = ","), ", ",
+               formatC(cm2$overall[["AccuracyUpper"]], digits = 4, format = "f", decimal.mark = ","), ")"),
+    formatC(cm2$overall[["AccuracyPValue"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm2$byClass[["Sensitivity"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm2$byClass[["Precision"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm2$byClass[["F1"]], digits = 4, format = "f", decimal.mark = ",")
+  ),
+  Cloglog = c(
+    formatC(cm3$overall[["Accuracy"]], digits = 4, format = "f", decimal.mark = ","),
+    paste0("(", formatC(cm3$overall[["AccuracyLower"]], digits = 4, format = "f", decimal.mark = ","), ", ",
+               formatC(cm3$overall[["AccuracyUpper"]], digits = 4, format = "f", decimal.mark = ","), ")"),
+    formatC(cm3$overall[["AccuracyPValue"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm3$byClass[["Sensitivity"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm3$byClass[["Precision"]], digits = 4, format = "f", decimal.mark = ","),
+    formatC(cm3$byClass[["F1"]], digits = 4, format = "f", decimal.mark = ",")
+  )
+)
 
+kable(comparison_df,
+      caption = "Binarinio atsako modelių tikslumo metrikos, apskaičiuotos internetinės parduotuvės duomenų testinėje aibėje\\label{tab:metrikos_tikslumo}",
+      col.names = c("", "\\textbf{Logit}", "Probit", "Cloglog"),
+      align = c("l", "c", "c", "c"),
+      escape = FALSE)
+```
+
+
+Klasifikavimo matricos.
+
+```{r, fig.height=3}
 df1 <- cm_to_df(cm1, "Logit")
 df2 <- cm_to_df(cm2, "Probit")
 df3 <- cm_to_df(cm3, "Cloglog")
@@ -200,45 +252,45 @@ plot_cm <- function(df, title, incl_ylab) {
   
   if (incl_ylab) {
     
-  ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = Freq), size = 20 / .pt) +
-    scale_y_discrete(limits = rev) +
-    scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
-    labs(
-      title = title,
-      y = "Prognozuotas\npelningumas",
-      x = "Tikrasis\npelningumas",
-      fill = "Dažnis"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 20),
-      axis.title = element_text(size = 16),
-      axis.text = element_text(size = 14),
-      legend.position = "none"
-    )
+    ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = Freq), size = 20 / .pt) +
+      scale_y_discrete(limits = rev) +
+      scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
+      labs(
+        title = title,
+        y = "Prognozuotas\npelningumas",
+        x = "Tikrasis\npelningumas",
+        fill = "Dažnis"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(hjust = 0.5, size = 20),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14),
+        legend.position = "none"
+      )
     
   } else {
     
-  ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = Freq), size = 20 / .pt) +
-    scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
-    scale_y_discrete(limits = rev) +
-    labs(
-      title = title,
-      x = "Tikrasis\npelningumas",
-      fill = "Dažnis"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 20),
-      axis.title = element_text(size = 16),
-      axis.text = element_text(size = 14),
-      axis.title.y = element_text(size = 0),
-      legend.position = "none"
-    )
+    ggplot(df, aes(y = Predicted, x = Actual, fill = Freq)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = Freq), size = 20 / .pt) +
+      scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
+      scale_y_discrete(limits = rev) +
+      labs(
+        title = title,
+        x = "Tikrasis\npelningumas",
+        fill = "Dažnis"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(hjust = 0.5, size = 20),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14),
+        axis.title.y = element_text(size = 0),
+        legend.position = "none"
+      )
 
   }
   
@@ -249,4 +301,29 @@ p2 <- plot_cm(df2, "Probit", FALSE)
 p3 <- plot_cm(df3, "Cloglog", FALSE)
 
 p1 + p2 + p3
+```
+
+
+# Sąveikų ir kitų kintamųjų pridėjimas
+
+Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti du nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
+
+```{r}
+train_df <- train_df_smote %>%
+  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
+  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
+  mutate(Average_Informational = Informational_Duration / Informational ) %>%
+   replace_na(list(
+     Average_Administrative = 0,
+     Average_Informational = 0
+   ))
+
+test_df <- test_df %>%
+  mutate(PageValues_x_Pages = (Administrative + Informational) * PageValues) %>%
+  mutate(Average_Administrative = Administrative_Duration / Administrative) %>%
+  mutate(Average_Informational = Informational_Duration / Informational ) %>%
+   replace_na(list(
+     Average_Administrative = 0,
+     Average_Informational = 0
+   ))
 ```
