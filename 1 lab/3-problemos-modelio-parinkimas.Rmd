@@ -26,6 +26,8 @@ plot(cooksd_logit, pch="*", cex=2, main="Logit: Kuko matas", ylab="Reikšmė")
 pearson_logit <- glm.diag(logit)$rp
 plot(log(abs(pearson_logit)+1e-6), pch="*", cex=2,
      main="Logit: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
+abline(h = log(3), col="red", lwd=2)
+abline(h = -log(3), col="red", lwd=2)
 
 # Probit
 cooksd_probit <- cooks.distance(probit)
@@ -33,6 +35,8 @@ plot(cooksd_probit, pch="*", cex=2, main="Probit: Kuko matas", ylab="Reikšmė")
 pearson_probit <- glm.diag(probit)$rp
 plot(log(abs(pearson_probit)+1e-6), pch="*", cex=2,
      main="Probit: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
+abline(h = log(3), col="red", lwd=2)
+abline(h = -log(3), col="red", lwd=2)
 
 # Cloglog
 cooksd_cloglog <- cooks.distance(cloglog)
@@ -42,6 +46,8 @@ isskirtis_0 <- train_df_smote[pearson_cloglog >= 3, ]
 isskirtis_1 <- train_df_smote[pearson_cloglog <= -3, ]
 plot(log(abs(pearson_cloglog)+1e-6), pch="*", cex=2,
      main="Cloglog: log(Pirson liekanos)", ylab="log(|Pirsono liekanos|)")
+abline(h = log(3), col="red", lwd=2)
+abline(h = -log(3), col="red", lwd=2)
 ```
 
 Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą empirinę ribą.
