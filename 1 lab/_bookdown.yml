@@ -4,6 +4,7 @@ rmd_files: [
   "1-duomenu-paruosimas.Rmd",
   "2-duomenu-skaidymas.Rmd",
   "3-problemos-modelio-parinkimas.Rmd",
-  
+  "4-slenkscio-parinkimas_2.Rmd",
+  "5-pazingsnine-regresija.Rmd",
   "appendix.Rmd"
 ]

@@ -1,0 +1,12 @@
+# Pažingsninė regresija
+
+Atlikome kintamųjų atranką logistinės regresijos modeliui, naudodami \textit{forward selection} metodą. Pradėdami nuo paprasčiausio modelio, kuriame nėra kovariančių, palaipsniui pridėjome tuos kintamuosius, kurie labiausiai pagerina modelio kokybę. Modelio tinkamumas buvo vertinamas pagal AIC (\textit{Akaike informacijos kriterijų}), siekiant rasti geriausią balansą tarp modelio tikslumo ir sudėtingumo.
+
+```{r,results='hide'}
+null_model <- glm(Revenue ~ 1, data = train_df_smote, family = binomial("logit"))
+full_model <- logit
+
+final_model <- step(null_model,
+     scope = list(lower = null_model, upper = full_model),
+     direction = "forward")
+```
