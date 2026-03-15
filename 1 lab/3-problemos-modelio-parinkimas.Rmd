@@ -384,7 +384,7 @@ Toliau įvertinsime modelio parametrus ir nustatysime, ar jie yra statistiškai 
 
 Iš lentelės (žr. \ref{fig:nereiksmingi} pav.) galime pastebėti, kad laikas, kurį lankytojas praleido paskyros valdymo ir informaciniuose puslapiuose, bei tai, kiek kartų lankytojas lankėsi informaciniuose puslapiuose, nėra statistiškai reikšmingi. Tačiau statistiškai reikšmingas yra kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose. Taip pat matome, kad statistiškai nereikšmingas yra vidutinis lankytojo aplankytų puslapių skaičius prieš baigiant sesiją, kai aplankyta tik viena prekė. Be to, statistiškai nereikšmingi pasirodė ir tokie kintamieji kaip savaitgalis bei ypatingos dienos efektas, o tai rodo, kad pirkimo sprendimas nepriklauso nuo to, ar sesija vyko savaitgalį ar artėjant šventėms.
 
-Patikrinus modelio be nereikšmingų kintamųjų prognozavimo F1 metriką ant testinės aibės (žr. \ref{tab:f1} lentelę), pastebėta, kad ji labai nežymiai sumažėjo, tačiau kartu sumažėjo ir AIC kriterijus, todėl toliau naudosime modelį be nereikšmingų kintamųjų.
+Pašalinus nereikšmingus kintamuosius (žr. \ref{tab:f1} lentelę), AIC kriterijus nežymiai sumažėjo, tačiau kartu sumažėjo ir F1 metrika, kuri atspindi modelio prognozavimo tikslumą. Kadangi pagrindinis modelio tikslas yra kuo tiksliau prognozuoti pirkimo tikimybę, buvo nuspręsta toliau naudoti pradinį modelį su visais kintamaisiais.
 
 ```{r}
 
