@@ -24,6 +24,74 @@ conflict_prefer("filter", "dplyr")
 
 # Tyrimas
 
+## Duomenų aprašymas
+
+Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository* su iš viso 10535 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir \ref{tab:cat_features} lentelėse.
+
+```{r}
+num_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "Administrative", 
+    "Administrative duration", 
+    "Informational", 
+    "Informational duration", 
+    "Product related", 
+    "Product related duration", 
+    "Bounce rate", 
+    "Exit rate", 
+    "Page value", 
+    "Special day"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido paskyros valdymo puslapiuose.",
+    "Kiek kartų lankytojas lankėsi informaciniuose puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido informaciniuose puslapiuose.",
+    "Kiek kartų lankytojas lankėsi parduodamų daiktų puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido  parduodamų daiktų puslapiuose.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta tik viena prekė.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta daugiau nei viena prekė..",
+    "Vidutinė lankytojo aplankytų puslapių vertė.",
+    "Svetainės apsilankymo laiko artumas ypatingai dienai (pvz., šventei, išpardavimui)."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(num_features, 
+      caption = "Kiekybininių kintamųjų aprašymas\\label{tab:num_features}")
+```
+
+
+```{r}
+cat_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "OperatingSystems", 
+    "Browser", 
+    "Region", 
+    "TrafficType", 
+    "VisitorType", 
+    "Weekend", 
+    "Month", 
+    "Revenue"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Lankytojo operacinė sistema.",
+    "Lankytojo interneto naršyklė.",
+    "Geografinis regionas, iš kurio lankytojas pradėjo sesiją.",
+    "Šaltinis, iš kurio lankytojas atvyko į svetainę (pvz., reklama kitame puslapyje, SMS, tiesioginis).",
+    "Lankytojo tipas: „Naujas lankytojas“, „Sugrįžtantis lankytojas“ ir „Kitas“.",
+    "Ar apsilankymo data sutampa su savaitgaliu.",
+    "Apsilankymo datos mėnuo.",
+    "Ar seija buvo pelninga."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(cat_features, 
+      caption = "Kategorinių kintamųjų aprašymas\\label{tab:cat_features}")
+
+```
+
 ## Duomenų paruošimas
 
 Kintamieji „OperatingSystems“, „Browser“, „Region“, „TraficType“ yra
@@ -251,7 +319,7 @@ ggplot(df_summary, aes(x = Rev, y = Category)) +
   geom_col(fill="#2C7FB8") +
   facet_wrap(~Variable, scales = "free_y") +
   labs(
-    x = "Pelningo apsilankymo tikimybė",
+    x = "Pelningo apsilankymo dažniai",
     y = NULL
   ) +
   theme_minimal(base_size = 20) +

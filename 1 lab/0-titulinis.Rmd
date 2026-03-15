@@ -78,7 +78,14 @@ ką nors nusipirks, ir, nustatyti kokie faktoriai veikia prisijungusio naudotojo
 \subsection*{Uždaviniai}
 
 Norint pasiekti savo užsibrėžto tikslo, išsikėlėme šiuos uždavinius:
+# - Atlikti pradinę naudotojo prisijungimo duomenų analizę ir palyginti pelningų ir nepelningų prisijungimų santykį.
+# - Spręsti duomenų disbalanso problemą naudojantis SMOTE metodą, kadangi nepelningų prisijungimų daug daugiau nei pelningų.
+# - Iš logit, probit, cloglog modelių parinkti mums tinkamiausią pagal bendrą tikslumą, F1 matą ir kitus modelio gerumą rodančius rodiklius.
 
+- Ištirti prisijungusių naudotojų prie internetinės parduotuvės sesijų charakteristikas.
+- Ištirti pelningų sesijų dažnį ir santykį.
+- Sudaryti ir palyginti skirtingų statistinių modelių klasifikavimo tikslumą.
+- Optimizuoti pasirinktą prognozavimo modelį.
 
 \pagebreak
 \listoftables
