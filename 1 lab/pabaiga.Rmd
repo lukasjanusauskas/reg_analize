@@ -20,3 +20,5 @@ tobulinant katalogą, svetainę ar strategiją.
 Taip pat, nustatytdami kokie faktoriai neigiamai įtakoja sesijos pelningumo tikimybę, 
 galima nustatyti kokios katalogo dalys ar kokie rinkos segmentai yra probleminiai,
 kur galima pasitempti ir patobulinti strategiją.
+
+\pagebreak
