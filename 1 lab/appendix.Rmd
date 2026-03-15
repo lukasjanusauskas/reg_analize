@@ -1,11 +1,12 @@
-
 # Šaltinių sąrašas
-<div id="refs"></div>
 
-# A priedas {-}
+::: {#refs}
+:::
+
+# A priedas {.unnumbered}
+
 \renewcommand{\thetable}{A.\arabic{table}}
-\setcounter{table}{0}                    
-
+\setcounter{table}{0}
 \renewcommand{\thefigure}{A.\arabic{figure}}
 \setcounter{figure}{0}
 
@@ -31,16 +32,25 @@ ggplot(df_long, aes(x = Value)) +
   theme_minimal(base_size = 20)
 ```
 
-
 ```{r}
 make_cross_table(df, "VisitorType")
+
+```
+
+\newpage
+
+```{r}
 make_cross_table(df, "Region")
 make_cross_table(df, "Weekend")
 make_cross_table(df, "Month")
 ```
 
-# B priedas {-}
+# B priedas {.unnumbered}
+
 ## DI naudojimas
-Naudotas Google Gemini 3 Flash Preview, kad patikrinti ar surašyti
-uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti
-taškus į kablelius, kad būtų lietuviškas formatavimas.
+
+Naudotas Google Gemini 3 Flash Preview, kad patikrinti ar surašyti uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti taškus į kablelius, kad būtų lietuviškas formatavimas.
+
+Naudotas „Claude“ ieškant R funkcijų atitikmenų „Python“ kalboje bei braižant grafikus.
+
+ChatGPT – gramatinėms klaidoms taisyti.
