@@ -10,3 +10,26 @@ final_model <- stats::step(null_model,
      scope = list(lower = null_model, upper = full_model),
      direction = "forward")
 ```
+Atliekamas galutinio modelio kokybės įvertinimas naudojant testinę imtį. Pirmiausia apskaičiuojamos tikimybės, kad stebėjimai priklauso teigiamai klasei, o pagal pasirinktą $0,5$ slenkstį nustatomos prognozuotos klasės. Tuomet apskaičiuojami modelio kokybės rodikliai: AUC (plotas po ROC kreive), kuris parodo modelio gebėjimą atskirti klases, ir F1 rodiklis. Gauti rezultatai pateikti \ref{mt} lentelėje.
+
+```{r}
+probs_final <- predict(final_model, newdata = test_df, type = "response")
+roc_final <- roc(test_df$Revenue, pred_logit, quiet = TRUE)
+
+pred_final <- ifelse(probs_final > 0.5, 1, 0)
+
+cm1 <- confusionMatrix(factor(pred_final), factor(test_df$Revenue), positive = "1")
+
+
+results <- data.frame(
+  AUC = as.numeric(roc_final$auc),
+  F1 = cm1$byClass[["F1"]]
+)
+
+kable(
+  results,
+  digits = 3,
+  col.names = c("AUC", "F1"),
+  caption = "Galutinio modelio metrikos\\label{mt}"
+)
+```

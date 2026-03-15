@@ -29,7 +29,10 @@ conflict_prefer("step","stats")
 
 ## Duomenų aprašymas
 
-Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository* [@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir \ref{tab:cat_features} lentelėse.
+Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository*
+[@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535
+duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir
+\ref{tab:cat_features} lentelėse.
 
 ```{r}
 num_features <- data.frame(
@@ -63,7 +66,6 @@ num_features <- data.frame(
 knitr::kable(num_features, 
       caption = "Kiekybininių kintamųjų aprašymas\\label{tab:num_features}")
 ```
-
 
 ```{r}
 cat_features <- data.frame(
@@ -124,8 +126,7 @@ df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
 Duomenų aprašyme autoriai teigia, kad praleistų reikšmių nėra. Mes
-pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų
-reikšmių nėra.
+pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų reikšmių nėra.
 
 ```{r, echo=FALSE, include=FALSE}
 missing_table <- data.frame(
@@ -276,11 +277,11 @@ df <- df %>%
   select( -c("TrafficType") ) 
 ```
 
-Stulpeliniuose grafikuose (žr. \ref{fig:pelningo_stulpel} pav.) pavaizduota,
-kaip dažnai sesijoje įvyksta pirkimas, pagal
-skirtingus kategorinius požymius. Čia pateikiame parinktus kategorinius
-požymius, ne visus, kadangi kiti kategoriniai požymiai buvo nereikšmingi
-arba trivialūs.
+Stulpeliniuose grafikuose (žr. \ref{fig:pelningo_stulpel} pav.)
+pavaizduota, kaip dažnai sesijoje įvyksta pirkimas, pagal skirtingus
+kategorinius požymius. Čia pateikiame parinktus kategorinius požymius,
+ne visus, kadangi kiti kategoriniai požymiai buvo nereikšmingi arba
+trivialūs.
 
 Matome, kad sesijos pelningumo santykinis dažnis skiriasi skirtingais
 mėnesiais, tai priklauso nuo internetinės parduotuvės pobūdžio, produktų
