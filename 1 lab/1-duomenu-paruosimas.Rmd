@@ -253,6 +253,8 @@ lentelėse. Taip pat kintamojo „Month“ lygmuo „Feb“ (atitinkantis vasari
 mėnesį) turi tik tris stebėjimus, taigi pašalinsime ir vasario mėnesio
 stebėjimus. Kitos kryžminės dažnių lentelės pateiktos priede A.
 
+\newpage
+
 ```{r}
 make_cross_table <- function(data, column) {
   result <- data %>%
@@ -280,6 +282,11 @@ make_cross_table <- function(data, column) {
 ```{r echo=FALSE}
 make_cross_table(df, "OperatingSystems")
 make_cross_table(df, "Browser")
+```
+
+\newpage
+
+```{r}
 make_cross_table(df, "TrafficType")
 ```
 

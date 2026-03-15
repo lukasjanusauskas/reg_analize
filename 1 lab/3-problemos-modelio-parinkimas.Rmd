@@ -86,7 +86,7 @@ kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinė
 
 # Multikolinearumas
 
-Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis [@mlr_collinearity]. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb|ProductRelated| ir \verb|ProductRelated_Duration|) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
+Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis [@mlr_collinearity]. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb\|ProductRelated\| ir \verb\|ProductRelated_Duration\|) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
 
 ```{r}
 vif_table <- data.frame(
@@ -247,9 +247,9 @@ plot_cm <- function(df, title, incl_ylab) {
       ) +
       theme_minimal() +
       theme(
-        plot.title = element_text(hjust = 0.5, size = 20),
-        axis.title = element_text(size = 16),
-        axis.text  = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5, size = 15),
+        axis.title = element_text(size = 9),
+        axis.text  = element_text(size = 8),
         legend.position = "none"
       )
     
@@ -267,9 +267,9 @@ plot_cm <- function(df, title, incl_ylab) {
       ) +
       theme_minimal() +
       theme(
-        plot.title  = element_text(hjust = 0.5, size = 20),
-        axis.title  = element_text(size = 16),
-        axis.text   = element_text(size = 14),
+        plot.title  = element_text(hjust = 0.5, size = 15),
+        axis.title  = element_text(size = 9),
+        axis.text   = element_text(size = 8),
         axis.title.y = element_text(size = 0),
         legend.position = "none"
       )
@@ -285,7 +285,7 @@ p1 + p2 + p3
 
 ROC kreivės (žr. \ref{fig:roc_kreives} pav.) mums rodo, kad visi modeliai yra geresni už atsitiktinį modelį, kadangi jų ROC kreivės yra toli nuo 45$^{\circ}$ tiesės. Be to, AUC metrikos yra arti vieneto visiems trims atrinktiems modeliams. Darome išvadą, kad jei mūsų tikslas būtų teisingai klasifkuoti teigiamas atsako reikšmes su mažu klaidingų teigiamų skaičiumi (turėti aukštą jautrumą ir specifiškumą) - visi trys binarinio atsako modeliai būtų apytiksliailygiaverčiai ir tinkami klasifikuoti sesijų pelningumą. Tačiau atsižvelgiant į tai, jog mums reikia teisingai klasifikuoti ir neigiamus atsakus, kad galėtume atlikti atitinkamus pakeitimus, kad sumažintume nepelningų sesijų tikimybę, nei ROC kreivė, nei AUC metrika mums nėra svarbios.
 
-```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje\\label{fig:roc_kreives}", fig.width=4, fig.height=4}
+```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje\\label{fig:roc_kreives}", fig.width=7, fig.height=4}
 pred_logit   <- predict(logit,   newdata = test_df, type = "response")
 pred_probit  <- predict(probit,  newdata = test_df, type = "response")
 pred_cloglog <- predict(cloglog, newdata = test_df, type = "response")
@@ -386,6 +386,8 @@ Iš lentelės (žr. \ref{fig:nereiksmingi} pav.) galime pastebėti, kad laikas, 
 
 Pašalinus nereikšmingus kintamuosius (žr. \ref{tab:f1} lentelę), AIC kriterijus nežymiai sumažėjo, tačiau kartu sumažėjo ir F1 metrika, kuri atspindi modelio prognozavimo tikslumą. Kadangi pagrindinis modelio tikslas yra kuo tiksliau prognozuoti pirkimo tikimybę, buvo nuspręsta toliau naudoti pradinį modelį su visais kintamaisiais.
 
+\newpage
+
 ```{r}
 
 logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
@@ -401,7 +403,7 @@ coef_lentele <- data.frame(
   P_reikšmė = summary(logit)$coefficients[, "Pr(>|z|)"]
 )
 p_raw <- as.numeric(coef_lentele$P_reikšmė)
-coef_lentele$P_reikšmė <- ifelse(p_raw < 0.01, "< 0.01", as.character(round(p_raw, 2)))
+coef_lentele$P_reikšmė <- ifelse(p_raw < 0.01, "< 0,01", as.character(round(p_raw, 2)))
 
 coef_lentele$P_reikšmė <- ifelse(
   p_raw > 0.05,
