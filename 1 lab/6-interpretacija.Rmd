@@ -1,0 +1,66 @@
+## Interpretacija
+
+Kadangi pažingsninės regresijos metodu gavome taupesnį modelį, kurio tikslumo metrikos
+apylygės pilno modelio metrikoms, būtent jį naudosime, interpretuodami kintamųjų
+įtaką atsakui.
+Tam pasitelksime galimybių santykį (*angl. odds ratio*) $\text{Odds ratio} = \frac{P(Y=1 \mid X_j = x+1)/ P(Y=0 \mid X_j = x+1)}{P(Y=1 \mid X_j = x)/ P(Y=0 \mid X_j = x)} = e^{\beta_j}$.
+
+Iš \ref{tab:or} lentelės matome, kad esant Rugsėjo ar Lapkričio mėnesiui, tikimybė 
+pelningos sesijos padidėja atitinkamai 124 \% ir 298 \% palyginus su sesijomis kovo mėnesį.
+Tuo tarpu matome, jog Google Analytics suteiktų puslapių metrikos Exit Rate ir Bounce Rate
+neigiamai įtakoja sesijos pelningumą: šansų santykis artimas nuliui.
+Matome, kad sesijos iš pirmojo regiono turi didžiausią šansą baigtis užsakymu.
+Tuo tarpu,  sesijos penktame, aštuntame ir devintame regionuose turi tarp 50 ir 
+60 % mažesnį šansąbaigtis užsakymu, taigi šie regionai yra probleminiai - reikia
+atkreipti dėmesį kaip į juos būtų galima plėstis.
+Matome, kad sesijos iš antrosios operacinės sistemos turi 16 \% didesnę šansą būti 
+pelningomis, tuo tarpu ketivrtos ir aštuntos operacinių sistemų naudotojai atitinkamai
+38 ir 47 \% rečiau sesijos metu ką nors nusiperka.
+Laikas praleistas adinistraciniuose ir produktų puslapiuose šiame modelyje neįtakoja
+šanso, kad sesijos metu įvyks prikimas, tai gali reikšti internetinių puslapių surinkėjų 
+robotų veiklą arba, kad sąryšio tarp sesijos trukmės ir pirkimo šanso nėra.
+Taip pat sugrįžtantys pirkėjai turi maždaug 10 \% mažesnį šansą atlikti užsakymą
+parduotuvėje, kas atsispindi ir mūsų pradinėje analizėje.
+Taip pat, artėjant kokiai nors šventiniai dienai šansų santykis mažėja 30 \%.
+
+```{r}
+or <- exp(coef(final_model))[2:length(coef(final_model))]
+
+fmt <- function(x) {
+  if (x < 0.0001) {
+    return("\\textbf{<0,0001}")
+  }
+  else{
+    rounded <- round(x, 4)
+    rounded <- formatC(rounded, digits = 4, format = "f", big.mark = "") |>
+      gsub("\\.", ",", x = _)
+    label <- ifelse(x > 2 | x < 0.5,
+           paste0("\\textbf{", rounded, "}"),
+           rounded)
+    
+    return(label)
+  }
+}
+
+or_fmt <- sapply(or, fmt)
+
+# ── Split into two halves ─────────────────────────────────────────────────────
+mid   <- ceiling(length(or_fmt) / 2)
+left  <- or_fmt[1:mid]
+right <- or_fmt[(mid + 1):length(or_fmt)]
+
+# Pad right half with empty string if uneven number of coefficients
+if (length(right) < length(left)) right <- c(right, "")
+
+df_side <- data.frame(
+  `Kintamasis`    = names(or)[1:mid],
+  `Šansų santykis` = left,
+  `Kintamasis`    = c(names(or)[(mid + 1):length(or)], if (length(right) > length(or) - mid) "" else NULL),
+  `Šansų santykis` = right,
+  check.names = FALSE
+)
+
+rownames(df_side) <- NULL
+kable(df_side, align = c("l", "r", "l", "r"),
+      caption = "Pažingsninės regresijos metu patobulinto Logit modelio šansų santykiai\\label{tab:or}")
+```
