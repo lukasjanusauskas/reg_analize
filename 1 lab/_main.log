@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.29)  14 MAR 2026 23:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.29)  15 MAR 2026 12:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -582,9 +582,12 @@ Package pdftex.def Info: images/MIF.png  used on input line 103.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-[2
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 166.
+(c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
+File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+) [2
 
-] (./_main.lot
+{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}] (./_main.lot
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 2.
 (c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -626,94 +629,92 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 \tf@toc=\write5
 \openout5 = `_main.toc'.
 
-[5] [6{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}]
-ignored error: Infinite glue shrinkage found in box being split [7]
-<_main_files/figure-latex/unnamed-chunk-11-1.pdf, id=124, 722.7pt x 433.62pt>
-File: _main_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-11-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 386.
+[5] [6{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}] [7] [8]
+<_main_files/figure-latex/unnamed-chunk-13-1.pdf, id=143, 722.7pt x 433.62pt>
+File: _main_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-13-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 491.
 (pdftex.def)             Requested size: 722.69823pt x 433.61894pt.
 
-Overfull \hbox (0.64954pt too wide) in paragraph at lines 391--400
+Overfull \hbox (0.64954pt too wide) in paragraph at lines 496--505
 [][]\T1/lmr/m/n/10 2[] grafike i² kintam[]j[] ^^RAdministrative_Duration``, ^^RInformational_Duration`` ir ^^RProductRelated_Duration``
  []
 
-<_main_files/figure-latex/unnamed-chunk-12-1.pdf, id=126, 722.7pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-12-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 403.
+<_main_files/figure-latex/unnamed-chunk-14-1.pdf, id=145, 722.7pt x 289.08pt>
+File: _main_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-14-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 508.
 (pdftex.def)             Requested size: 722.69823pt x 289.07928pt.
-[8 <./_main_files/figure-latex/unnamed-chunk-11-1.pdf>]
-<_main_files/figure-latex/unnamed-chunk-13-1.pdf, id=135, 722.7pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-13-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 419.
+<_main_files/figure-latex/unnamed-chunk-15-1.pdf, id=147, 722.7pt x 289.08pt>
+File: _main_files/figure-latex/unnamed-chunk-15-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-15-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-15-1.pdf  used on input line 524.
 (pdftex.def)             Requested size: 722.69823pt x 289.07928pt.
 
-LaTeX Warning: Citation `chawla2002smote' on page 9 undefined on input line 431.
+LaTeX Warning: Citation `chawla2002smote' on page 9 undefined on input line 536.
 
-[9 <./_main_files/figure-latex/unnamed-chunk-12-1.pdf> <./_main_files/figure-latex/unnamed-chunk-13-1.pdf>]
-<_main_files/figure-latex/unnamed-chunk-18-1.pdf, id=157, 794.97pt x 794.97pt>
-File: _main_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-18-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-18-1.pdf  used on input line 446.
+[9 <./_main_files/figure-latex/unnamed-chunk-13-1.pdf>] [10 <./_main_files/figure-latex/unnamed-chunk-14-1.pdf> <./_main_files/figure-latex/unnamed-chunk-15-1.pdf>]
+<_main_files/figure-latex/unnamed-chunk-20-1.pdf, id=176, 794.97pt x 794.97pt>
+File: _main_files/figure-latex/unnamed-chunk-20-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-20-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-20-1.pdf  used on input line 551.
 (pdftex.def)             Requested size: 794.96806pt x 794.96806pt.
-
-Underfull \hbox (badness 4441) in paragraph at lines 468--468
-[]\T1/lmr/m/n/10 6 []lentel
+[11 <./_main_files/figure-latex/unnamed-chunk-20-1.pdf>]
+Underfull \hbox (badness 4441) in paragraph at lines 573--573
+[]\T1/lmr/m/n/10 8 []lentel
 e[]: Binarinio atsako modeli[] apmokyt[] internetin
 es
  []
 
-[10 <./_main_files/figure-latex/unnamed-chunk-18-1.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 527--527
-[]\T1/lmr/m/n/10 7 []lentel
+
+Underfull \hbox (badness 10000) in paragraph at lines 632--632
+[]\T1/lmr/m/n/10 9 []lentel
 e[]: Binarinio atsako modeli[] tikslumo metrikos,
  []
 
-<_main_files/figure-latex/unnamed-chunk-21-1.pdf, id=169, 433.62pt x 216.81pt>
-File: _main_files/figure-latex/unnamed-chunk-21-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-21-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-21-1.pdf  used on input line 585.
+[12]
+<_main_files/figure-latex/unnamed-chunk-23-1.pdf, id=198, 433.62pt x 216.81pt>
+File: _main_files/figure-latex/unnamed-chunk-23-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-23-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-23-1.pdf  used on input line 690.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
-<_main_files/figure-latex/unnamed-chunk-22-1.pdf, id=170, 433.62pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-22-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-22-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-22-1.pdf  used on input line 592.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-[11] [12 <./_main_files/figure-latex/unnamed-chunk-21-1.pdf> <./_main_files/figure-latex/unnamed-chunk-22-1.pdf>]
-<_main_files/figure-latex/unnamed-chunk-26-1.pdf, id=192, 867.24pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-26-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-26-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-26-1.pdf  used on input line 653.
+<_main_files/figure-latex/unnamed-chunk-24-1.pdf, id=200, 361.35pt x 216.81pt>
+File: _main_files/figure-latex/unnamed-chunk-24-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-24-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-24-1.pdf  used on input line 709.
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
+[13 <./_main_files/figure-latex/unnamed-chunk-23-1.pdf> <./_main_files/figure-latex/unnamed-chunk-24-1.pdf>] [14]
+<_main_files/figure-latex/unnamed-chunk-30-1.pdf, id=220, 867.24pt x 289.08pt>
+File: _main_files/figure-latex/unnamed-chunk-30-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-30-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-30-1.pdf  used on input line 860.
 (pdftex.def)             Requested size: 867.2379pt x 289.07928pt.
 
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.655 kiekviename puslapio tipui}
+l.862 kiekviename puslapio tipui}
                                  
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.673 \end{longtable}
-                     
-ignored error: Infinite glue shrinkage found in box being split [13 <./_main_files/figure-latex/unnamed-chunk-26-1.pdf>]
+l.880 \end{longtable}
+                      [15 <./_main_files/figure-latex/unnamed-chunk-30-1.pdf>]
 pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.697 \end{longtable}
+l.904 \end{longtable}
                      
 pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.714 \end{longtable}
+l.921 \end{longtable}
                      
 pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.738 \end{longtable}
-                      [14] (./_main.aux)
+l.945 \end{longtable}
+                      [16] (./_main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-14>
@@ -723,18 +724,18 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 13007 strings out of 469519
- 206843 string characters out of 5468255
- 659644 words of memory out of 5000000
- 41400 multiletter control sequences out of 15000+600000
- 668994 words of font info for 66 fonts, out of 8000000 for 9000
+ 13069 strings out of 469519
+ 208108 string characters out of 5468255
+ 662171 words of memory out of 5000000
+ 41447 multiletter control sequences out of 15000+600000
+ 675332 words of font info for 69 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 89i,11n,93p,542b,615s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on _main.pdf (14 pages, 7473237 bytes).
+ 89i,12n,93p,542b,569s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi5.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb>
+Output written on _main.pdf (16 pages, 7480886 bytes).
 PDF statistics:
- 308 PDF objects out of 1000 (max. 8388607)
- 252 compressed objects within 3 object streams
- 54 named destinations out of 1000 (max. 500000)
- 145 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 357 PDF objects out of 1000 (max. 8388607)
+ 294 compressed objects within 3 object streams
+ 62 named destinations out of 1000 (max. 500000)
+ 169 words of extra memory for PDF output out of 10000 (max. 10000000)
 
