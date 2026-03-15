@@ -185,7 +185,7 @@ Kad susitvarkytume su išskirtimis, išimsime stebėjimus, kai bendras
 praleistas laikas svetainėse yra nulis. Taip pat, pašalinsime
 stebėjimus, jei laikas tam tikram svetainių tipui yra nenulinis (pvz.
 nurodyta, kad administraciniuose puslapiuose praleistas tam tikras
-laikas), tačiau to tipo puslapių nebuvo aplankyta. Ir atvirkščiai, jei
+laikas), tačiau to tipo puslapių nebuvo aplankyta.
 
 ```{r}
 df <- df %>% 
