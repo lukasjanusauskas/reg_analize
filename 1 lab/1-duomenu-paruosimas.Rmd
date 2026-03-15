@@ -388,8 +388,10 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   labs(
     title = "Logaritmuotų trukmių pasiskirtymas pagal pelningumą",
     x = NULL,
-    y = "Trukmė"
+    y = "Trukmė",
+    fill = "Pelningas"
   ) +
+  scale_fill_discrete(labels = c("FALSE" = "Ne", "TRUE" = "Taip")) + 
   theme_minimal(base_size = 18) +
   theme(
     axis.ticks.x = element_blank(),
@@ -424,15 +426,17 @@ df_long <- df_with_revenue %>%
   )
 
 ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
-  geom_violin(alpha = 0.6, trim = FALSE, color = NA) +  # thinner violin outline
-  geom_boxplot(alpha = 0.1, linewidth = 0.3) +               # thinner boxplot outline
+  geom_violin(alpha = 0.6, trim = FALSE, color = NA) +
+  geom_boxplot(alpha = 0.1, linewidth = 0.3) +
   facet_wrap(~variable, scales = "free_y", ncol=3) +
   scale_y_log10(labels = label_number(decimal.mark = ",")) +
   labs(
-    title = "Logaritmuotų reikšmių pasiskirtymas pagal pelningumą",
+    title = "Logaritmuotų trukmių pasiskirtymas pagal pelningumą",
     x = NULL,
-    y = "Logaritmuota reikšmė"
+    y = "Trukmė",
+    fill = "Pelningas"
   ) +
+  scale_fill_discrete(labels = c("FALSE" = "Ne", "TRUE" = "Taip")) + 
   theme_minimal(base_size = 18) +
   theme(
     axis.ticks.x = element_blank(),
