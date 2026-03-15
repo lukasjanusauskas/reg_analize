@@ -6,5 +6,6 @@ rmd_files: [
   "3-problemos-modelio-parinkimas.Rmd",
   "4-slenkscio-parinkimas_2.Rmd",
   "5-pazingsnine-regresija.Rmd",
+  "6-interpretacija.Rmd",
   "appendix.Rmd"
 ]

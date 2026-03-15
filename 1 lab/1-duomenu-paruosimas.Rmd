@@ -9,6 +9,7 @@ library(dplyr)
 library(tidyr)
 library(knitr)
 library(ggplot2)
+library(scales)
 library(corrplot)
 library(GGally)
 library(caret)
@@ -64,7 +65,7 @@ num_features <- data.frame(
 )
 
 knitr::kable(num_features, 
-      caption = "Kiekybininių kintamųjų aprašymas\\label{tab:num_features}")
+      caption = "Kiekybinių kintamųjų aprašymas\\label{tab:num_features}")
 ```
 
 ```{r}
@@ -167,16 +168,16 @@ summary_tbl <- df %>%
   ) %>%
   pivot_longer(
     cols = everything(),
-    names_to = c("Kintamasis", "Kintamasis / Statistika"),
+    names_to = c("Kintamasis", "Statistika"),
     names_pattern = "^(.*)__(.*)$"
   ) %>%
-  pivot_wider(names_from = Kintamasis, values_from = value) %>%
+  pivot_wider(names_from = Statistika, values_from = value) %>%
   mutate(across(where(is.numeric), ~round(.x, 2)))
 
 knitr::kable(
-  t(summary_tbl),
+  summary_tbl,
+  digits = 2, format.args = list(decimal.mark = ","),
   caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}",
-  format.args = list(decimal.mark = ",", big.mark = " ")
 )
 ```
 
@@ -212,6 +213,7 @@ weekend_freq <- df %>%
 
 knitr::kable(
   weekend_freq,
+  digits = 2, format.args = list(decimal.mark = ","),
   caption = "Pelningų sesijų dažnių lentelė\\label{tab:revenue_freq}",
   align = c("l", "r", "r"),
   col.names = c('Pelningas apsilankymas', 'Dažnis', 'Santykinis dažnis, %')
@@ -301,7 +303,8 @@ categorical_cols <- c("Month", "OperatingSystems", "Weekend", "VisitorType")
 
 df$Month <- factor(
   df$Month,
-  levels = c("Jan","Feb","Mar","Apr","May","June","Jul","Aug","Sep","Oct","Nov","Dec")
+  # levels = c("Jan","Feb","Mar","Apr","May","June","Jul","Aug","Sep","Oct","Nov","Dec")
+  levels = c("Dec","Nov","Oct","Sep","Aug","Jul","June","May","Apr","Mar","Feb","Jan")
 )
 
 df <- df %>%
@@ -321,6 +324,7 @@ df_summary <- df_long %>%
 ggplot(df_summary, aes(x = Rev, y = Category)) +
   geom_col(fill="#2C7FB8") +
   facet_wrap(~Variable, scales = "free_y") +
+  scale_x_continuous(labels = label_number(decimal.mark = ",")) +
   labs(
     x = "Pelningo apsilankymo dažniai",
     y = NULL
@@ -360,7 +364,7 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   geom_violin(alpha = 0.6, trim = FALSE, color = NA) +  # thinner violin outline
   geom_boxplot(alpha = 0.1, linewidth = 0.3) +               # thinner boxplot outline
   facet_wrap(~variable, scales = "free_y", ncol=3) +
-  scale_y_log10() +
+  scale_y_log10(labels = label_number(decimal.mark = ",")) +
   labs(
     title = "Logaritmuotų trukmių pasiskirtymas pagal pelningumą",
     x = NULL,
@@ -403,7 +407,7 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   geom_violin(alpha = 0.6, trim = FALSE, color = NA) +  # thinner violin outline
   geom_boxplot(alpha = 0.1, linewidth = 0.3) +               # thinner boxplot outline
   facet_wrap(~variable, scales = "free_y", ncol=3) +
-  scale_y_log10() +
+  scale_y_log10(labels = label_number(decimal.mark = ",")) +
   labs(
     title = "Logaritmuotų reikšmių pasiskirtymas pagal pelningumą",
     x = NULL,

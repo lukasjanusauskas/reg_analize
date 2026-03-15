@@ -1,7 +1,7 @@
 # Slenksčio parinkimas
 
 Toliau, išbandysime parinkti optimalią ribą, pritaikydami Joudeno indeksą.
-Gautas ribas pateikiame \ref{tab:youden_res} lentelėje.
+Gautą ribą ir metrikas pateikiame \ref{tab:youden_res} lentelėje.
 Optimalios ribos parinkimas turi neigiamą tiek tikslumo tiek F1 mato atžvilgiu.
 Kaip matome, preciziškumas dar pamažėjo, nors jis ir taip buvo mažas prieš slenksčio 
 parinkimą.
@@ -14,7 +14,6 @@ pred_logit   <- predict(logit, newdata = test_df, type = "response")
 
 roc_logit <- roc(test_df$Revenue, pred_logit, quiet = TRUE)
 
-# ── Youden optimisation ───────────────────────────────────────────────────────
 youden_logit <- coords(
   roc_logit,
   x           = "best",
@@ -22,7 +21,6 @@ youden_logit <- coords(
   ret         = c("threshold", "sensitivity", "specificity", "ppv")
 )
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 f1 <- function(sens, ppv) 2 * (ppv * sens) / (ppv + sens)
 
 accuracy <- function(pred, actual, threshold) {
@@ -30,9 +28,8 @@ accuracy <- function(pred, actual, threshold) {
   mean(predicted_class == actual)
 }
 
-# ── Summary table ─────────────────────────────────────────────────────────────
 results <- data.frame(
-  `Riba`          = youden_logit$threshold,
+  `Slenkstis`          = youden_logit$threshold,
   `Jautrumas`     = youden_logit$sensitivity,
   `Preciziškumas` = youden_logit$ppv,
   `F1`            = f1(youden_logit$sensitivity, youden_logit$ppv),
@@ -41,6 +38,6 @@ results <- data.frame(
 )
 
 kable(t(results), digits = 4, format.args = list(decimal.mark = ","),
-      caption = "Logit modelio riba, Joudeno indeksas ir tikslumo matai\\label{tab:youden_res}",
+      caption = "Logit modelio slenkstis, Joudeno indeksas ir tikslumo matai\\label{tab:youden_res}",
       col.names = c("Matas/hiperparametras", "Vertė"))
 ```
