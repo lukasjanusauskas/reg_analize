@@ -177,7 +177,7 @@ summary_tbl <- df %>%
 knitr::kable(
   summary_tbl,
   digits = 2, format.args = list(decimal.mark = ","),
-  caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}",
+  caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}"
 )
 ```
 
@@ -188,12 +188,15 @@ nurodyta, kad administraciniuose puslapiuose praleistas tam tikras
 laikas), tačiau to tipo puslapių nebuvo aplankyta.
 
 ```{r}
-df <- df %>% 
+df <- df %>%
   filter(
-    !(df$Administrative_Duration + df$Informational_Duration + df$ProductRelated_Duration == 0) &
-    !( (df$Administrative_Duration != 0) & (df$Administrative == 0) ) &
-    !( (df$Informational_Duration != 0) & (df$Administrative == 0) ) &
-    !( (df$ProductRelated_Duration != 0) & (df$ProductRelated == 0) )
+    Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
+    !(Administrative == 0 & Administrative_Duration != 0),
+    !(Informational == 0 & Informational_Duration != 0),
+    !(ProductRelated == 0 & ProductRelated_Duration != 0),
+    !(Administrative > 0 & Administrative_Duration == 0),
+    !(Informational > 0 & Informational_Duration == 0),
+    !(ProductRelated > 0 & ProductRelated_Duration == 0)
   )
 ```
 
@@ -209,7 +212,8 @@ paprastai užtenka nedaug duomenų.
 weekend_freq <- df %>%
   group_by(Revenue) %>%
   summarise(Dažnis = n()) %>%
-  mutate(`Santykinis dažnis` = round(Dažnis / sum(Dažnis) * 100, 2))
+  mutate(`Santykinis dažnis` = round(Dažnis / sum(Dažnis) * 100, 2)) %>%
+  mutate(Revenue = ifelse(Revenue == TRUE, "Taip", "Ne"))
 
 knitr::kable(
   weekend_freq,
@@ -251,7 +255,8 @@ make_cross_table <- function(data, column) {
     group_by(!!sym(column), Revenue) %>%
     summarise(Dažnis = n(), .groups = "drop_last") %>%
     pivot_wider(names_from = Revenue, values_from = Dažnis, values_fill = 0) %>%
-    mutate(Bendrai = `FALSE` + `TRUE`)
+    mutate(Bendrai = `FALSE` + `TRUE`) %>%
+    ungroup()
   
   knitr::kable(
     result,
@@ -259,8 +264,12 @@ make_cross_table <- function(data, column) {
       deparse(substitute(column)), 
       " ir pelningumo kryžminė lentelė\\label{tab:",
       column, "}"),
-    col.names = c("", "Nepelninga", "Pelninga", "Bendrai")
-  )
+    col.names = c(column, "Nepelninga", "Pelninga", "Bendrai")
+  ) %>%
+    kableExtra::row_spec(
+      which(result$'FALSE' < 5 | result$'TRUE' < 5),
+      bold = TRUE, background = "#FFD700"
+    )
 }
 ```
 
