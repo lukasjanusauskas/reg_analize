@@ -64,7 +64,9 @@ abline(h = -log(3), col="red", lwd=2, lty=2)
 
 Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą empirinę ribą.
 
-Ištyrus stebėjimus, kurių $|Pirsono\ liekana| > 3$, pastebėjome gana panašų skaičių išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į stebėjimų skaičių išskirtys sudaro vos 0,7 - 1,6 %. Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, užtat visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0. Todėl manome, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus, todėl išskirčių nešalinsime.
+Ištyrus stebėjimus, kurių $|Pirsono\ liekana| > 3$, pastebėjome gana panašų skaičių išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į stebėjimų skaičių išskirtys sudaro vos 0,68 - 1,74 %. Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, užtat visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0. Todėl manome, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus, todėl išskirčių nešalinsime.
+
+\newpage
 
 ```{r}
 outlier_table <- data.frame(
@@ -325,6 +327,8 @@ ggroc(
     legend.justification = c(1, 0)
   )
 ```
+
+\newpage
 
 # Sąveikų ir kitų kintamųjų pridėjimas
 
