@@ -1,6 +1,8 @@
 
 # Šaltinių sąrašas
 
+<div id="refs"></div>
+
 # A priedas {-}
 \renewcommand{\thetable}{A.\arabic{table}}
 \setcounter{table}{0}                    

@@ -53,7 +53,7 @@ abline(h = -log(3), col="red", lwd=2)
 
 Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą empirinę ribą.
 
-Ištyrus stebėjimus, kurių \|Pirsono liekanos\| \> 3, pastebėjome gana panašų skaičių 
+Ištyrus stebėjimus, kurių $|Pirsono\ liekana| > 3$, pastebėjome gana panašų skaičių 
 išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į 
 stebėjimų skaičių išskirtys sudaro vos 0,7 - 1,6 \%.
 Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, 
