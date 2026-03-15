@@ -18,6 +18,8 @@ library(boot)
 library(car)
 library(QuantPsyc)
 library(conflicted)
+library(pROC)
+library(caret)
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 ```
@@ -26,7 +28,7 @@ conflict_prefer("filter", "dplyr")
 
 ## Duomenų aprašymas
 
-Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository* su iš viso 10535 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir \ref{tab:cat_features} lentelėse.
+Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository* [@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir \ref{tab:cat_features} lentelėse.
 
 ```{r}
 num_features <- data.frame(
@@ -120,9 +122,8 @@ int_faktoriai <- c(
 df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
-Duomenų aprašyme, esančiame *UCI Irvine Machine Learning Repository*
-duomenų portale, autoriai teigia, kad praleistų reikšmių nėra. Mes
-pasitikslinome, pasileidę atitinkamą \\verb\|R\| kodą - praleistų
+Duomenų aprašyme autoriai teigia, kad praleistų reikšmių nėra. Mes
+pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų
 reikšmių nėra.
 
 ```{r, echo=FALSE, include=FALSE}
@@ -141,7 +142,7 @@ skaitinių charakteristikų lentelę kiekybiniams kintamiesiems
 charakteristikų žymėjimai: Min - minimumas, $Q_n$ - $n$-tasis kvartilis,
 $\mu$ - vidurkis, Max - maximumas. \ref{tab:char} lentelėje matome, jog
 nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose
-nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijisiems
+nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijusiems
 su bendra apsilankymo trukme
 
 ```{r}
@@ -274,8 +275,8 @@ df <- df %>%
   select( -c("TrafficType") ) 
 ```
 
-Žiūrint iš stulpelinių grafikų (žr. \ref{fig:pelningo_stulpel} pav.),
-kuriuose pavaizduota tikimybė, jog sesijoje įvyks pirkimas, pagal
+Stulpeliniuose grafikuose (žr. \ref{fig:pelningo_stulpel} pav.) pavaizduota,
+kaip dažnai sesijoje įvyksta pirkimas, pagal
 skirtingus kategorinius požymius. Čia pateikiame parinktus kategorinius
 požymius, ne visus, kadangi kiti kategoriniai požymiai buvo nereikšmingi
 arba trivialūs.
@@ -371,13 +372,13 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   )
 ```
 
-„Google analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui
+„Google Analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui
 sesijos metu, labiau įtakoja pasirinkimą atliksti užsakymą (žr.
 \ref{fig:violinplots_metrics} pav.). „BounceRates“, kas yra dalis
 puslapių dalis, kuriuos naudotojai , neigiamai įtakoja pasirinkimą
 užsisakyti prekę iš parduotuvės. Taip pat neigiamai įtakoja ir
 „ExitRates“, kurį aprašėme duomenų aprašyme. Užtat vidutinis sesijos
-metu aplankytų puslapių „Google analytics“ įvertis („PageValues“)
+metu aplankytų puslapių „Google Analytics“ įvertis („PageValues“)
 teigiamai įtakoja sesijos pelningumą.
 
 ```{r fig.width=10, fig.height=4, fig.cap="Sesijos metu aplankytų puslapių požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots_metrics}"}

@@ -2,8 +2,8 @@
 
 Kadangi skirtumas tarp klasių stebėjimų skaičiaus yra labai didelis, spręsime šią
 problemą sugeneruodami daugiau mažesnės klasės (pelninga sesija) duomenų.
-Tam naudosime SMOTE-NC (*angl. Synthetic Minority Over-sampling TEchnique-Nominal Continuous*) algoritmą \cite{chawla2002smote}, kuris leidžia atlikti SMOTE tiek nominaliems tiek kiekybiniams kintamiesiems.
-Galiausiai gavome duomenų rinkinį, kuriame kiekviena klasė turi po 7300stebėjimų
+Tam naudosime SMOTE-NC (*angl. Synthetic Minority Over-sampling TEchnique-Nominal Continuous*) algoritmą [@chawla2002smote], kuris leidžia atlikti SMOTE tiek nominaliems tiek kiekybiniams kintamiesiems.
+Galiausiai gavome duomenų rinkinį, kuriame kiekviena klasė turi po 7300 stebėjimų.
 
 ```{r}
 
