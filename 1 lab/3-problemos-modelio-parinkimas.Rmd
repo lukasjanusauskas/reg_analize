@@ -7,7 +7,7 @@ library(pROC)
 ```
 
 ```{r}
-logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"))
+logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"), control = glm.control(maxit = 100, epsilon = 1e-8))
 probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'probit'))
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'))
 ```
@@ -119,11 +119,7 @@ probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(li
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
 ```
 
-Atsižvelgami į deviaciją padalintą iš laisvės laipsnių skaičiaus (pateikta \ref{tab:deviance} lentelėje),
-matome, kad modeliai tinkami, nes $\frac{D}{df} \approx 1$ visiems modeliams.
-Taip pat pastebime, kad deviacija yra mažiausia logistinės regresijos modelyje, kas
-mums sako, kad logistinės regresijos modelis paaiškina didesnę dalį dispersijos, taigi
-tikriausiai jis yra geresnis už kitus du modelius (*probit* ir *cloglog*).
+Atsižvelgami į deviaciją padalintą iš laisvės laipsnių skaičiaus (pateikta \ref{tab:deviance} lentelėje), matome, kad modeliai tinkami, nes $\frac{D}{df} \approx 1$ visiems modeliams. Taip pat pastebime, kad deviacija yra mažiausia logistinės regresijos modelyje, kas mums sako, kad logistinės regresijos modelis paaiškina didesnę dalį dispersijos, taigi tikriausiai jis yra geresnis už kitus du modelius (*probit* ir *cloglog*).
 
 ```{r}
 sum1 <- summary(logit)
@@ -287,16 +283,7 @@ p3 <- plot_cm(df3, "Cloglog", FALSE)
 p1 + p2 + p3
 ```
 
-ROC kreivės (žr. \ref{fig:roc_kreives} pav.) mums rodo, kad visi modeliai yra geresni 
-už atsitiktinį modelį, kadangi jų ROC kreivės yra toli nuo 45$^{\circ}$ tiesės.
-Be to, AUC metrikos yra arti vieneto visiems trims atrinktiems modeliams.
-Darome išvadą, kad jei mūsų tikslas būtų teisingai klasifkuoti teigiamas atsako reikšmes
-su mažu klaidingų teigiamų skaičiumi (turėti aukštą jautrumą ir specifiškumą) -
-visi trys binarinio atsako modeliai būtų apytiksliailygiaverčiai ir tinkami 
-klasifikuoti sesijų pelningumą.
-Tačiau atsižvelgiant į tai, jog mums reikia teisingai klasifikuoti ir neigiamus atsakus,
-kad galėtume atlikti atitinkamus pakeitimus, kad sumažintume nepelningų sesijų tikimybę,
-nei ROC kreivė, nei AUC metrika mums nėra svarbios.
+ROC kreivės (žr. \ref{fig:roc_kreives} pav.) mums rodo, kad visi modeliai yra geresni už atsitiktinį modelį, kadangi jų ROC kreivės yra toli nuo 45$^{\circ}$ tiesės. Be to, AUC metrikos yra arti vieneto visiems trims atrinktiems modeliams. Darome išvadą, kad jei mūsų tikslas būtų teisingai klasifkuoti teigiamas atsako reikšmes su mažu klaidingų teigiamų skaičiumi (turėti aukštą jautrumą ir specifiškumą) - visi trys binarinio atsako modeliai būtų apytiksliailygiaverčiai ir tinkami klasifikuoti sesijų pelningumą. Tačiau atsižvelgiant į tai, jog mums reikia teisingai klasifikuoti ir neigiamus atsakus, kad galėtume atlikti atitinkamus pakeitimus, kad sumažintume nepelningų sesijų tikimybę, nei ROC kreivė, nei AUC metrika mums nėra svarbios.
 
 ```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje\\label{fig:roc_kreives}", fig.width=4, fig.height=4}
 pred_logit   <- predict(logit,   newdata = test_df, type = "response")
@@ -371,7 +358,7 @@ F1_log_saveikos <- cm1$byClass[["F1"]]
 summary_logit_saveikos <- summary(logit_2)
 ```
 
-Patikrinus, ar nauji kintamieji yra reikšmingi, gavome, kad sąveikos, kaip ir vidutinis laikas, praleistas valdymo ar informaciniuose puslapiuose, yra statistiškai reikšmingi. Tačiau F1 testinėje aibėje padidėjo tik 0,0127, todėl galima teigti, kad naujų kintamųjų įtraukimas modelio našumą pagerino tik nežymiai, o praktinė tokio pagerėjimo nauda yra gana maža, todėl toliau jų nenaudosime.
+Patikrinus, ar nauji kintamieji yra reikšmingi, gavome, kad sąveikos, kaip ir vidutinis laikas, praleistas valdymo ar informaciniuose puslapiuose, yra statistiškai reikšmingi. Tačiau F1 testinėje aibėje padidėjo tik 0,0127 (žr. \ref{tab:saveikos} lentelę), todėl galima teigti, kad naujų kintamųjų įtraukimas modelio našumą pagerino tik nežymiai, o praktinė tokio pagerėjimo nauda yra gana maža, todėl toliau jų nenaudosime.
 
 ```{r}
 probs_final <- predict(logit, newdata = test_df, type = "response")
@@ -389,4 +376,86 @@ results$F1 <- format(results$F1, decimal.mark = ",", scientific = FALSE)
 
 kable(results,
       caption = "Logit modelių su papildomais kintamaisiais ir be jų F1 metrikos, apskaičiuotos internetinės parduotuvės duomenų testinėje aibėje.\\label{tab:saveikos}")
+```
+
+# Parametrų vertinimas
+
+Toliau įvertinsime modelio parametrus ir nustatysime, ar jie yra statistiškai reikšmingi. Kiekvieno parametro statistinis reikšmingumas tikrinamas naudojant t-testą, kurio pagrindu apskaičiuojama p-reikšmė. Jei p-reikšmė yra mažesnė už pasirinktą reikšmingumo lygmenį (0,05), parametras laikomas statistiškai reikšmingu, tai reiškia, kad atitinkamas kintamasis turi reikšmingą įtaką priklausomajam kintamajam.
+
+Iš lentelės (žr. \ref{fig:nereiksmingi} pav.) galime pastebėti, kad laikas, kurį lankytojas praleido paskyros valdymo ir informaciniuose puslapiuose, bei tai, kiek kartų lankytojas lankėsi informaciniuose puslapiuose, nėra statistiškai reikšmingi. Tačiau statistiškai reikšmingas yra kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose. Taip pat matome, kad statistiškai nereikšmingas yra vidutinis lankytojo aplankytų puslapių skaičius prieš baigiant sesiją, kai aplankyta tik viena prekė. Be to, statistiškai nereikšmingi pasirodė ir tokie kintamieji kaip savaitgalis bei ypatingos dienos efektas, o tai rodo, kad pirkimo sprendimas nepriklauso nuo to, ar sesija vyko savaitgalį ar artėjant šventėms.
+
+Patikrinus modelio be nereikšmingų kintamųjų prognozavimo F1 metriką ant testinės aibės (žr. \ref{tab:f1} lentelę), pastebėta, kad ji labai nežymiai sumažėjo, tačiau kartu sumažėjo ir AIC kriterijus, todėl toliau naudosime modelį be nereikšmingų kintamųjų.
+
+```{r}
+
+logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
+             control = glm.control(maxit = 500, epsilon = 1e-8))
+#summary(logit)
+
+```
+
+```{r}
+coef_lentele <- data.frame(
+  Kintamasis = rownames(summary(logit)$coefficients),
+  Z_statistika = summary(logit)$coefficients[, "Estimate"],
+  P_reikšmė = summary(logit)$coefficients[, "Pr(>|z|)"]
+)
+p_raw <- as.numeric(coef_lentele$P_reikšmė)
+coef_lentele$P_reikšmė <- ifelse(p_raw < 0.01, "< 0.01", as.character(round(p_raw, 2)))
+
+coef_lentele$P_reikšmė <- ifelse(
+  p_raw > 0.05,
+  paste0("\\textbf{", coef_lentele$P_reikšmė, "}"),
+  coef_lentele$P_reikšmė
+)
+
+knitr::kable(
+  coef_lentele,
+  caption = "Logit modelio koeficientų įverčiai ir jų statistinio reikšmingumo vertinimas.\\label{fig:nereiksmingi}",
+  escape = FALSE,
+  row.names = FALSE
+)
+```
+
+```{r}
+# Gauti kintamuosius kurių p > 0.05
+p_values <- summary(logit)$coefficients[, "Pr(>|z|)"]
+pasalinti <- names(p_values[p_values > 0.05])
+
+# Pašalinti intercept jei jis tarp jų
+pasalinti <- pasalinti[pasalinti != "(Intercept)"]
+
+# Gauti dabartinę formulę ir pašalinti kintamuosius
+sena_formule <- formula(logit)
+kintamieji <- attr(terms(sena_formule), "term.labels")
+likę <- kintamieji[!kintamieji %in% pasalinti]
+
+# Sukurti naują modelį
+nauja_formule <- as.formula(paste("Revenue ~", paste(likę, collapse = " + ")))
+logit_3 <- glm(nauja_formule, data = train_df_smote, family = binomial)
+
+#summary(logit_3)
+```
+
+```{r}
+probs_final <- predict(logit_3, newdata = test_df, type = "response")
+pred_final <- ifelse(probs_final > 0.5, 1, 0)
+cm1 <- confusionMatrix(factor(pred_final), factor(test_df_saveikos$Revenue), positive = "1")
+F1_pasalinus <- cm1$byClass[["F1"]]
+
+# AIC kriterijus
+AIC_pradinis <- AIC(logit)
+AIC_pasalinus <- AIC(logit_3)
+
+# Lentelė
+results <- data.frame(
+  Modelis = c("Pradinis", "Pašalinus nereikšmingus"),
+  F1 = c(F1_log, F1_pasalinus),
+  AIC = c(AIC_pradinis, AIC_pasalinus)
+)
+results$F1 <- format(results$F1, decimal.mark = ",", scientific = FALSE)
+results$AIC <- format(round(results$AIC, 2), decimal.mark = ",", scientific = FALSE)
+
+kable(results,
+      caption = "Logit modelių su nereikšmingais kintamaisiais ir be jų F1 metrikos ir AIC kriterijus, apskaičiuoti internetinės parduotuvės duomenų testinėje aibėje.\\label{tab:f1}")
 ```

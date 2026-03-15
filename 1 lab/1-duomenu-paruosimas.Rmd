@@ -8,6 +8,8 @@ editor_options:
 library(dplyr)
 library(tidyr)
 library(knitr)
+library(kableExtra)
+options(kableExtra.latex.load_packages = TRUE)
 library(ggplot2)
 library(scales)
 library(corrplot)
@@ -33,8 +35,9 @@ conflict_prefer("step","stats")
 Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository*
 [@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535
 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir
-\ref{tab:cat_features} lentelėse. Duomenų rinkinį sudaro 1 metų informacija,
-kuri yra surinkta iš *columbia.com.tr* puslapio [@columbia_website].
+\ref{tab:cat_features} lentelėse. Duomenų rinkinį sudaro 1 metų
+informacija, kuri yra surinkta iš *columbia.com.tr* puslapio
+[@columbia_website].
 
 ```{r}
 num_features <- data.frame(
