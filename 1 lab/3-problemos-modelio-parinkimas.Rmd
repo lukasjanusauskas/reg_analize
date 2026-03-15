@@ -73,7 +73,9 @@ outlier_table <- data.frame(
 )
 
 n <- nobs(logit)
-outlier_table$Dalis <- paste0(round(outlier_table$Išskirtys / n * 100, 2), "%")
+outlier_table$Dalis <- paste0(format(
+  round(outlier_table$Išskirtys / n * 100, 2), 
+  decimal.mark = ","), " %")
 
 kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinės paruodutvės duomenimis išskirtys mokymo aibėje, identifikuotos pagal Pirsono liekanų kriterijų\\label{tab:pearson_counts}")
 ```
@@ -124,7 +126,11 @@ probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(li
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'), control = glm.control(maxit = 150, epsilon = 1e-8))
 ```
 
-Residual deviance / df kiekvienam modeliui pateikta \ref{tab:deviance} lentelėje.
+Atsižvelgami į deviaciją padalintą iš laisvės laipsnių skaičiaus (pateikta \ref{tab:deviance} lentelėje),
+matome, kad modeliai tinkami, nes $\frac{D}{df} \approx 1$ visiems modeliams.
+Taip pat pastebime, kad deviacija yra mažiausia logistinės regresijos modelyje, kas
+mums sako, kad logistinės regresijos modelis paaiškina didesnę dalį dispersijos, taigi
+tikriausiai jis yra geresnis už kitus du modelius (*probit* ir *cloglog*).
 
 ```{r}
 sum1 <- summary(logit)
@@ -132,7 +138,7 @@ sum2 <- summary(probit)
 sum3 <- summary(cloglog)
 
 dispersion_table <- data.frame(
-  Modelis = c("Logit", "Probit", "Cloglog"),
+  Modelis = c("*Logit*", "*Probit*", "*Cloglog*"),
   `Deviance / df` = c(
     sum1$deviance / sum1$df[2],
     sum2$deviance / sum2$df[2],
@@ -142,10 +148,10 @@ dispersion_table <- data.frame(
 
 kable(dispersion_table,
       digits = 4,
-      caption = "Modelių deviance
+      caption = "Binarinio atsako modelių deviacija, padalinta iš laisvės laipsnių skaičiaus
       \\label{tab:deviance}",
-      format = "latex",
-      booktabs = TRUE)
+      format.args = list(decimal.mark = ","),
+      col.names = c("Modelis", "$\\frac{D}{df}$"))
 ```
 
 
@@ -256,13 +262,17 @@ df3 <- cm_to_df(cm3, "Cloglog")
 
 plot_cm <- function(df, title, incl_ylab) {
   
-  df$Pct <- df$Freq / sum(df$Freq) * 100
+  # Calculate row totals and divide each cell by its row's total
+  df <- df %>%
+    group_by(Predicted) %>%
+    mutate(Pct = Freq / sum(Freq) * 100) %>%
+    ungroup()
   
   if (incl_ylab) {
     
     ggplot(df, aes(y = Predicted, x = Actual, fill = Pct)) +
       geom_tile(color = "white") +
-      geom_text(aes(label = sprintf("%.1f%%", Pct)), size = 16 / .pt) +
+      geom_text(aes(label = gsub(".", ",", sprintf("%.1f%%", Pct), fixed = TRUE)), size = 16 / .pt) +
       scale_y_discrete(limits = rev) +
       scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
       labs(
@@ -283,7 +293,7 @@ plot_cm <- function(df, title, incl_ylab) {
     
     ggplot(df, aes(y = Predicted, x = Actual, fill = Pct)) +
       geom_tile(color = "white") +
-      geom_text(aes(label = sprintf("%.1f%%", Pct)), size = 16 / .pt) +
+      geom_text(aes(label = gsub(".", ",", sprintf("%.1f%%", Pct), fixed = TRUE)), size = 16 / .pt) +
       scale_fill_gradient(low = "#E6F1FB", high = "#0C447C") +
       scale_y_discrete(limits = rev) +
       labs(
@@ -300,7 +310,6 @@ plot_cm <- function(df, title, incl_ylab) {
         legend.position = "none"
       )
   }
-  
 }
 
 p1 <- plot_cm(df1, "Logit", TRUE)
@@ -311,7 +320,7 @@ p1 + p2 + p3
 ```
 
 ROC kreivės (žr. \ref{fig:roc_kreives} pav.) mums rodo, kad visi modeliai yra geresni 
-už atsitiktinį modelį, kadangi jų ROC kreivės yra toli nuo tiesės $y=x$.
+už atsitiktinį modelį, kadangi jų ROC kreivės yra toli nuo 45$^{\circ}$ tiesės.
 Be to, AUC metrikos yra arti vieneto visiems trims atrinktiems modeliams.
 Darome išvadą, kad jei mūsų tikslas būtų teisingai klasifkuoti teigiamas atsako reikšmes
 su mažu klaidingų teigiamų skaičiumi (turėti aukštą jautrumą ir specifiškumą) -
@@ -321,7 +330,7 @@ Tačiau atsižvelgiant į tai, jog mums reikia teisingai klasifikuoti ir neigiam
 kad galėtume atlikti atitinkamus pakeitimus, kad sumažintume nepelningų sesijų tikimybę,
 nei ROC kreivė, nei AUC metrika mums nėra svarbios.
 
-```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje\\label{fig:roc_kreives}", fig.width=5, fig.height=3}
+```{r, fig.cap="ROC kreivės binarinio atsako modeliams klasifikuojant sesijos pelningumą interentinėje parduotuvėje\\label{fig:roc_kreives}", fig.width=4, fig.height=4}
 pred_logit   <- predict(logit,   newdata = test_df, type = "response")
 pred_probit  <- predict(probit,  newdata = test_df, type = "response")
 pred_cloglog <- predict(cloglog, newdata = test_df, type = "response")
@@ -329,31 +338,37 @@ pred_cloglog <- predict(cloglog, newdata = test_df, type = "response")
 roc_logit   <- roc(test_df$Revenue, pred_logit,   quiet = TRUE)
 roc_probit  <- roc(test_df$Revenue, pred_probit,  quiet = TRUE)
 roc_cloglog <- roc(test_df$Revenue, pred_cloglog, quiet = TRUE)
-
-# ── Font size via par() ───────────────────────────────────────────────────────
-par(cex.main = 1.15,   # title
-    cex.axis = 0.9,   # axis tick labels
-    cex.lab  = 0.95)   # axis titles
-
-plot(roc_logit,
-     col  = "steelblue",
-     lwd  = 2,
-     main = "ROC kreivės binarinio atsako modeliams",
-     xlim = c(1, 0),
-     xlab = "Specifiškumas",
-     ylab = "Jautrumas")
-plot(roc_probit,  col = "darkorange",  lwd = 2, add = TRUE)
-plot(roc_cloglog, col = "forestgreen", lwd = 2, add = TRUE)
-
-legend("bottomright",
-       legend = c(
-         paste0("Logit   (AUC=", round(auc(roc_logit),   3), ")"),
-         paste0("Probit  (AUC=", round(auc(roc_probit),  3), ")"),
-         paste0("Cloglog (AUC=", round(auc(roc_cloglog), 3), ")")
-       ),
-       col    = c("steelblue", "darkorange", "forestgreen"),
-       lwd    = 2,
-       cex    = 0.75)   # legend text size
+ggroc(
+  list(Logit = roc_logit, Probit = roc_probit, Cloglog = roc_cloglog),
+  legacy.axes = TRUE,
+  lwd = 1.25
+) +
+  scale_color_manual(
+    values = c("Logit" = "steelblue", "Probit" = "darkorange", "Cloglog" = "forestgreen"),
+    labels = c(
+      paste0("Logit   (AUC=", round(auc(roc_logit),   3), ")"),
+      paste0("Probit  (AUC=", round(auc(roc_probit),  3), ")"),
+      paste0("Cloglog (AUC=", round(auc(roc_cloglog), 3), ")")
+    )
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  coord_fixed(ratio = 1) +
+  labs(
+    title = "ROC kreivės binarinio\natsako modeliams",
+    x     = "1-Specifiškumas",
+    y     = "Jautrumas",
+    color = NULL
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    aspect.ratio = 1,
+    plot.title   = element_text(size = rel(1.15)),
+    axis.text    = element_text(size = rel(0.9)),
+    axis.title   = element_text(size = rel(0.95)),
+    legend.text  = element_text(size = rel(0.75)),
+    legend.position      = c(0.98, 0.02),
+    legend.justification = c(1, 0)
+  )
 ```
 
 
