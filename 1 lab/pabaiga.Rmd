@@ -1,16 +1,6 @@
 # Išvados
 
-1. Logistinės regresijos modelis klasifikuoja sesijos pelningumą internetinės paruodtuvės
-duomenims geriausiai, atsižvelgiant į tikslumą (), AUC ir F1 matą
-2. *Probit* modelio tikslumas yra panašus logistinės regresijos tikslumui, klasifikuojant 
-ar sesija baigsis užsakymu, ar ne (*probit* F1 matas - 0,61, o *logit* - 0,64).
-3. *cloglog* modelis nėra tinkamas šiai klasifikavimo užduočiai - 
-4. Joudeno indekso metodu optimizuotas slenkstis nėra tinkamas - jis nepagerina modelio
-F1 mato ar tikslumo.
-4. Naudotojo operacinė sistema, regionas ir naršyklė yra svarbūs faktoriai, klasifikuojant 
-sesijos pelningumą.
-5. Taip pat ir „Google Analytics“ pateiktos aplankytų puslapių „Exit Rate“ ir „Bounce Rate“
-metrikos yra labai svarbios, klasifikuojant sesijos pelningumą.
+Remiantis atlikta analize, logistinės regresijos modelis geriausiai klasifikuoja internetinės parduotuvės sesijų pelningumą, įvertinus modelio tikslumą, AUC reikšmę bei F1 matą. Nustatyta, kad „Probit“ modelio gebėjimas prognozuoti, ar sesija pasibaigs užsakymu, yra panašus į logistinės regresijos rezultatus: „Probit“ modelio F1 matas siekia 0,64, o „Logit“ – 0,65. Tuo tarpu „Cloglog“ modelis šiai klasifikavimo užduočiai nėra tinkamas, kadangi jo klasifikavimo tikslumas yra mažesnis nei dominuojančios klasės dalis duomenyse. Tyrimo metu pastebėta, kad Joudono indekso metodu optimizuotas klasifikavimo slenkstis nebuvo efektyvus – jis nepagerino nei modelio tikslumo, nei F1 mato, todėl jo taikymas šiuo atveju nėra tikslingas. Analizuojant kintamųjų įtaką, išaiškėjo, kad vartotojo operacinė sistema, regionas ir naudojama naršyklė yra statistiškai reikšmingi veiksniai prognozuojant sesijos pelningumą. Taip pat itin svarbios pasirodė „Google Analytics“ pateikiamos elgsenos metrikos – „Exit Rate“ ir „Page Values“, kurios turi tiesioginę įtaką galutiniam sesijos rezultatui.
 
 # Praktinė nauda
 
