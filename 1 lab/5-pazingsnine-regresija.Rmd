@@ -3,7 +3,8 @@
 Atlikome kintamųjų atranką logistinės regresijos modeliui, naudodami \textit{forward selection} metodą. Pradėdami nuo paprasčiausio modelio, kuriame nėra kovariančių, palaipsniui pridėjome tuos kintamuosius, kurie labiausiai pagerina modelio kokybę. Modelio tinkamumas buvo vertinamas pagal AIC (\textit{Akaike informacijos kriterijų}), siekiant rasti geriausią balansą tarp modelio tikslumo ir sudėtingumo.
 
 ```{r,results='hide'}
-null_model <- glm(Revenue ~ 1, data = train_df, family = binomial("logit"))
+set.seed(10)
+null_model <- glm(Revenue ~ 1, data = train_df_smote, family = binomial("logit"))
 full_model <- logit
 
 final_model <- stats::step(null_model,
@@ -14,22 +15,24 @@ Atliekamas galutinio modelio kokybės įvertinimas naudojant testinę imtį. Pir
 
 ```{r}
 probs_final <- predict(final_model, newdata = test_df, type = "response")
-roc_final <- roc(test_df$Revenue, pred_logit, quiet = TRUE)
 
 pred_final <- ifelse(probs_final > 0.5, 1, 0)
-
-cm1 <- confusionMatrix(factor(pred_final), factor(test_df$Revenue), positive = "1")
+roc_final <- roc(test_df$Revenue, pred_final, quiet = TRUE)
+roc_t <- roc(test_df$Revenue, pred_logit, quiet = TRUE)
+cm <- confusionMatrix(factor(pred_final), factor(test_df$Revenue), positive = "1")
 
 
 results <- data.frame(
-  AUC = as.numeric(roc_final$auc),
-  F1 = cm1$byClass[["F1"]]
+  models = c("Galutinis","Logit"),
+  AUC = c(as.numeric(roc_final$auc),as.numeric(roc_t$auc)),
+  F1 = c(cm$byClass[["F1"]],cm1$byClass[["F1"]]),
+  Accuracy = c(cm$overall[["Accuracy"]],cm1$overall[["Accuracy"]])
 )
 
 kable(
   results,
   digits = 3,
-  col.names = c("AUC", "F1"),
-  caption = "Galutinio modelio metrikos\\label{mt}"
+  col.names = c("Modelis","AUC", "F1", "Tikslumas"),
+  caption = "Modelių metrikos\\label{mt}"
 )
 ```
