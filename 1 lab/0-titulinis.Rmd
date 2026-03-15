@@ -68,11 +68,18 @@ theme_set(theme_minimal(base_size = 16))
 
 \subsection*{Aktualumas}
 
+Nustatymas ar lankytojas išleis pinigų ir sėkmingai įvykdys pirkimą
+yra labai aktuali užduotis elektroninių parduotuvių savininkams.
+Surinktų duomenų apie pirkėją analizė gali padėti nustatyti kokie
+pirkėjai yra labiau linkę apsipirkti parduotuvėje ir kurti tikslines
+reklamas pirkėjams, taip pat tobulinti patį pardavimo procesą, jeigu
+nustatoma kodėl pirkėjas tik apsilankė puslapyje, tačiau nieko nenusipirko.
+
 
 \subsection*{Tikslas}
 
 Mūsų tikslas yra prognozuoti ar pirkėjas, prisijungęs prie internetinės parduotuvės, 
-ką nors nusipirks, ir, nustatyti kokie faktoriai veikia prisijungusio naudotojo pasirinkimą.
+ką nors nusipirks ir nustatyti kokie faktoriai veikia prisijungusio naudotojo pasirinkimą.
 
 
 \subsection*{Uždaviniai}
@@ -88,9 +95,9 @@ Norint pasiekti savo užsibrėžto tikslo, išsikėlėme šiuos uždavinius:
 
 2. Ištirti pelningų sesijų dažnį ir santykį.
 
-3.  Sudaryti ir palyginti skirtingų statistinių modelių klasifikavimo tikslumą.
+3. Sudaryti ir palyginti logit, probit, cloglog binarinio klasifikavimo modelių klasifikavimo tikslumą.
 
-4. Optimizuoti pasirinktą prognozavimo modelį.
+4. Optimizuoti pasirinktą binarinio klasifikavimo modelį, kuris skirtas nuspėti ar naudotojas įvykdys pirkimą.
 
 \pagebreak
 \listoftables
