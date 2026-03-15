@@ -308,4 +308,11 @@ test_df <- test_df %>%
      Average_Administrative = 0,
      Average_Informational = 0
    ))
+
+
+logit_2 <- glm(Revenue ~ ., data = train_df, family = binomial("logit"))
+probs_final <- predict(logit_2, newdata = test_df, type = "response")
+pred_final <- ifelse(probs_final > 0.5, 1, 0)
+cm1 <- confusionMatrix(factor(pred_final), factor(test_df$Revenue), positive = "1")
+cm1$byClass[["F1"]]
 ```
