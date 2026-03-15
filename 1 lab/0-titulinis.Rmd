@@ -88,9 +88,9 @@ Norint pasiekti savo užsibrėžto tikslo, išsikėlėme šiuos uždavinius:
 
 2. Ištirti pelningų sesijų dažnį ir santykį.
 
-3.  Sudaryti ir palyginti skirtingų statistinių modelių klasifikavimo tikslumą.
+3. Sudaryti ir palyginti logit, probit, cloglog binarinio klasifikavimo modelių klasifikavimo tikslumą.
 
-4. Optimizuoti pasirinktą prognozavimo modelį.
+4. Optimizuoti pasirinktą binarinio klasifikavimo modelį, kuris skirtas nuspėti ar naudotojas įvykdys pirkimą.
 
 \pagebreak
 \listoftables
