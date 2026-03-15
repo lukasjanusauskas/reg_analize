@@ -12,7 +12,7 @@ probit <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(li
 cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(link = 'cloglog'))
 ```
 
-Išskirtis tikrinsime pasitelkę Kuko matą (*angl. Cook's distance*) ir Pirsono liekanas (*angl. Pearson residuals*). Kad identifikuotume potencialias išskirtis, tiriant Kuko matą $D_i$ naudosime vieną iš empirinių taisyklių $D_i < 1$, t.y. stebėjimą žymėsime kaip išskirtį, jei Kuko matas didesnis už 1. Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę: $|Pirsono\ liekana| > 3$.
+Išskirtis tikrinsime pasitelkę Kuko matą (*angl. Cook's distance*) ir Pirsono liekanas (*angl. Pearson residuals*). Kad identifikuotume potencialias išskirtis, tiriant Kuko matą $D_i$ naudosime vieną iš empirinių taisyklių $D_i < 1$, t.y. stebėjimą žymėsime kaip išskirtį, jei Kuko matas didesnis už 1 [@tiesiniai_modeliai]. Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę: $|Pirsono\ liekana| > 3$.
 
 ```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
 par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=1.8, cex.lab=1.5, cex.axis=1.4)
@@ -86,7 +86,7 @@ kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinė
 
 # Multikolinearumas
 
-Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis \cite{mlr_collinearity}. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb|ProductRelated| ir \verb|ProductRelated_Duration|) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
+Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis [@mlr_collinearity]. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb|ProductRelated| ir \verb|ProductRelated_Duration|) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
 
 ```{r}
 vif_table <- data.frame(

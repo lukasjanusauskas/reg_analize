@@ -42,4 +42,6 @@ make_cross_table(df, "Month")
 
 # B priedas {-}
 ## DI naudojimas
-
+Naudotas Google Gemini 3 Flash Preview, kad patikrinti ar surašyti
+uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti
+taškus į kablelius, kad būtų lietuviškas formatavimas.

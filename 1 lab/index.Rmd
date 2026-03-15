@@ -23,4 +23,5 @@ header-includes:
 editor_options:
   markdown:
     wrap: sentence
+nocite: '@tiesiniai_modeliai @regresine_analize'
 ---
