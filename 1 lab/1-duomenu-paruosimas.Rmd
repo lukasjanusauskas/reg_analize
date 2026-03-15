@@ -18,12 +18,82 @@ library(boot)
 library(car)
 library(QuantPsyc)
 library(conflicted)
+library(pROC)
+library(caret)
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("step","stats")
 ```
 
 # Tyrimas
+
+## Duomenų aprašymas
+
+Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository* [@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535 duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir \ref{tab:cat_features} lentelėse.
+
+```{r}
+num_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "Administrative", 
+    "Administrative duration", 
+    "Informational", 
+    "Informational duration", 
+    "Product related", 
+    "Product related duration", 
+    "Bounce rate", 
+    "Exit rate", 
+    "Page value", 
+    "Special day"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido paskyros valdymo puslapiuose.",
+    "Kiek kartų lankytojas lankėsi informaciniuose puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido informaciniuose puslapiuose.",
+    "Kiek kartų lankytojas lankėsi parduodamų daiktų puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido  parduodamų daiktų puslapiuose.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta tik viena prekė.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta daugiau nei viena prekė..",
+    "Vidutinė lankytojo aplankytų puslapių vertė.",
+    "Svetainės apsilankymo laiko artumas ypatingai dienai (pvz., šventei, išpardavimui)."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(num_features, 
+      caption = "Kiekybininių kintamųjų aprašymas\\label{tab:num_features}")
+```
+
+
+```{r}
+cat_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "OperatingSystems", 
+    "Browser", 
+    "Region", 
+    "TrafficType", 
+    "VisitorType", 
+    "Weekend", 
+    "Month", 
+    "Revenue"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Lankytojo operacinė sistema.",
+    "Lankytojo interneto naršyklė.",
+    "Geografinis regionas, iš kurio lankytojas pradėjo sesiją.",
+    "Šaltinis, iš kurio lankytojas atvyko į svetainę (pvz., reklama kitame puslapyje, SMS, tiesioginis).",
+    "Lankytojo tipas: „Naujas lankytojas“, „Sugrįžtantis lankytojas“ ir „Kitas“.",
+    "Ar apsilankymo data sutampa su savaitgaliu.",
+    "Apsilankymo datos mėnuo.",
+    "Ar seija buvo pelninga."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(cat_features, 
+      caption = "Kategorinių kintamųjų aprašymas\\label{tab:cat_features}")
+
+```
 
 ## Duomenų paruošimas
 
@@ -53,9 +123,8 @@ int_faktoriai <- c(
 df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
 ```
 
-Duomenų aprašyme, esančiame *UCI Irvine Machine Learning Repository*
-duomenų portale, autoriai teigia, kad praleistų reikšmių nėra. Mes
-pasitikslinome, pasileidę atitinkamą \\verb\|R\| kodą - praleistų
+Duomenų aprašyme autoriai teigia, kad praleistų reikšmių nėra. Mes
+pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų
 reikšmių nėra.
 
 ```{r, echo=FALSE, include=FALSE}
@@ -74,7 +143,7 @@ skaitinių charakteristikų lentelę kiekybiniams kintamiesiems
 charakteristikų žymėjimai: Min - minimumas, $Q_n$ - $n$-tasis kvartilis,
 $\mu$ - vidurkis, Max - maximumas. \ref{tab:char} lentelėje matome, jog
 nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose
-nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijisiems
+nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijusiems
 su bendra apsilankymo trukme
 
 ```{r}
@@ -207,8 +276,8 @@ df <- df %>%
   select( -c("TrafficType") ) 
 ```
 
-Žiūrint iš stulpelinių grafikų (žr. \ref{fig:pelningo_stulpel} pav.),
-kuriuose pavaizduota tikimybė, jog sesijoje įvyks pirkimas, pagal
+Stulpeliniuose grafikuose (žr. \ref{fig:pelningo_stulpel} pav.) pavaizduota,
+kaip dažnai sesijoje įvyksta pirkimas, pagal
 skirtingus kategorinius požymius. Čia pateikiame parinktus kategorinius
 požymius, ne visus, kadangi kiti kategoriniai požymiai buvo nereikšmingi
 arba trivialūs.
@@ -252,7 +321,7 @@ ggplot(df_summary, aes(x = Rev, y = Category)) +
   geom_col(fill="#2C7FB8") +
   facet_wrap(~Variable, scales = "free_y") +
   labs(
-    x = "Pelningo apsilankymo tikimybė",
+    x = "Pelningo apsilankymo dažniai",
     y = NULL
   ) +
   theme_minimal(base_size = 20) +
@@ -304,13 +373,13 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   )
 ```
 
-„Google analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui
+„Google Analytics“ metrikos, agreguotos kiekvienam aplankytam puslapiui
 sesijos metu, labiau įtakoja pasirinkimą atliksti užsakymą (žr.
 \ref{fig:violinplots_metrics} pav.). „BounceRates“, kas yra dalis
 puslapių dalis, kuriuos naudotojai , neigiamai įtakoja pasirinkimą
 užsisakyti prekę iš parduotuvės. Taip pat neigiamai įtakoja ir
 „ExitRates“, kurį aprašėme duomenų aprašyme. Užtat vidutinis sesijos
-metu aplankytų puslapių „Google analytics“ įvertis („PageValues“)
+metu aplankytų puslapių „Google Analytics“ įvertis („PageValues“)
 teigiamai įtakoja sesijos pelningumą.
 
 ```{r fig.width=10, fig.height=4, fig.cap="Sesijos metu aplankytų puslapių požymių smuiko formos ir stačiakampės diagramos pagal pelningumą\\label{fig:violinplots_metrics}"}

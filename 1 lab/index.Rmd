@@ -7,7 +7,6 @@ output:
 lang: lt
 bibliography: bibliografija.bib
 csl: harvard-cite-them-right.csl
-suppress-bibliography: true
 link-citations: true
 fig_caption: true
 extra_dependencies: ["float", "multicol"]
