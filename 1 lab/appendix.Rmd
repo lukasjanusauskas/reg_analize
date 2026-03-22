@@ -3,6 +3,8 @@
 ::: {#refs}
 :::
 
+\pagebreak
+
 # A priedas {.unnumbered}
 
 \renewcommand{\thetable}{A.\arabic{table}}
@@ -49,8 +51,8 @@ make_cross_table(df, "Month")
 
 ## DI naudojimas
 
-Naudotas Google Gemini 3 Flash Preview, kad patikrinti ar surašyti uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti taškus į kablelius, kad būtų lietuviškas formatavimas.
+Naudotas „Google Gemini 3 Flash Preview“, kad patikrinti ar surašyti uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti taškus į kablelius, kad būtų lietuviškas formatavimas.
 
-Naudotas „Claude“ ieškant R funkcijų atitikmenų „Python“ kalboje bei braižant grafikus.
+Naudotas „Claude“ ieškant *R* funkcijų atitikmenų *Python* kalboje bei braižant grafikus, surašant lenteles ir *R* aplinkoje.
 
-ChatGPT – gramatinėms klaidoms taisyti.
+„ChatGPT“ skirtas gramatinėms klaidoms taisyti, *R Markdown* specifinių klaidų taisymui, rečiau naudojamų *R* paketų naudojimui.

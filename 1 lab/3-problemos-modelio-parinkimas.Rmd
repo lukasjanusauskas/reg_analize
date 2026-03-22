@@ -1,4 +1,6 @@
-# Išskirtys
+# Modeliavimas
+
+## Išskirtys
 
 ```{r}
 library(car)
@@ -14,43 +16,44 @@ cloglog <- glm(formula = Revenue ~ ., data = train_df_smote, family = binomial(l
 
 Išskirtis tikrinsime pasitelkę Kuko matą (*angl. Cook's distance*) ir Pirsono liekanas (*angl. Pearson residuals*). Kad identifikuotume potencialias išskirtis, tiriant Kuko matą $D_i$ naudosime vieną iš empirinių taisyklių $D_i < 1$, t.y. stebėjimą žymėsime kaip išskirtį, jei Kuko matas didesnis už 1 [@tiesiniai_modeliai]. Tuo tarpu, Pirsono liekanoms taikysime empirinę taisyklę: $|Pirsono\ liekana| > 3$.
 
-```{r fig.width=11, fig.height=11, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
-par(mfrow=c(3,2), mar=c(5,5,4,2), cex.main=1.8, cex.lab=1.5, cex.axis=1.4)
+```{r fig.width=11, fig.height=6, fig.cap="Kuko matas ir Pirsono liekanos\\label{fig:kuko_logit}"}
+par(mfrow=c(2,3), mar=c(5,5,4,2), cex.main=1.8, cex.lab=1.6, cex.axis=1.6)
 
 # Logit
 cooksd_logit <- cooks.distance(logit)
 plot(cooksd_logit, pch=19, cex=0.8,
      col=rgb(0.2, 0.4, 0.8, alpha=0.2),
      main="Logit: Kuko matas", ylab="Reikšmė")
-abline(h = 4/length(cooksd_logit), col="red", lwd=2, lty=2)
-
-pearson_logit <- glm.diag(logit)$rp
-plot(log(abs(pearson_logit)+1e-6), pch=19, cex=0.8,
-     col=rgb(0.2, 0.4, 0.8, alpha=0.2),
-     main="Logit: log(Pirsono liekanos)", ylab="log(|Pirsono liekanos|)")
-abline(h =  log(3), col="red", lwd=2, lty=2)
-abline(h = -log(3), col="red", lwd=2, lty=2)
+abline(h = 1, col="red", lwd=3, lty=2)
 
 # Probit
 cooksd_probit <- cooks.distance(probit)
 plot(cooksd_probit, pch=19, cex=0.8,
      col=rgb(0.5, 0.1, 0.8, alpha=0.2),
      main="Probit: Kuko matas", ylab="Reikšmė")
-abline(h = 4/length(cooksd_probit), col="red", lwd=2, lty=2)
+abline(h = 1, col="red", lwd=3, lty=2)
 
-pearson_probit <- glm.diag(probit)$rp
-plot(log(abs(pearson_probit)+1e-6), pch=19, cex=0.8,
-     col=rgb(0.5, 0.1, 0.8, alpha=0.2),
-     main="Probit: log(Pirsono liekanos)", ylab="log(|Pirsono liekanos|)")
-abline(h =  log(3), col='red', lwd=2, lty=2)
-abline(h = -log(3), col='red', lwd=2, lty=2)
 
 # Cloglog
 cooksd_cloglog <- cooks.distance(cloglog)
 plot(cooksd_cloglog, pch=19, cex=0.8,
      col=rgb(0.2, 0.7, 0.4, alpha=0.2),
      main="Cloglog: Kuko matas", ylab="Reikšmė")
-abline(h = 4/length(cooksd_cloglog), col="red", lwd=2, lty=2)
+abline(h = 1, col="red", lwd=3, lty=2)
+
+pearson_logit <- glm.diag(logit)$rp
+plot(log(abs(pearson_logit)+1e-6), pch=19, cex=0.8,
+     col=rgb(0.2, 0.4, 0.8, alpha=0.2),
+     main="Logit: log(Pirsono liekanos)", ylab="log(|Pirsono liekanos|)")
+abline(h =  log(3), col="red", lwd=3, lty=2)
+abline(h = -log(3), col="red", lwd=3, lty=2)
+
+pearson_probit <- glm.diag(probit)$rp
+plot(log(abs(pearson_probit)+1e-6), pch=19, cex=0.8,
+     col=rgb(0.5, 0.1, 0.8, alpha=0.2),
+     main="Probit: log(Pirsono liekanos)", ylab="log(|Pirsono liekanos|)")
+abline(h =  log(3), col='red', lwd=3, lty=2)
+abline(h = -log(3), col='red', lwd=3, lty=2)
 
 pearson_cloglog <- glm.diag(cloglog)$rp
 isskirtis_0 <- train_df_smote[pearson_cloglog >= 3, ]
@@ -58,13 +61,13 @@ isskirtis_1 <- train_df_smote[pearson_cloglog <= -3, ]
 plot(log(abs(pearson_cloglog)+1e-6), pch=19, cex=0.8,
      col=rgb(0.2, 0.7, 0.4, alpha=0.2),
      main="Cloglog: log(Pirsono liekanos)", ylab="log(|Pirsono liekanos|)")
-abline(h =  log(3), col="red", lwd=2, lty=2)
-abline(h = -log(3), col="red", lwd=2, lty=2)
+abline(h =  log(3), col="red", lwd=3, lty=2)
+abline(h = -log(3), col="red", lwd=3, lty=2)
 ```
 
-Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą empirinę ribą.
+Pavaizdavus Kuko matą (žr. \ref{fig:kuko_logit} pav.), negalime pastebėti jokių išskirčių - visos reikšmės neviršija net 0,05, kas yra mažiau už mūsų naudotą ribą.
 
-Ištyrus stebėjimus, kurių $|Pirsono\ liekana| > 3$, pastebėjome gana panašų skaičių išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į stebėjimų skaičių išskirtys sudaro vos 0,68 - 1,74 %. Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, užtat visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, kai pajamos = 0 ir dažnai trumpu, kai pajamos \> 0. Todėl manome, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus, todėl išskirčių nešalinsime.
+Ištyrus stebėjimus, kurių $|Pirsono\ liekana| > 3$, pastebėjome gana panašų skaičių išskirčių kiekvienam modeliui (žr. \ref{tab:pearson_counts} lentelę), atsižvelgus į stebėjimų skaičių išskirtys sudaro vos 0,68 - 1,74 %. Tirdami išskirtis nepastebėjome jokių akivaizdžių duomenų įvedimo ar matavimo klaidų, užtat visi stebėjimai išsiskyrė ilgu laiku praleistu svetainėje, nors nieko sesijos metu nepirko arba labai trumpu, kai sesijos metu įvykdytas koks nors užsakymas. Todėl manome, kad šios reikšmės atspindi realius duomenų svyravimus, o jų pašalinimas galėtų iškreipti analizės rezultatus, todėl išskirčių nešalinsime.
 
 \newpage
 
@@ -86,27 +89,28 @@ outlier_table$Dalis <- paste0(format(
 kable(outlier_table, caption = "Binarinio atsako modelių apmokytų internetinės paruodutvės duomenimis išskirtys mokymo aibėje, identifikuotos pagal Pirsono liekanų kriterijų\\label{tab:pearson_counts}")
 ```
 
-# Multikolinearumas
+## Multikolinearumas
 
-Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis [@mlr_collinearity]. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai \verb\|ProductRelated\| ir \verb\|ProductRelated_Duration\|) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
+Šiame žingsnyje buvo ištirtas kintamųjų multikolinearumas, naudojant tokius rodiklius kaip GVIF ir koreguotas GVIF. GVIF naudojome, kadangi kai kurios kovariantės yra kategorinės, o koreguotas GVIF mums leidžia atsižvelgti į skirtingus laisvės laipsnius skirtingose kovariantėse. Požymius, kurių koreguotos GVIF reikšmes didesnes už 1,6 laikysime potencialiai kolineariomis, 2,2 - išskirtimis [@mlr_collinearity]. Pagal koreguoto GVIF reikšmes nustatėme, kad tarp su produktais susijusių peržiūrėtų puslapių skaičiaus ir juose praleisto laiko egzisuoja kolinearumas. Kiekvienam modeliui šių dviejų kintamųjų (pažymėtų atitinkamai *ProductRelated* ir *ProductRelated_Duration*) GVIF ir koreguoto GVIF reikšmės yra pateiktos \ref{tab:agvif_product} lentelėje. Todėl buvo nuspręsta iš modelio pašalinti su produktais susijusių puslapių peržiūrų skaičiaus kintamąjį.
 
 ```{r}
+fmt <- function(x, digits = 4) gsub("\\.", ",", formatC(x, digits = digits, format = "f"))
+
 vif_table <- data.frame(
-  Modelis = c("Logit", "Probit", "Cloglog"),
-  ProductRelated = c(
+  Modelis = c("*Logit*", "*Probit*", "*Cloglog*"),
+  ProductRelated = fmt(c(
     vif(logit)["ProductRelated", "GVIF^(1/(2*Df))"],
     vif(probit)["ProductRelated", "GVIF^(1/(2*Df))"],
     vif(cloglog)["ProductRelated", "GVIF^(1/(2*Df))"]
-  ),
-  ProductRelated_Duration = c(
+  )),
+  ProductRelated_Duration = fmt(c(
     vif(logit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
     vif(probit)["ProductRelated_Duration", "GVIF^(1/(2*Df))"],
     vif(cloglog)["ProductRelated_Duration", "GVIF^(1/(2*Df))"]
-  )
+  ))
 )
 
 kable(vif_table,
-      digits = 4,
       caption = "Koreguoto GVIF reikšmės kintamiesiems ProductRelated ir ProductRelated\\_Duration \\label{tab:agvif_product}",
       col.names = c("Modelis", "ProductRelated", "ProductRelated\\_Duration"))
 ```
@@ -145,7 +149,7 @@ kable(dispersion_table,
       col.names = c("Modelis", "$\\frac{D}{df}$"))
 ```
 
-# Modelio parinkimas
+## Modelio parinkimas
 
 Renkantis tiksliausią modelį spręsime pagal keletą skirtingų metrikų, pateiktų \ref{tab:metrikos_tikslumo} lentelėje:
 
@@ -219,7 +223,7 @@ kable(comparison_df,
 Turint klasių disbalanso problemą ypatingai svarbu ištirti klasifikavimo matricą. Nors jau nusprendėme, kad *logit* modelis yra pranašiausias iš atrinktų statistinių binarinio atsako modelių, ištirsime kodėl būtent ir kokias ydas turi šie modeliai.
 
 Iš klasifikavimo matricų (žr. \ref{fig:klasifikavimo_matricos} pav.) matome, kad logistinės regresijos modelis (kaip ir *probit*) teisingai prognozuoja teigiamą (pelningą sesiją), nei neigiamą (sesijos metu neįvykdytas užsakymas). Todėl, manome, šiems modeliams atmetėme hipotezę, jog jų tikslumas lygus modeliui, visada išvedančiam neigiamą. Nedidelis *logit* pranašumas klasifikavimo tikslumo atžvilgiu, lyginant su *probit* kyla iš to, jog teisingų teigiamų skaičius *logit* klasifikavimo matricoje yra kiek didesnis nei *probit*. Tačiau matome, kad klaidingų neigiamų skaičius yra artimas teisingų teigiamų skaičiui, taigi šis modelis turi panašią tikimybę išvesti teigiamą, kaip ir neigiamą, kai sesija iš tiesų yra pelninga. Tuo tarpu modelio *cloglog*, kurio tikslumas ir kitos metrikos buvo prasčiausios,\
-klasifikavimo matricoje matome, kad klaidingų neigiamų yra mažiau, nei teisingų teigiamų, kas paaiškiną tikslumą, mažesnį už dominuojančios klasės santykinį dažnį.
+klasifikavimo matricoje matome, kad klaidingų neigiamų yra daugiau, nei teisingų teigiamų, kas paaiškiną tikslumą, mažesnį už dominuojančios klasės santykinį dažnį.
 
 ```{r, fig.height=3, fig.cap="Klasifikavimo matricos statistiniams binarinio atsako modeliams \\label{fig:klasifikavimo_matricos}"}
 df1 <- cm_to_df(cm1, "Logit")
@@ -330,7 +334,7 @@ ggroc(
 
 \newpage
 
-# Sąveikų ir kitų kintamųjų pridėjimas
+## Sąveikų ir kitų kintamųjų pridėjimas
 
 Šiame žingsnyje buvo sukurti nauji kintamieji, kurie gali geriau atspindėti vartotojo elgseną svetainėje. Buvo apskaičiuoti du nauji rodikliai, parodantys santykį tarp aplankytų puslapių skaičiaus ir jų peržiūros trukmės kiekvienoje kategorijoje. Taip pat sukurtas papildomas kintamasis, kuris apjungia bendrą peržiūrėtų puslapių skaičių su puslapio verte (*PageValues*), siekiant geriau įvertinti vartotojo įsitraukimą.
 
@@ -376,92 +380,9 @@ results <- data.frame(
   F1 = c(F1_log, F1_log_saveikos)
 )
 
-results$F1 <- format(results$F1, decimal.mark = ",", scientific = FALSE)
+results$F1 <- format(round(results$F1, 4), decimal.mark = ",", scientific = FALSE)
 
 kable(results,
       caption = "Logit modelių su papildomais kintamaisiais ir be jų F1 metrikos, apskaičiuotos internetinės parduotuvės duomenų testinėje aibėje.\\label{tab:saveikos}")
 ```
 
-# Parametrų vertinimas
-
-Toliau įvertinsime modelio parametrus ir nustatysime, ar jie yra statistiškai reikšmingi. Kiekvieno parametro statistinis reikšmingumas tikrinamas naudojant t-testą, kurio pagrindu apskaičiuojama p-reikšmė. Jei p-reikšmė yra mažesnė už pasirinktą reikšmingumo lygmenį (0,05), parametras laikomas statistiškai reikšmingu, tai reiškia, kad atitinkamas kintamasis turi reikšmingą įtaką priklausomajam kintamajam.
-
-Iš lentelės (žr. \ref{fig:nereiksmingi} pav.) galime pastebėti, kad laikas, kurį lankytojas praleido paskyros valdymo ir informaciniuose puslapiuose, bei tai, kiek kartų lankytojas lankėsi informaciniuose puslapiuose, nėra statistiškai reikšmingi. Tačiau statistiškai reikšmingas yra kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose. Taip pat matome, kad statistiškai nereikšmingas yra vidutinis lankytojo aplankytų puslapių skaičius prieš baigiant sesiją, kai aplankyta tik viena prekė. Be to, statistiškai nereikšmingi pasirodė ir tokie kintamieji kaip savaitgalis bei ypatingos dienos efektas, o tai rodo, kad pirkimo sprendimas nepriklauso nuo to, ar sesija vyko savaitgalį ar artėjant šventėms.
-
-Pašalinus nereikšmingus kintamuosius (žr. \ref{tab:f1} lentelę), AIC kriterijus nežymiai sumažėjo, tačiau kartu sumažėjo ir F1 metrika, kuri atspindi modelio prognozavimo tikslumą. Kadangi pagrindinis modelio tikslas yra kuo tiksliau prognozuoti pirkimo tikimybę, buvo nuspręsta toliau naudoti pradinį modelį su visais kintamaisiais.
-
-\newpage
-
-```{r}
-
-logit <- glm(Revenue ~ ., data = train_df_smote, family = binomial("logit"),
-             control = glm.control(maxit = 500, epsilon = 1e-8))
-#summary(logit)
-
-```
-
-```{r}
-coef_lentele <- data.frame(
-  Kintamasis = rownames(summary(logit)$coefficients),
-  Z_statistika = summary(logit)$coefficients[, "Estimate"],
-  P_reikšmė = summary(logit)$coefficients[, "Pr(>|z|)"]
-)
-p_raw <- as.numeric(coef_lentele$P_reikšmė)
-coef_lentele$P_reikšmė <- ifelse(p_raw < 0.01, "< 0,01", as.character(round(p_raw, 2)))
-
-coef_lentele$P_reikšmė <- ifelse(
-  p_raw > 0.05,
-  paste0("\\textbf{", coef_lentele$P_reikšmė, "}"),
-  coef_lentele$P_reikšmė
-)
-
-knitr::kable(
-  coef_lentele,
-  caption = "Logit modelio koeficientų įverčiai ir jų statistinio reikšmingumo vertinimas.\\label{fig:nereiksmingi}",
-  escape = FALSE,
-  row.names = FALSE
-)
-```
-
-```{r}
-# Gauti kintamuosius kurių p > 0.05
-p_values <- summary(logit)$coefficients[, "Pr(>|z|)"]
-pasalinti <- names(p_values[p_values > 0.05])
-
-# Pašalinti intercept jei jis tarp jų
-pasalinti <- pasalinti[pasalinti != "(Intercept)"]
-
-# Gauti dabartinę formulę ir pašalinti kintamuosius
-sena_formule <- formula(logit)
-kintamieji <- attr(terms(sena_formule), "term.labels")
-likę <- kintamieji[!kintamieji %in% pasalinti]
-
-# Sukurti naują modelį
-nauja_formule <- as.formula(paste("Revenue ~", paste(likę, collapse = " + ")))
-logit_3 <- glm(nauja_formule, data = train_df_smote, family = binomial)
-
-#summary(logit_3)
-```
-
-```{r}
-probs_final <- predict(logit_3, newdata = test_df, type = "response")
-pred_final <- ifelse(probs_final > 0.5, 1, 0)
-cm1 <- confusionMatrix(factor(pred_final), factor(test_df_saveikos$Revenue), positive = "1")
-F1_pasalinus <- cm1$byClass[["F1"]]
-
-# AIC kriterijus
-AIC_pradinis <- AIC(logit)
-AIC_pasalinus <- AIC(logit_3)
-
-# Lentelė
-results <- data.frame(
-  Modelis = c("Pradinis", "Pašalinus nereikšmingus"),
-  F1 = c(F1_log, F1_pasalinus),
-  AIC = c(AIC_pradinis, AIC_pasalinus)
-)
-results$F1 <- format(results$F1, decimal.mark = ",", scientific = FALSE)
-results$AIC <- format(round(results$AIC, 2), decimal.mark = ",", scientific = FALSE)
-
-kable(results,
-      caption = "Logit modelių su nereikšmingais kintamaisiais ir be jų F1 metrikos ir AIC kriterijus, apskaičiuoti internetinės parduotuvės duomenų testinėje aibėje.\\label{tab:f1}")
-```

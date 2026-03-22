@@ -3,7 +3,14 @@
 Kadangi pažingsninės regresijos metodu gavome taupesnį modelį, kurio tikslumo metrikos apylygės pilno modelio metrikoms, būtent jį naudosime, interpretuodami kintamųjų įtaką atsakui.
 Tam pasitelksime galimybių santykį (*angl. odds ratio*) $\text{Odds ratio} = \frac{P(Y=1 \mid X_j = x+1)/ P(Y=0 \mid X_j = x+1)}{P(Y=1 \mid X_j = x)/ P(Y=0 \mid X_j = x)} = e^{\beta_j}$.
 
-Iš \ref{tab:or} lentelės matome, kad esant Rugsėjo ar Lapkričio mėnesiui, galimybė pelningos sesijos padidėja atitinkamai 124 \% ir 298 \% palyginus su sesijomis kovo mėnesį. Tuo tarpu matome, jog Google Analytics suteiktų puslapių metrikos Exit Rate ir Bounce Rate neigiamai įtakoja sesijos pelningumą: galimybių santykis artimas nuliui. Matome, kad sesijos iš pirmojo regiono turi didžiausią galimybę baigtis užsakymu. Tuo tarpu, sesijos penktame, aštuntame ir devintame regionuose turi tarp 50 ir 60 \% mažesnę galimybę baigtis užsakymu, taigi šie regionai yra probleminiai — reikia atkreipti dėmesį kaip į juos būtų galima plėstis. Matome, kad sesijos iš antrosios operacinės sistemos turi 16 \% didesnę galimybę būti pelningomis, tuo tarpu ketvirtos ir aštuntos operacinių sistemų naudotojai atitinkamai 38 ir 47 \% rečiau sesijos metu ką nors nusiperka. Laikas praleistas administraciniuose ir produktų puslapiuose šiame modelyje neįtakoja galimybės, kad sesijos metu įvyks pirkimas, tai gali reikšti internetinių puslapių surinkėjų robotų veiklą arba, kad sąryšio tarp sesijos trukmės ir pirkimo galimybės nėra. Taip pat sugrįžtantys pirkėjai turi maždaug 10 \% mažesnę galimybę atlikti užsakymą parduotuvėje, kas atsispindi ir mūsų pradinėje analizėje. Taip pat, artėjant kokiai nors šventinei dienai galimybių santykis mažėja 30 \%.
+Iš \ref{tab:or} lentelės matome, kad esant Lapkričio mėnesiui, galimybė pelningos sesijos padidėja 279 \% palyginus su sesijomis kovo mėnesį.
+Tuo tarpu matome, jog Google Analytics suteiktų puslapių metrikos Exit Rate ir Bounce Rate neigiamai įtakoja sesijos pelningumą: galimybių santykis artimas nuliui. 
+Matome, kad sesijos iš pirmojo regiono turi didžiausią galimybę baigtis užsakymu. 
+Tuo tarpu, sesijos penktame regione turi 72 \% mažesnę galimybę baigtis užsakymu, taigi šis regionas yra probleminis — reikia atkreipti dėmesį kaip į juos būtų galima plėstis.
+Matome, kad sesijos iš antrosios operacinės sistemos turi 81 \% didesnę galimybę būti pelningomis, tuo tarpu ketvirtos ir aštuntos operacinių sistemų naudotojai atitinkamai 47 ir 64 \% rečiau sesijos metu ką nors nusiperka. 
+Laikas praleistas administraciniuose ir produktų puslapiuose šiame modelyje neįtakoja galimybės, kad sesijos metu įvyks pirkimas, tai gali reikšti internetinių puslapių surinkėjų robotų veiklą arba, kad sąryšio tarp sesijos trukmės ir pirkimo galimybės nėra.
+Taip pat sugrįžtantys pirkėjai turi maždaug 17 \% mažesnę galimybę atlikti užsakymą parduotuvėje, kas atsispindi ir mūsų pradinėje analizėje. 
+Taip pat, artėjant kokiai nors šventinei dienai galimybių santykis mažėja 27 \%.
 
 ```{r}
 or <- exp(coef(final_model))[2:length(coef(final_model))]

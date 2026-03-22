@@ -1,4 +1,4 @@
-# Slenksčio parinkimas
+## Slenksčio parinkimas
 
 Toliau, išbandysime parinkti optimalią ribą, pritaikydami Joudeno indeksą.
 Gautą ribą ir metrikas pateikiame \ref{tab:youden_res} lentelėje.

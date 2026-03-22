@@ -1,6 +1,7 @@
-# Pažingsninė regresija
+## Pažingsninė regresija
 
 Atlikome kintamųjų atranką logistinės regresijos modeliui, naudodami \textit{forward selection} metodą. Pradėdami nuo paprasčiausio modelio, kuriame nėra kovariančių, palaipsniui pridėjome tuos kintamuosius, kurie labiausiai pagerina modelio kokybę. Modelio tinkamumas buvo vertinamas pagal AIC (\textit{Akaike informacijos kriterijų}), siekiant rasti geriausią balansą tarp modelio tikslumo ir sudėtingumo.
+Atlikę pažingsninę regresiją nepridėjome laiko praleisto informaciniuose puslapiuose, aplankytų informacinių puslapių skaičių, administracinių pulspaių skaičių ir dichotominį savaitgalio kintamąjį.
 
 ```{r,results='hide'}
 set.seed(10)
@@ -11,7 +12,10 @@ final_model <- stats::step(null_model,
      scope = list(lower = null_model, upper = full_model),
      direction = "forward")
 ```
-Atliekamas galutinio modelio kokybės įvertinimas naudojant testinę imtį. Pirmiausia apskaičiuojamos tikimybės, kad stebėjimai priklauso teigiamai klasei, o pagal pasirinktą $0,5$ slenkstį nustatomos prognozuotos klasės. Tuomet apskaičiuojami modelio kokybės rodikliai: AUC (plotas po ROC kreive), kuris parodo modelio gebėjimą atskirti klases, ir F1 rodiklis. Gauti rezultatai pateikti \ref{mt} lentelėje.
+Atliekamas galutinio modelio kokybės įvertinimas naudojant testinę imtį.
+Pirmiausia apskaičiuojamos tikimybės, kad stebėjimai priklauso teigiamai klasei, o pagal pasirinktą $0,5$ slenkstį nustatomos prognozuotos klasės.
+Tuomet apskaičiuojami modelio kokybės rodikliai: AUC (plotas po ROC kreive), kuris parodo modelio gebėjimą atskirti klases, ir F1 rodiklis.
+Gauti rezultatai pateikti \ref{mt} lentelėje, atskleidžia, kad atlikta pažingsninė regresija minimaliai paveikė šias tikslumo metrikas (AUC sumažėjo 9,14 %, F1 - 0,76 %, tikslumas - 0,35 %), taigi toliau naudosime taupesnį modelį su panašiu tikslumu.
 
 ```{r}
 probs_final <- predict(final_model, newdata = test_df, type = "response")
@@ -33,6 +37,61 @@ kable(
   results,
   digits = 3,
   col.names = c("Modelis","AUC", "F1", "Tikslumas"),
-  caption = "Modelių metrikos\\label{mt}"
+  caption = "Modelių metrikos\\label{mt}",
+  format.args = list(decimal.mark = ",")
+)
+```
+
+## Parametrų vertinimas
+
+Toliau įvertinsime modelio parametrus ir nustatysime, ar jie yra statistiškai reikšmingi. 
+Kiekvieno parametro statistinis reikšmingumas tikrinamas naudojant t-testą, kurio pagrindu apskaičiuojama p-reikšmė.
+Be to, galima reikšmingumą spręsti ir pagal parametrinį 95 % pasikliautinį intervalą, kurį mes skaičiavome
+remdamiesi tuo, kad didžiausio tikėtinumo metodu gauti įvertiniai yra asimptotiškai normaliai pasiskirstę.
+Jei p-reikšmė yra mažesnė už pasirinktą reikšmingumo lygmenį (0,05), parametras laikomas statistiškai reikšmingu, tai reiškia, kad atitinkamas kintamasis turi reikšmingą įtaką priklausomajam kintamajam.
+
+Iš lentelės (žr. \ref{fig:nereiksmingi} pav.) galime pastebėti, kad laikas, kurį lankytojas praleido paskyros valdymo ir produktų puslapiuose yra statistiškai reikšmingas.
+Taip pat svarbus mėnesis, kurį vyko sesija, opearcinė sistema ir naršyklė.
+Šventinės dienos kintamasis nebuvo reikšmingas, taigi, matyt parduotuvėje neprekiaujama šventinėmis prekėmis.
+Iš *Google Analtycs* kintamųjų svarbus buvo tik *Exit Rate*, o *Bounce Rate* nedaro statistiškai reikšmingos įtakos šiame modelyje. 
+
+\newpage
+
+```{r}
+se <- summary(final_model)$coefficients[, "Std. Error"]
+est <- summary(final_model)$coefficients[, "Estimate"]
+
+# Helper: format number with comma as decimal mark
+fmt <- function(x, digits = 4) gsub("\\.", ",", formatC(x, digits = digits, format = "f"))
+
+coef_lentele <- data.frame(
+  Kintamasis = rownames(summary(final_model)$coefficients),
+  Koeficientas = fmt(est),
+  CI_lower = fmt(est - 1.96 * se),
+  CI_upper = fmt(est + 1.96 * se),
+  P_reikšmė = summary(final_model)$coefficients[, "Pr(>|z|)"]
+)
+
+p_raw <- as.numeric(coef_lentele$P_reikšmė)
+coef_lentele$P_reikšmė <- ifelse(p_raw < 0.01, "< 0,01", gsub("\\.", ",", as.character(round(p_raw, 2))))
+coef_lentele$P_reikšmė <- ifelse(
+  p_raw > 0.05,
+  paste0("\\textbf{", coef_lentele$P_reikšmė, "}"),
+  coef_lentele$P_reikšmė
+)
+
+coef_lentele$`95% PI` <- paste0(
+  "[", coef_lentele$CI_lower, "; ", coef_lentele$CI_upper, "]"
+)
+coef_lentele$CI_lower <- NULL
+coef_lentele$CI_upper <- NULL
+rownames(coef_lentele) <- NULL
+
+knitr::kable(
+  coef_lentele[2:36,],
+  caption = "Logit modelio koeficientų įverčiai ir jų statistinio reikšmingumo vertinimas.\\label{fig:nereiksmingi}",
+  escape = FALSE,
+  row.names = FALSE,
+  col.names = c("Kintamasis", "Koeficientas", "P reikšmė", "Koeficiento 95% PI")
 )
 ```

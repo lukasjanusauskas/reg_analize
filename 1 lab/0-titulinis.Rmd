@@ -14,7 +14,7 @@
 \centerline{\large \textbf{\MakeUppercase{Duomenų mokslo\space studijų programa}}}
 \vskip 80pt
 \begin{center}
-    {\bf \LARGE Apsilankymo internetinėje parduotuvėje pelningumo prognozė}
+    {\bf \LARGE Apsilankymo internetinėje parduotuvėje pelningumo klasifikavimas, taikant statistinius binarinio atsako modelius}
 \end{center}
 \begin{center}
     {\bf \Large Laboratorinis darbas}
@@ -24,7 +24,7 @@
 \centering{\LARGE 1 grupė\\}
 \centering{\Large Nikita Demin, Lukas Janušauskas \\ Edvin Liubkevič, Martynas Zabitis}
 
-\vskip 110pt
+\vfill
 
 \centerline{\large \textbf{Vilnius}}
 \centerline{\large \textbf{\the\year{}}}
