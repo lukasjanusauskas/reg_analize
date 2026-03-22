@@ -431,9 +431,9 @@ ggplot(df_long, aes(x = Revenue, y = value, fill = Revenue)) +
   facet_wrap(~variable, scales = "free_y", ncol=3) +
   scale_y_log10(labels = label_number(decimal.mark = ",")) +
   labs(
-    title = "Logaritmuotų trukmių pasiskirtymas pagal pelningumą",
+    title = "Logaritmuotų reikšmių pasiskirtymas pagal pelningumą",
     x = NULL,
-    y = "Trukmė",
+    y = "Reikšmės",
     fill = "Pelningas"
   ) +
   scale_fill_discrete(labels = c("FALSE" = "Ne", "TRUE" = "Taip")) + 
