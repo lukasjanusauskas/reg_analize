@@ -1,0 +1,98 @@
+\begin{titlepage}
+\vskip 20pt
+\begin{center}
+\includegraphics[width = 5cm]{images/MIF.png}
+\end{center}
+
+\makeatletter
+
+\vskip 20pt
+\centerline{\bf \large \textbf{VILNIAUS UNIVERSITETAS}}
+\vskip 10pt
+\centerline{\large \textbf{MATEMATIKOS IR INFORMATIKOS FAKULTETAS}}
+\vskip 10pt
+\centerline{\large \textbf{\MakeUppercase{Duomenų mokslo\space studijų programa}}}
+\vskip 80pt
+\begin{center}
+    {\bf \LARGE Apsilankymo internetinėje parduotuvėje trukmės prognozė, naudojant statistinius regresijos modelius}
+\end{center}
+\begin{center}
+    {\bf \Large Laboratorinis darbas}
+\end{center}
+\vskip 80pt
+
+\centering{\LARGE 2 groupė 4 pogrupis\\}
+\centering{\Large Nikita Demin, Lukas Janušauskas \\ Edvin Liubkevič, Martynas Zabitis}
+
+\vfill
+
+\centerline{\large \textbf{Vilnius}}
+\centerline{\large \textbf{\the\year{}}}
+
+\makeatother
+
+\newpage
+\end{titlepage}
+\newgeometry{top=2cm,bottom=2cm,right=2cm,left=3cm} 
+\setcounter{page}{2}
+
+\newpage
+
+<!-- Titulinio pabaiga -->
+
+<!-- Turinys -->
+
+\newpage
+
+<!-- Bibliotekos ir duomenys -->
+
+```{r, echo=FALSE, include=FALSE}
+# Nenorim galutiniame faile įspėjimų
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      echo=FALSE, fig.pos="H", fig.height = 4, fig.width = 6)
+
+# Į aprašą neįdedame su include=FALSE, echo=FALSE
+# Importuojame bibliotekas
+library(ggplot2)
+library(showtext)       # Lietuviškom raidėm
+showtext_auto()
+
+# Nustatom temą
+theme_set(theme_minimal(base_size = 16))
+```
+
+<!-- Kodas prasideda čia -->
+
+\section*{Santrauka}
+\addcontentsline{toc}{section}{Santrauka}
+
+\subsection*{Aktualumas}
+
+Nustatyti, ar 
+
+\subsection*{Tikslas}
+
+Mūsų tikslas yra prognozuoti laiką, kurį naudotojai praleis svetainės puslapiuose
+
+
+\subsection*{Uždaviniai}
+
+Norint pasiekti savo užsibrėžto tikslo, išsikėlėme šiuos uždavinius:
+
+1. Ištirti prie internetinės parduotuvės prisijungusių naudotojų sesijų charakteristikas, sąryšius su produktų puslapiuose praleista trukme.
+
+2. Apmokyti ir optimizuoti statistinius regresijos modelius, skirtus prognozuoti su produktais susijusiuose puslapiuose praleistą trukmę.
+
+3. Ištirti optimalaus modelio, prognozuojančio su produktais susijusiuose puslapiuose praleistą trukmę, požymių reikšmingumą, įtaką.
+
+\pagebreak
+\listoftables
+\pagebreak
+\listoffigures
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+

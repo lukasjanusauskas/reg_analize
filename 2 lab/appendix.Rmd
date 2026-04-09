@@ -1,0 +1,16 @@
+# Šaltinių sąrašas
+
+::: {#refs}
+:::
+
+\pagebreak
+
+# A priedas {.unnumbered}
+
+## DI naudojimas
+
+Naudotas „Google Gemini 3 Flash Preview“, kad patikrinti ar surašyti uždaviniai nėra etapai. Taip pat lentelėse, grafikuose pakeisti taškus į kablelius, kad būtų lietuviškas formatavimas.
+
+Naudotas „Claude“ ieškant *R* funkcijų atitikmenų *Python* kalboje bei braižant grafikus, surašant lenteles ir *R* aplinkoje.
+
+„ChatGPT“ skirtas gramatinėms klaidoms taisyti, *R Markdown* specifinių klaidų taisymui, rečiau naudojamų *R* paketų naudojimui.

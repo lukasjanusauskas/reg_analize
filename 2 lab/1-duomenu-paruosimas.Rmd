@@ -1,0 +1,397 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+options(kableExtra.latex.load_packages = TRUE)
+library(ggplot2)
+library(scales)
+library(corrplot)
+library(GGally)
+library(caret)
+library(tidymodels)
+library(themis)
+library(boot)
+library(car)
+library(QuantPsyc)
+library(conflicted)
+library(pROC)
+library(caret)
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+conflict_prefer("step","stats")
+```
+
+# Tyrimas
+
+## Duomenų aprašymas
+
+Duomenys atsisiųsti iš *UCI Irvine Machine Learning Repository*
+[@online_shoppers_purchasing_intention_dataset_468] su iš viso 10535
+duomenų eilučių. Duomenų kintamieji aprašyti \ref{tab:num_features} ir
+\ref{tab:cat_features} lentelėse. Duomenų rinkinį sudaro 1 metų
+informacija, kuri yra surinkta iš *columbia.com.tr* puslapio
+[@columbia_website].
+
+```{r}
+num_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "Administraciniai puslapiai", 
+    "Administracinių puslapių trukmė", 
+    "Informaciniai puslapiai", 
+    "Informacinių puslapių trukmė", 
+    "Produktų puslapiai", 
+    "Produktų puslapių trukmė", 
+    "Atšokimo dažnis", 
+    "Išėjimo dažnis", 
+    "Puslapio vertė", 
+    "Ypatinga diena"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Kiek kartų lankytojas lankėsi paskyros valdymo puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido paskyros valdymo puslapiuose.",
+    "Kiek kartų lankytojas lankėsi informaciniuose puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido informaciniuose puslapiuose.",
+    "Kiek kartų lankytojas lankėsi parduodamų daiktų puslapiuose.",
+    "Bendras laikas (sekundėmis), kurį lankytojas praleido parduodamų daiktų puslapiuose.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta tik viena prekė.",
+    "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta daugiau nei viena prekė.",
+    "Vidutinė lankytojo aplankytų puslapių vertė.",
+    "Svetainės apsilankymo laiko artumas ypatingai dienai (pvz., šventei, išpardavimui)."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(num_features, 
+      caption = "Kiekybinių kintamųjų aprašymas\\label{tab:num_features}")
+```
+
+
+```{r}
+cat_features <- data.frame(
+  "Kintamojo pavadinimas" = c(
+    "Operacinė sistema", 
+    "Naršyklė", 
+    "Regionas", 
+    "Srauto tipas", 
+    "Lankytojo tipas", 
+    "Savaitgalis", 
+    "Mėnuo", 
+    "Pelningumas"
+  ),
+  "Kintamojo aprašymas" = c(
+    "Lankytojo operacinė sistema.",
+    "Lankytojo interneto naršyklė.",
+    "Geografinis regionas, iš kurio lankytojas pradėjo sesiją.",
+    "Šaltinis, iš kurio lankytojas atvyko į svetainę (pvz., reklama kitame puslapyje, SMS, tiesioginis).",
+    "Lankytojo tipas: \"Naujas lankytojas\", \"Sugrįžtantis lankytojas\" ir \"Kitas\"",
+    "Ar apsilankymo data sutampa su savaitgaliu.",
+    "Apsilankymo datos mėnuo.",
+    "Ar sesija buvo pelninga."
+  ),
+  check.names = FALSE
+)
+
+knitr::kable(cat_features, 
+      caption = "Kategorinių kintamųjų aprašymas\\label{tab:cat_features}")
+```
+
+## Duomenų paruošimas
+
+Kintamieji „OperatingSystems“, „Browser“, „Region“, „TraficType“ yra
+kategoriniai kintamieji, užkoduoti natūraliais skaičiais. Todėl juos
+pakeičiame atitinkamais faktoriais ir vėliau iš jų formuosime fiktyvius
+kintamuosius. Kintamasis „SpecialDay“, sprendžiant pagal reikšmes ir
+aprašymą yra ranginis kitamasis įgaunantis 6 skirtingas reikšmes:
+$\{0;\ 0,2;\ \dots;\ 1\}$.
+
+
+```{r}
+# duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
+
+df <- read.csv(
+  "data//online_shoppers_intention.csv",
+  header=TRUE,
+  stringsAsFactors=FALSE
+)
+
+
+int_faktoriai <- c(
+  "OperatingSystems",
+  "Browser",
+  "Region",
+  "TrafficType"
+)
+df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
+```
+
+
+Duomenų aprašyme autoriai teigia, kad praleistų reikšmių nėra. Mes
+pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų reikšmių nėra.
+
+```{r, echo=FALSE, include=FALSE}
+missing_table <- data.frame(
+  Praleista = colSums(is.na(df))
+)
+
+missing_table
+```
+
+Loginių išskirčių tyrimas yra būtina dalis tyrimo, kadangi kai kurios iš
+duomenų rinkinyje esančios sesijos gali būti informacijos surinkimo
+robotai (*angl. web-scrapers*). Kad ištirtume logines išskirtis sudarėme
+skaitinių charakteristikų lentelę kiekybiniams kintamiesiems
+(\ref{tab:char} lentelė). Joje naudojami standartiniai skaitinių
+charakteristikų žymėjimai: Min - minimumas, $Q_n$ - $n$-tasis kvartilis,
+$\mu$ - vidurkis, Max - maximumas. \ref{tab:char} lentelėje matome, jog
+nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose
+nesusijusiuose su apsilankymo trukme. Tačiau kintamiesiems, susijusiems
+su bendra apsilankymo trukme
+
+```{r}
+summary_tbl <- df %>%
+  summarise(
+    across(
+      where(is.numeric),
+      list(
+        Min      = ~min(.x, na.rm = TRUE),
+        `$Q_1$`  = ~quantile(.x, 0.25, na.rm = TRUE),
+        `$Q_2$`  = ~median(.x, na.rm = TRUE),
+        `$\\mu$` = ~mean(.x, na.rm = TRUE),
+        `$Q_3$`  = ~quantile(.x, 0.75, na.rm = TRUE),
+        Max      = ~max(.x, na.rm = TRUE)
+      ),
+      .names = "{.col}__{.fn}"
+    )
+  ) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Kintamasis", "Statistika"),
+    names_pattern = "^(.*)__(.*)$"
+  ) %>%
+  pivot_wider(names_from = Statistika, values_from = value) %>%
+  mutate(
+    across(where(is.numeric), ~round(.x, 2)),
+    Kintamasis = dplyr::recode(Kintamasis,
+      "Administrative"          = "Administraciniai puslapiai",
+      "Administrative_Duration" = "Laikas administraciniuose puslapiuose",
+      "Informational"           = "Informaciniai puslapiai",
+      "Informational_Duration"  = "Laikas informaciniuose puslapiuose",
+      "ProductRelated"          = "Produktų puslapiai",
+      "ProductRelated_Duration" = "Produktų puslapių trukmė",
+      "BounceRates"             = "Atšokimo dažnis",
+      "ExitRates"               = "Išėjimo dažnis",
+      "PageValues"              = "Puslapio vertė",
+      "SpecialDay"              = "Ypatinga diena"
+    )
+  )
+
+knitr::kable(
+  summary_tbl,
+  digits = 2, format.args = list(decimal.mark = ","),
+  caption = "Kiekybinių kintamųjų skaitinės charakteristikos\\label{tab:char}"
+)
+```
+
+Kad susitvarkytume su išskirtimis, išimsime stebėjimus, kai bendras
+praleistas laikas svetainėse yra nulis. Taip pat, pašalinsime
+stebėjimus, jei laikas tam tikram svetainių tipui yra nenulinis (pvz.
+nurodyta, kad administraciniuose puslapiuose praleistas tam tikras
+laikas), tačiau to tipo puslapių nebuvo aplankyta.
+
+```{r}
+df <- df %>%
+  filter(
+    Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
+    !(Administrative == 0 & Administrative_Duration != 0),
+    !(Informational == 0 & Informational_Duration != 0),
+    !(ProductRelated == 0 & ProductRelated_Duration != 0),
+    !(Administrative > 0 & Administrative_Duration == 0),
+    !(Informational > 0 & Informational_Duration == 0),
+    !(ProductRelated > 0 & ProductRelated_Duration == 0)
+  )
+```
+
+## Duomenų pradinė analizė
+
+Šioje aprašymo dalyje pateikiame tik svarbiausius akcentus, kurie mums
+bus svarbus, kitus grafikus, išbrėžtus duomenų pradinei tyrybai,
+pateiksime A priede.
+
+Prieš taikant binarinę regresiją labai svarbu įsitikinti, kad
+kategorinio kintamojo lygmenų kartotinumas yra pakankamai didelis, esant
+visoms klasifikuojamo kintamojo reikšmėms.
+
+Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių
+lygmenų. Kintamasis „VisitorType“ turi lygmenį „Other“, kuris gali būti
+problemiškas, padarius dominuojančios klasės sumažinimą, taigi šį
+faktoriaus lygmenį pašalinsime.
+
+Pašalinsime „OperatingSystems“, „Browser“ faktorių lygmenis, kurie turi
+mažiau arba lygiai 5 stebėjimus, esant pelningai sesijai. Faktorius
+„TrafficType“ turi daug probleminių lygmenų, taigi juos šalinant
+išmesime daug duomenų, todėl mes šį faktorių pašalinsime. Šių trijų
+minėtų faktorių dažnių lentelės pateiktos atitinkamai
+\ref{tab:OperatingSystems}, \ref{tab:Browser} ir \ref{tab:TrafficType}
+lentelėse. Taip pat kintamojo „Month“ lygmuo „Feb“ (atitinkantis vasario
+mėnesį) turi tik tris stebėjimus, taigi pašalinsime ir vasario mėnesio
+stebėjimus. Kitos kryžminės dažnių lentelės pateiktos priede A.
+
+\newpage
+
+```{r}
+make_freq_table <- function(data, column, label = column) {
+  result <- data %>%
+    group_by(!!sym(column)) %>%
+    summarise(Dažnis = n(), .groups = "drop") %>%
+    mutate(Procentai = round(Dažnis / sum(Dažnis) * 100, 1))
+  
+  knitr::kable(
+    result,
+    caption = paste0(label, " dažnių lentelė\\label{tab:", column, "}"),
+    col.names = c(label, "Dažnis", "Santykinis dažnis (%)")
+  ) %>%
+    kableExtra::row_spec(
+      which(result$Dažnis < 5),
+      bold = TRUE, background = "#FFD700"
+    )
+}
+```
+
+```{r echo=FALSE}
+make_freq_table(df, "Browser",          "Naršyklė")
+make_freq_table(df, "TrafficType",      "Srauto tipas")
+```
+
+```{r}
+df <- df %>%
+  filter(Browser != 9) %>%
+  filter(!TrafficType %in% c(12, 16, 17))
+```
+
+```{r, fig.width=8, fig.height=6}
+var_labels <- c(
+  "Administrative"          = "Administraciniai puslapiai",
+  "Administrative_Duration" = "Laikas administraciniuose\npuslapiuose",
+  "Informational"           = "Informaciniai puslapiai",
+  "Informational_Duration"  = "Laikas informaciniuose\npuslapiuose",
+  "ProductRelated"          = "Produktų puslapiai",
+  "BounceRates"             = "Atšokimo dažnis",
+  "ExitRates"               = "Išėjimo dažnis",
+  "PageValues"              = "Puslapio vertė",
+  "SpecialDay"              = "Ypatinga diena"
+)
+
+col_subset <- names(var_labels)
+
+df_long <- df %>%
+  filter(
+    PageValues != 0,
+    BounceRates != 0,
+    Administrative_Duration != 0,
+    Informational_Duration != 0
+  ) %>%
+  tidyr::pivot_longer(
+    cols = all_of(col_subset),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  mutate(variable = var_labels[variable])
+
+ggplot(df_long, aes(x = value, y = ProductRelated_Duration)) +
+  geom_point(alpha = 0.45, size = 0.4, color = "#2C3E50") +
+  geom_smooth(method = "lm", color = "#E74C3C", linewidth = 0.8, se = TRUE) +
+  facet_wrap(~ variable, scales = "free_x", ncol = 3) +
+  scale_x_continuous(
+    trans  = "log1p",
+    breaks = scales::trans_breaks("log1p", function(x) round(exp(x) - 1))
+  ) +
+  scale_y_continuous(
+    trans  = "log1p",
+    breaks = c(0, 10, 100, 1000, 10000)
+  ) +
+  labs(x = NULL, y = "Trukmė produktų puslapiuose") +
+  theme_minimal() +
+  theme(
+    strip.text       = element_text(color = "black", face = "bold", size = 9),
+    panel.grid.minor = element_blank(),
+    axis.text        = element_text(size = 12)
+  )
+```
+
+```{r}
+cor_table <- sapply(col_subset, function(var) {
+  cor.test(df[[var]], df$ProductRelated_Duration, method = "spearman")
+}) |>
+  t() |>
+  as.data.frame() |>
+  transmute(
+    variable = var_labels[col_subset],
+    rho      = round(unlist(estimate), 3)
+  )
+
+row.names(cor_table) <- NULL
+
+knitr::kable(
+  cor_table,
+  col.names = c("Kintamasis", "Spearmano koeficientas"),
+  caption   = "Spirmano koreliacijos su trukme apsilankymų produktų puslapiuose"
+) %>%
+  kableExtra::row_spec(which(abs(cor_table$rho) > 0.25), bold = TRUE)
+```
+
+```{r}
+var_labels2 <- c(
+  "Month"           = "Mėnuo",
+  "OperatingSystems" = "Operacinė sistema",
+  "Browser"         = "Naršyklė",
+  "Region"          = "Regionas",
+  "VisitorType"     = "Lankytojo tipas",
+  "Weekend"         = "Savaitgalis"
+)
+
+col_subset2 <- names(var_labels2)
+
+boot_ci <- function(x, bound, R = 500) {
+  b  <- boot::boot(x, function(d, i) mean(d[i]), R = R)
+  ci <- boot::boot.ci(b, type = "perc")
+  ci$percent[bound]
+}
+
+df_long2 <- df %>%
+  mutate(across(all_of(col_subset2), as.factor)) %>%
+  tidyr::pivot_longer(
+    cols = all_of(col_subset2),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  mutate(variable = var_labels2[variable])
+
+df_summary <- df_long2 %>%
+  group_by(variable, value) %>%
+  summarise(
+    mean_y = mean(ProductRelated_Duration),
+    lower  = boot_ci(ProductRelated_Duration, 4),
+    upper  = boot_ci(ProductRelated_Duration, 5),
+    .groups = "drop"
+  )
+
+ggplot(df_summary, aes(x = value, y = mean_y)) +
+  geom_col(fill = "#2C3E50") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                width = 0.3, color = "#E74C3C") +
+  facet_wrap(~ variable, scales = "free_x", ncol = 3) +
+  labs(x = NULL, y = "Trukmė produktų puslapiuose") +
+  theme_minimal() +
+  theme(
+    strip.text       = element_text(color = "black", face = "bold", size = 9),
+    panel.grid.minor = element_blank(),
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 7)
+  )
+```

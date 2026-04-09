@@ -1,0 +1,27 @@
+---
+output:
+  pdf_document:
+    fig_caption: true
+    number_sections: true
+    toc: false
+lang: lt
+bibliography: bibliografija.bib
+csl: harvard-cite-them-right.csl
+link-citations: true
+fig_caption: true
+extra_dependencies: ["float", "multicol"]
+header-includes:
+- \renewcommand{\contentsname}{Turinys}
+- \usepackage{float}
+- \usepackage{booktabs}
+- \usepackage{multicol}
+- \usepackage{amsthm}
+- \usepackage[utf8]{inputenc}
+- \usepackage[T1]{fontenc}
+- \newtheorem*{proposition}{Teiginys}
+- \newtheorem*{definition}{Apibrėžimas}
+editor_options:
+  markdown:
+    wrap: sentence
+nocite: '@tiesiniai_modeliai @regresine_analize'
+---
