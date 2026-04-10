@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.29)  9 APR 2026 22:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.29)  10 APR 2026 20:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -569,7 +569,7 @@ File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count349
 ) (./_main.aux
 
-LaTeX Warning: Label `tab:unnamed-chunk-10' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-22' multiply defined.
 
 )
 \openout1 = `_main.aux'.
@@ -717,47 +717,40 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 \tf@toc=\write5
 \openout5 = `_main.toc'.
 
-[5] [6{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}]
-
-LaTeX Warning: Reference `tab:OperatingSystems' on page 7 undefined on input line 434.
-
-[7]
-<_main_files/figure-latex/unnamed-chunk-12-1.pdf, id=95, 433.62pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-12-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 495.
+[5] [6{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}] [7]
+<_main_files/figure-latex/unnamed-chunk-24-1.pdf, id=103, 578.16pt x 433.62pt>
+File: _main_files/figure-latex/unnamed-chunk-24-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-24-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-24-1.pdf  used on input line 514.
+(pdftex.def)             Requested size: 578.15858pt x 433.61894pt.
+[8] [9 <./_main_files/figure-latex/unnamed-chunk-24-1.pdf>]
+<_main_files/figure-latex/unnamed-chunk-26-1.pdf, id=122, 433.62pt x 289.08pt>
+File: _main_files/figure-latex/unnamed-chunk-26-1.pdf Graphic file (type pdf)
+<use _main_files/figure-latex/unnamed-chunk-26-1.pdf>
+Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-26-1.pdf  used on input line 561.
 (pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-[8]
-<_main_files/figure-latex/unnamed-chunk-14-1.pdf, id=100, 433.62pt x 289.08pt>
-File: _main_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
-<use _main_files/figure-latex/unnamed-chunk-14-1.pdf>
-Package pdftex.def Info: _main_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 517.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-[9 <./_main_files/figure-latex/unnamed-chunk-12-1.pdf>] [10 <./_main_files/figure-latex/unnamed-chunk-14-1.pdf>] [11] (./_main.aux)
+[10 <./_main_files/figure-latex/unnamed-chunk-26-1.pdf>] [11] (./_main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-14>
  ***********
 
-LaTeX Warning: There were undefined references.
-
-
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 14378 strings out of 469519
- 228354 string characters out of 5468255
- 684025 words of memory out of 5000000
- 42730 multiletter control sequences out of 15000+600000
+ 14389 strings out of 469519
+ 228499 string characters out of 5468255
+ 683376 words of memory out of 5000000
+ 42736 multiletter control sequences out of 15000+600000
  669100 words of font info for 67 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 89i,12n,93p,542b,551s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 89i,12n,93p,542b,558s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/lukas/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on _main.pdf (11 pages, 1171653 bytes).
+Output written on _main.pdf (11 pages, 1178337 bytes).
 PDF statistics:
- 216 PDF objects out of 1000 (max. 8388607)
- 174 compressed objects within 2 object streams
- 40 named destinations out of 1000 (max. 500000)
+ 229 PDF objects out of 1000 (max. 8388607)
+ 187 compressed objects within 2 object streams
+ 45 named destinations out of 1000 (max. 500000)
  80 words of extra memory for PDF output out of 10000 (max. 10000000)
 

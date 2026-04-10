@@ -68,11 +68,16 @@ theme_set(theme_minimal(base_size = 16))
 
 \subsection*{Aktualumas}
 
-Nustatyti, ar 
+Nustatyti, kiek laiko naudotojas praleidžia internetinės parduotuvės
+svetainėje ir kokie faktoriai tai įtakoja, gali padėti nustatyti rinkodaros 
+strategijas, nustatyti į ką atsižvelgti, norint prailginti šią trukmę.
+Taip pat, nustatę, kurie naudotojai tikėtinai praleis mažai laiko, 
+galėsime nustatyti, kuriems naudotojams geriau pritaikyti kai kuriuos 
+naudotojo sąsajos elementus (pvz. tokiems naudotojams naudoti greitesnius serverius).  
 
 \subsection*{Tikslas}
 
-Mūsų tikslas yra prognozuoti laiką, kurį naudotojai praleis svetainės puslapiuose
+Mūsų tikslas yra prognozuoti laiką, kurį naudotojai praleis svetainės puslapiuose.
 
 
 \subsection*{Uždaviniai}
