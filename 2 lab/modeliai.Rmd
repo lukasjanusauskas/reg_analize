@@ -1,0 +1,163 @@
+```{r, include=FALSE}
+library(splines)
+library(ggplot2)
+library(mgcv)
+library(caret)
+```
+
+# Duomenų padalijimas
+
+```{r}
+set.seed(4)
+train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.8, list = FALSE)
+train_df <- df[train_idx, ]
+test_df <- df[-train_idx, ]
+```
+
+# Spline modeliai
+
+```{r}
+df_values <- 3:10
+cv_folds  <- createFolds(train_df$ProductRelated_Duration, k = 5)
+
+# Geriausio df parinkimas per kryžminę patikrą (B-Spline)
+bs_cv_rmse <- sapply(df_values, function(d) {
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    tr <- train_df[-idx, ]
+    val <- train_df[idx, ]
+    m <- lm(ProductRelated_Duration ~ bs(ProductRelated, df = d,
+                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
+                 Administrative + PageValues + VisitorType + Weekend, data = tr)
+    pred <- predict(m, newdata = val)
+    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
+  })
+  mean(fold_rmse)
+})
+
+best_bs_df <- df_values[which.min(bs_cv_rmse)]
+cat("Geriausias B-Spline df:", best_bs_df, "\n")
+```
+
+```{r}
+# Geriausio df parinkimas per kryžminę patikrą (Natural Spline)
+ns_cv_rmse <- sapply(df_values, function(d) {
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    tr <- train_df[-idx, ]
+    val <- train_df[idx, ]
+    m <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = d,
+                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
+                 Administrative + PageValues + VisitorType + Weekend, data = tr)
+    pred <- predict(m, newdata = val)
+    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
+  })
+  mean(fold_rmse)
+})
+
+best_ns_df <- df_values[which.min(ns_cv_rmse)]
+cat("Geriausias Natural Spline df:", best_ns_df, "\n")
+```
+
+```{r}
+bs_model <- lm(ProductRelated_Duration ~ bs(ProductRelated, df = best_bs_df,
+                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
+                 Administrative + PageValues + VisitorType + Weekend, data = train_df)
+ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = best_ns_df,
+                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
+                 Administrative + PageValues + VisitorType + Weekend, data = train_df)
+```
+
+# GAM modelis
+
+```{r}
+gam_model <- gam(ProductRelated_Duration ~ s(ProductRelated) + s(Administrative) +
+                   s(PageValues) + VisitorType + Weekend,
+                 data = train_df, method = "REML")
+
+summary(gam_model)
+```
+
+# Lokalios regresijos modelis
+
+```{r}
+# Geriausio span parinkimas per kryžminę patikrą
+span_values <- seq(0.1, 0.9, by = 0.1)
+
+loess_cv_rmse <- sapply(span_values, function(s) {
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    tr <- train_df[-idx, ]
+    val <- train_df[idx, ]
+    m <- loess(ProductRelated_Duration ~ ProductRelated + Administrative + PageValues,
+                  data = tr, span = s)
+    pred <- predict(m, newdata = val)
+    na_idx <- is.na(pred)
+    if (any(na_idx)) {
+      val_clamped <- val
+      num_vars <- names(Filter(is.numeric, tr))
+      for (var in num_vars) {
+        val_clamped[[var]] <- pmin(val[[var]], max(tr[[var]], na.rm = TRUE))
+      }
+      pred[na_idx] <- predict(m, newdata = val_clamped)[na_idx]
+    }
+    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
+  })
+  mean(fold_rmse)
+})
+
+best_span <- span_values[which.min(loess_cv_rmse)]
+cat("Geriausias span:", best_span, "\n")
+```
+
+```{r}
+loess_model <- loess(ProductRelated_Duration ~ ProductRelated + Administrative + PageValues,
+                     data = train_df, span = best_span)
+```
+
+# Modelių palyginimas
+
+```{r}
+eval_metrics <- function(actual, predicted) {
+  rmse <- sqrt(mean((actual - predicted)^2))
+  r2 <- cor(actual, predicted)^2
+  mae <- mean(abs(actual - predicted))
+  c(RMSE = round(rmse, 2), R2 = round(r2, 4), MAE = round(mae, 2))
+}
+
+# Jei po prognozavimo atsiranda NA reikšmės, faktorių reikšmes reikia pakeisti į mokymo duomenų intervalą
+clamp_predict <- function(model, newdata, train_data) {
+  pred <- predict(model, newdata = newdata)
+  na_idx <- is.na(pred)
+  if (any(na_idx)) {
+    num_vars <- names(Filter(is.numeric, train_data))
+    newdata_clamped <- newdata
+    for (var in num_vars) {
+      rng <- range(train_data[[var]], na.rm = TRUE)
+      newdata_clamped[[var]] <- pmax(pmin(newdata[[var]], rng[2]), rng[1])
+    }
+    pred[na_idx] <- predict(model, newdata = newdata_clamped)[na_idx]
+  }
+  pred
+}
+
+bs_pred <- clamp_predict(bs_model, test_df, train_df)
+ns_pred <- clamp_predict(ns_model, test_df, train_df)
+gam_pred <- clamp_predict(gam_model, test_df, train_df)
+loess_pred <- clamp_predict(loess_model, test_df, train_df)
+
+rezultatai <- data.frame(
+  Modelis = c("B-Spline", "Natural Spline", "GAM", "Lokalioji regresija"),
+  rbind(
+    eval_metrics(test_df$ProductRelated_Duration, bs_pred),
+    eval_metrics(test_df$ProductRelated_Duration, ns_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred),
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred)
+  )
+)
+
+knitr::kable(rezultatai,
+             col.names = c("Modelis", "RMSE", "R²", "MAE"),
+             caption   = "Modelių palyginimas testavimo aibėje")
+```
+
+```{r}
+AIC(bs_model, ns_model, gam_model)
+```
