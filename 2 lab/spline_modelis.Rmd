@@ -1,0 +1,50 @@
+```{r}
+library(splines)
+library(ggplot2)
+library(mgcv)
+```
+
+```{r}
+# reikia pridėti ieškojimą geriausio df
+spline_model <- lm(ProductRelated_Duration ~ bs(ProductRelated, df = 5), data = df)
+
+summary(spline_model)
+```
+
+```{r}
+ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = 5), data = df)
+
+summary(ns_model)
+```
+
+
+
+```{r}
+gam_model <- gam(ProductRelated_Duration ~ s(ProductRelated) + s(Administrative) + 
+                 s(PageValues) + VisitorType + Weekend, 
+                 data = df, method = "REML")
+
+summary(gam_model)
+```
+
+
+```{r}
+termplot(spline_model, partial.resid = TRUE, se = TRUE, main = "B-Spline")
+termplot(ns_model, partial.resid = TRUE, se = TRUE, main = "Spline su tiesiais galais")
+```
+
+
+```{r}
+gam.check(gam_model)
+```
+
+
+```{r}
+AIC(spline_model, ns_model, gam_model)
+
+```
+
+
+
+
+
