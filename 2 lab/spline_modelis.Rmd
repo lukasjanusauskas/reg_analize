@@ -8,8 +8,8 @@ library(caret)
 # Duomenų padalijimas
 
 ```{r}
-set.seed(4)
-train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.8, list = FALSE)
+set.seed(1234)
+train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.75, list = FALSE)
 train_df <- df[train_idx, ]
 test_df <- df[-train_idx, ]
 ```
@@ -59,54 +59,96 @@ cat("Geriausias Natural Spline df:", best_ns_df, "\n")
 ```
 
 ```{r}
-bs_model <- lm(ProductRelated_Duration ~ bs(ProductRelated, df = best_bs_df) +
-                 Administrative + PageValues + VisitorType + Weekend, data = train_df)
+bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 3), data = train_df)
 summary(bs_model)
 ```
 
 ```{r}
-ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = best_ns_df,
-                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
-                 Administrative + PageValues + VisitorType + Weekend, data = train_df)
+ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = best_ns_df), data = train_df)
 
 summary(ns_model)
 ```
-
 # GAM modelis
 
 ```{r}
-gam_model <- gam(log1p(ProductRelated) ~ 
-                   s(Administrative) + 
-                   s(Administrative_Duration) + 
-                   s(Informational) + 
+# gam_model <- gam(ProductRelated_duration ~ 
+#                    s(Administrative) + 
+#                    s(Administrative_Duration) + 
+#                    s(Informational) + 
+#                    s(Informational_Duration) +
+#                    s(PageValues) + 
+#                    s(BounceRates)+
+#                    s(ExitRates) +
+#                    Month + TrafficType + SpecialDay +
+#                  VisitorType + Weekend, 
+#                  data = train_df, method = "REML")
+
+# R-sq.(adj) =   0.48   Deviance explained = 48.5%
+# TRAIN RMSE: 1410.4 
+# TEST  RMSE: 1685.06 
+# 
+# TRAIN MAE: 848.67 seconds
+# TEST  MAE: 918.06 seconds
+
+gam_model <- gam(log1p(ProductRelated_Duration) ~
+                   s(Administrative) +
+                   s(Administrative_Duration) +
+                   s(Informational) +
                    s(Informational_Duration) +
-                   s(PageValues) + 
+                   s(PageValues) +
                    s(BounceRates)+
                    s(ExitRates) +
                    Month + TrafficType + SpecialDay +
-                 VisitorType + Weekend, 
+                 VisitorType + Weekend,
                  data = train_df, method = "REML")
 
+# R-sq.(adj) =  0.485   Deviance explained = 48.9%
+# TRAIN RMSE: 1585.81 
+# TEST  RMSE: 1827.46 
+# 
+# TRAIN MAE: 793.15 seconds
+# TEST  MAE: 850.64 seconds
+```
+
+```{r}
 summary(gam_model)
 ```
-```{r}
-concurvity(gam_model, full = TRUE)
-```
-```{r}
-library(gratia)
-```
-```{r}
-draw(gam_model, select = "s(ExitRates)")
-draw(gam_model, select = "s(BounceRates)")
-```
-
-```{r}
-plot(predict(gam_model), train_df$ProductRelated_Duration)
-```
-
 
 ```{r}
 gam.check(gam_model)
+```
+
+```{r}
+train_preds_log <- predict(gam_model, newdata = train_df)
+test_preds_log  <- predict(gam_model, newdata = test_df)
+
+train_preds_real <- expm1(train_preds_log)
+test_preds_real  <- expm1(test_preds_log)
+
+train_actual_real <- train_df$ProductRelated_Duration
+test_actual_real  <- test_df$ProductRelated_Duration
+
+rmse_train <- sqrt(mean((train_actual_real - train_preds_real)^2))
+rmse_test  <- sqrt(mean((test_actual_real - test_preds_real)^2))
+
+mae_train <- mean(abs(train_actual_real - train_preds_real))
+mae_test  <- mean(abs(test_actual_real - test_preds_real))
+
+cat("TRAIN RMSE:", round(rmse_train, 2), "\n")
+cat("TEST  RMSE:", round(rmse_test, 2), "\n\n")
+cat("TRAIN MAE:", round(mae_train, 2), "seconds\n")
+cat("TEST  MAE:", round(mae_test, 2), "seconds\n")
+```
+
+```{r}
+ggplot(data = data.frame(actual = test_actual_real, pred = test_preds_real), 
+       aes(x = actual, y = pred)) +
+  geom_point(alpha = 0.3) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Test Set: Predicted vs. Actual Duration",
+       x = "Actual Duration (sec)",
+       y = "Predicted Duration (sec)") +
+  theme_minimal()
 ```
 
 # Lokalios regresijos modelis
