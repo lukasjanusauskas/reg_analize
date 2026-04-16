@@ -68,6 +68,7 @@ ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = best_ns_df), da
 
 summary(ns_model)
 ```
+
 # GAM modelis
 
 ```{r}
@@ -154,43 +155,86 @@ ggplot(data = data.frame(actual = test_actual_real, pred = test_preds_real),
 # Lokalios regresijos modelis
 
 ```{r}
-# Geriausio span parinkimas per kryžminę patikrą
+target <- "ProductRelated_Duration"
 
-# Kol kas užkomentuoju, nes labai ilgai užtrunka, man paskaičiavo best_span = 0.9
+X_train <- train_df |> select(-all_of(target)) |> select(where(is.numeric))
+y_train <- train_df[[target]]
 
-# span_values <- seq(0.1, 0.9, by = 0.1)
-# 
-# loess_cv_rmse <- sapply(span_values, function(s) {
-#   fold_rmse <- sapply(cv_folds, function(idx) {
-#     tr <- train_df[-idx, ]
-#     val <- train_df[idx, ]
-#     m <- loess(ProductRelated_Duration ~ ProductRelated + Administrative + PageValues,
-#                   data = tr, span = s)
-#     pred <- predict(m, newdata = val)
-#     na_idx <- is.na(pred)
-#     if (any(na_idx)) {
-#       val_clamped <- val
-#       num_vars <- names(Filter(is.numeric, tr))
-#       for (var in num_vars) {
-#         val_clamped[[var]] <- pmin(val[[var]], max(tr[[var]], na.rm = TRUE))
-#       }
-#       pred[na_idx] <- predict(m, newdata = val_clamped)[na_idx]
-#     }
-#     sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
-#   })
-#   mean(fold_rmse)
-# })
-# 
-# best_span <- span_values[which.min(loess_cv_rmse)]
+span_values   <- seq(0.1, 0.9, by = 0.1)
+pcaComp_values <- 1:3
 
-best_span = 0.9
+grid_results <- expand.grid(span = span_values, pcaComp = pcaComp_values)
+grid_results$RMSE <- NA
 
-cat("Geriausias span:", best_span, "\n")
+for (i in seq_len(nrow(grid_results))) {
+  s  <- grid_results$span[i]
+  pc <- grid_results$pcaComp[i]
+  
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    
+    X_tr  <- X_train[-idx, ]
+    y_tr  <- y_train[-idx]
+    X_val <- X_train[idx, ]
+    y_val <- y_train[idx]
+    
+    # PCA 
+    preproc <- preProcess(X_tr, method = c("center", "scale", "pca"),
+                          pcaComp = pc)
+    
+    X_tr_pca  <- predict(preproc, X_tr)  |> mutate(!!target := y_tr)
+    X_val_pca <- predict(preproc, X_val)
+    
+    # LOESS 
+    pc_cols      <- paste0("PC", 1:pc)
+    loess_formula <- as.formula(paste(target, "~", paste(pc_cols, collapse = " + ")))
+
+    m <- loess(loess_formula, data = X_tr_pca, span = s)
+
+    pred <- predict(m, newdata = X_val_pca)
+    
+    # NA tvarkymas
+    na_idx <- is.na(pred)
+    if (any(na_idx)) {
+      X_val_clamped <- X_val_pca
+      for (var in pc_cols) {
+        X_val_clamped[[var]] <- pmin(X_val_pca[[var]], max(X_tr_pca[[var]], na.rm = TRUE))
+      }
+      pred[na_idx] <- predict(m, newdata = X_val_clamped)[na_idx]
+    }
+    
+    sqrt(mean((y_val - pred)^2, na.rm = TRUE))
+  })
+  
+  grid_results$RMSE[i] <- mean(fold_rmse)
+}
+
+best_row  <- grid_results[which.min(grid_results$RMSE), ]
+best_span    <- best_row$span
+best_pcaComp <- best_row$pcaComp
+
+cat("Geriausias span:   ", best_span, "\n")
+cat("Geriausias pcaComp:", best_pcaComp, "\n")
+cat("RMSE:              ", round(best_row$RMSE, 4), "\n")
+
+
+
+ggplot(grid_results, aes(x = span, y = RMSE, color = factor(pcaComp))) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(x = "Span", y = "RMSE", color = "pcaComp") +
+  theme_minimal()
 ```
 
 ```{r}
-loess_model <- loess(ProductRelated_Duration ~ ProductRelated + Administrative + PageValues,
-                     data = train_df, span = best_span)
+preproc <- preProcess(X_train, method = c("center", "scale", "pca"),
+                          pcaComp = best_pcaComp)
+
+X_tr_pca  <- predict(preproc, X_train)  |> mutate(!!target := y_train)
+
+X_test_pca <- predict(preproc, X_test)
+
+loess_model <- loess(ProductRelated_Duration ~ PC1, data = X_tr_pca, span = best_span)
 ```
 
 # Modelių palyginimas
@@ -222,7 +266,7 @@ clamp_predict <- function(model, newdata, train_data) {
 bs_pred <- clamp_predict(bs_model, test_df, train_df)
 ns_pred <- clamp_predict(ns_model, test_df, train_df)
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
-loess_pred <- clamp_predict(loess_model, test_df, train_df)
+loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 
 rezultatai <- data.frame(
   Modelis = c("B-Spline", "Natural Spline", "GAM", "Lokalioji regresija"),
