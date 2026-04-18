@@ -232,7 +232,7 @@ preproc <- preProcess(X_train, method = c("center", "scale", "pca"),
 
 X_tr_pca  <- predict(preproc, X_train)  |> mutate(!!target := y_train)
 
-X_test_pca <- predict(preproc, X_test)
+X_test_pca <- predict(preproc, test_df)
 
 loess_model <- loess(ProductRelated_Duration ~ PC1, data = X_tr_pca, span = best_span)
 ```
