@@ -11,9 +11,6 @@ library(gam)
 ```{r}
 set.seed(1234)
 
-df <- df %>% 
-  select( -c("ProductRelated") )
-
 train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.75, list = FALSE)
 train_df <- df[train_idx, ]
 test_df <- df[-train_idx, ]
@@ -172,6 +169,7 @@ cat("Geriausias glodžiųjų splainų mazgų skaičius:", best_ns_df,     "\n")
 cat("Geriausia lambda vertė:", best_ns_lambda, "\n")
 
 ```
+
 ```{r}
 ss_model <- smooth.spline(train_df$Administrative_Duration, train_df$ProductRelated_Duration, df = 3, lambda=0.003290345)
 
