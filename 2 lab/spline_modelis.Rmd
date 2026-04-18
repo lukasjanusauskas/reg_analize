@@ -212,7 +212,7 @@ cat("lambda:   ", ss_model$lambda,     "\n")
 # TRAIN MAE: 848.67 seconds
 # TEST  MAE: 918.06 seconds
 
-gam_model <- gam(log1p(ProductRelated_Duration) ~
+gam_model <- gam(ProductRelated_Duration ~
                    s(Administrative) +
                    s(Administrative_Duration) +
                    s(Informational) +
