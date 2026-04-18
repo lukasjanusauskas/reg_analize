@@ -46,7 +46,6 @@ num_features <- data.frame(
     "Administracinių puslapių trukmė", 
     "Informaciniai puslapiai", 
     "Informacinių puslapių trukmė", 
-    "Produktų puslapiai", 
     "Produktų puslapių trukmė", 
     "Atšokimo dažnis", 
     "Išėjimo dažnis", 
@@ -58,7 +57,6 @@ num_features <- data.frame(
     "Bendras laikas (sekundėmis), kurį lankytojas praleido paskyros valdymo puslapiuose.",
     "Kiek kartų lankytojas lankėsi informaciniuose puslapiuose.",
     "Bendras laikas (sekundėmis), kurį lankytojas praleido informaciniuose puslapiuose.",
-    "Kiek kartų lankytojas lankėsi parduodamų daiktų puslapiuose.",
     "Bendras laikas (sekundėmis), kurį lankytojas praleido parduodamų daiktų puslapiuose.",
     "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta tik viena prekė.",
     "Vidutinis lankytojo aplankytų puslapių skaičius, prieš pabaigiant sesiją, kai aplankyta daugiau nei viena prekė.",
@@ -71,7 +69,6 @@ num_features <- data.frame(
 knitr::kable(num_features, 
       caption = "Kiekybinių kintamųjų aprašymas\\label{tab:num_features}")
 ```
-
 
 ```{r}
 cat_features <- data.frame(
@@ -104,13 +101,12 @@ knitr::kable(cat_features,
 
 ## Duomenų paruošimas
 
-Kintamieji „Operacinė sistema“, „Naršyklė“, „Regionas“ ir „Srauto tipas“ yra
-kategoriniai kintamieji, užkoduoti natūraliais skaičiais. Todėl juos
+Kintamieji „Operacinė sistema“, „Naršyklė“, „Regionas“ ir „Srauto tipas“
+yra kategoriniai kintamieji, užkoduoti natūraliais skaičiais. Todėl juos
 pakeičiame atitinkamais faktoriais ir vėliau iš jų formuosime fiktyvius
 kintamuosius. Kintamasis „SpecialDay“, sprendžiant pagal reikšmes ir
 aprašymą yra ranginis kitamasis įgaunantis 6 skirtingas reikšmes:
 $\{0;\ 0,2;\ \dots;\ 1\}$.
-
 
 ```{r}
 # duomenu atsisiuntimo nuoroda: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset
@@ -129,8 +125,10 @@ int_faktoriai <- c(
   "TrafficType"
 )
 df[int_faktoriai] <- lapply( df[int_faktoriai], as.factor )
-```
 
+df <- df %>% 
+  select( -c("ProductRelated") )
+```
 
 Duomenų aprašyme autoriai teigia, kad praleistų reikšmių nėra. Mes
 pasitikslinome, pasileidę atitinkamą *R* kodą - praleistų reikšmių nėra.
@@ -151,9 +149,9 @@ skaitinių charakteristikų lentelę kiekybiniams kintamiesiems
 charakteristikų žymėjimai: Min - minimumas, $Q_n$ - $n$-tasis kvartilis,
 $\mu$ - vidurkis, Max - maximumas. \ref{tab:char} lentelėje matome, jog
 nėra jokių nelogiškai išsiskiriančių reikšmių kintamuosiuose
-nesusijusiuose su apsilankymo trukme. Tačiau pastebėjome, kad kintamieji, 
-susijusiems su sesijos trukme, turi loginių išskirčių, kurių tvarkybą pakomentuosim
-sekančiame paragrafe.
+nesusijusiuose su apsilankymo trukme. Tačiau pastebėjome, kad
+kintamieji, susijusiems su sesijos trukme, turi loginių išskirčių, kurių
+tvarkybą pakomentuosim sekančiame paragrafe.
 
 ```{r}
 summary_tbl <- df %>%
@@ -212,26 +210,25 @@ df <- df %>%
     Administrative_Duration + Informational_Duration + ProductRelated_Duration != 0,
     !(Administrative == 0 & Administrative_Duration != 0),
     !(Informational == 0 & Informational_Duration != 0),
-    !(ProductRelated == 0 & ProductRelated_Duration != 0),
     !(Administrative > 0 & Administrative_Duration == 0),
-    !(Informational > 0 & Informational_Duration == 0),
-    !(ProductRelated > 0 & ProductRelated_Duration == 0)
+    !(Informational > 0 & Informational_Duration == 0)
   )
 ```
 
 ## Duomenų pradinė analizė
 
 Prieš apmokant regresijos modelius labai svarbu įsitikinti, kad
-kategorinio kintamojo lygmenų kartotinumas yra pakankamai didelis,
-nes lygmenims, turintiems mažai stebėjimų, negalėsime daryti išvadų.
-Toliau pašaliname kategorinių kintamųjų lygmenis, turinčius 5 ar mažiau stebėjimų.
+kategorinio kintamojo lygmenų kartotinumas yra pakankamai didelis, nes
+lygmenims, turintiems mažai stebėjimų, negalėsime daryti išvadų. Toliau
+pašaliname kategorinių kintamųjų lygmenis, turinčius 5 ar mažiau
+stebėjimų.
 
-Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių lygmenų. 
-„Naršyklės" devintas lygmuo, turi mažiau nei 5 stebėjimus.
-Tuo tarpu faktorius „Srauto tipas" turi tris probleminius lygmenis, kuriuos
-mes išimsime: būtent 12-as, 16-as ir 17-as.
-Šių faktorių dažnių lentelės pateiktos atitinkamai \ref{tab:Browser} ir 
-\ref{tab:TrafficType} lentelėse. 
+Iš žemiau pateiktų lentelių, matome, kad yra probleminių faktorių
+lygmenų. „Naršyklės" devintas lygmuo, turi mažiau nei 5 stebėjimus. Tuo
+tarpu faktorius „Srauto tipas" turi tris probleminius lygmenis, kuriuos
+mes išimsime: būtent 12-as, 16-as ir 17-as. Šių faktorių dažnių lentelės
+pateiktos atitinkamai \ref{tab:Browser} ir \ref{tab:TrafficType}
+lentelėse.
 
 \newpage
 
@@ -265,22 +262,23 @@ df <- df %>%
   filter(!TrafficType %in% c(12, 16, 17))
 ```
 
-Toliau tiriame kiekybinių požymių sąryšius su atsaku - laiku, praleistu produktų puslapiuose.
-Sąryšius tiriame, pasitelkę sklaidos diagramų groteles (žr. \ref{fig:scatterplots} pav.),
-kurių x ir y ašims pritaikyta logaritminė transformacija.
-Pastebime, kad turime tam tikrą koreliacija su visomis potencialiomis kovariantėmis 
-išskyrus kintamąjį „Ypatinga diena“.
-Aplankytų administracinių, informacinių ir produktų puslapių skaičius natūraliai 
-reiškia didesnę trukmę, praleistą produktų puslapiuose, taigi pastebime teigiamą koreliaciją.
-Neigiamą puslapių kokybę atskleidžiančios „Google Analytics“ metrikos „Atšokimo dažnis
-ir Išėjimo dažnis turi neigiamą koreliaciją su.
-Kas irgi yra akivaizdu - kuo naudotojo aplankyti puslapiai yra labiau linkę būti 
-sesijos pabaigimo priežastimi ar būti praversti nesukūrus jokios užklausos puslapyje, 
-tuo puslapiai yra labiau linkę skatinti naudotoją atsijungti nuo internetinės parduotuvės.
-Tuo tarpu puslapio Google Analytics vertė turi neigiamą koreliaciją su atsaku, 
-kas nėra intuityvu.
-Tai galimai yra konkurentų puslapiai, turintys aukštus įvertinimus ar kita problema, 
-į kurią reikėtų iš dalykinės pasižiūrėti.
+Toliau tiriame kiekybinių požymių sąryšius su atsaku - laiku, praleistu
+produktų puslapiuose. Sąryšius tiriame, pasitelkę sklaidos diagramų
+groteles (žr. \ref{fig:scatterplots} pav.), kurių x ir y ašims
+pritaikyta logaritminė transformacija. Pastebime, kad turime tam tikrą
+koreliacija su visomis potencialiomis kovariantėmis išskyrus kintamąjį
+„Ypatinga diena“. Aplankytų administracinių, informacinių ir produktų
+puslapių skaičius natūraliai reiškia didesnę trukmę, praleistą produktų
+puslapiuose, taigi pastebime teigiamą koreliaciją. Neigiamą puslapių
+kokybę atskleidžiančios „Google Analytics“ metrikos „Atšokimo dažnis ir
+Išėjimo dažnis turi neigiamą koreliaciją su. Kas irgi yra akivaizdu -
+kuo naudotojo aplankyti puslapiai yra labiau linkę būti sesijos
+pabaigimo priežastimi ar būti praversti nesukūrus jokios užklausos
+puslapyje, tuo puslapiai yra labiau linkę skatinti naudotoją atsijungti
+nuo internetinės parduotuvės. Tuo tarpu puslapio Google Analytics vertė
+turi neigiamą koreliaciją su atsaku, kas nėra intuityvu. Tai galimai yra
+konkurentų puslapiai, turintys aukštus įvertinimus ar kita problema, į
+kurią reikėtų iš dalykinės pasižiūrėti.
 
 Šias išvadas patvirtina ir \ref{tab:spearman_coef} lentelė.
 
@@ -291,7 +289,6 @@ var_labels <- c(
   "Administrative_Duration" = "Laikas administraciniuose\npuslapiuose",
   "Informational"           = "Informaciniai puslapiai",
   "Informational_Duration"  = "Laikas informaciniuose\npuslapiuose",
-  "ProductRelated"          = "Produktų puslapiai",
   "BounceRates"             = "Atšokimo dažnis",
   "ExitRates"               = "Išėjimo dažnis",
   "PageValues"              = "Puslapio vertė",
@@ -356,12 +353,17 @@ knitr::kable(
   kableExtra::row_spec(which(abs(cor_table$rho) > 0.25), bold = TRUE)
 ```
 
-Iš stulpelinių grafikų, su 95 % procentilinių savirankos intervalais, (žr. 
-\ref{fig:barchart} pav.) pastebime, kad:
+Iš stulpelinių grafikų, su 95 % procentilinių savirankos intervalais,
+(žr. \ref{fig:barchart} pav.) pastebime, kad:
 
-1. Lankytojo tipas, mėnuo, kurio metu fiksuota naudotojo sesija, naudotojo naršyklė ir naudojama operacinė sistema turi reikšmingai skirtingus vidurkius praleisto laiko produktų puslapiuose.
-2. Laikas, praleistas produktų puslapiuose vidutiniškai nepriklauso nuo to, ar sesija fiksuota savaitgalį, ar ne.
-3. Tik pavieniai regionai išsiskiria laiko, praleisto produktų puslapiuose prasme, tačiau bendrai paėmus labai panašus atsako vidurkis visuose lygmenyse.
+1.  Lankytojo tipas, mėnuo, kurio metu fiksuota naudotojo sesija,
+    naudotojo naršyklė ir naudojama operacinė sistema turi reikšmingai
+    skirtingus vidurkius praleisto laiko produktų puslapiuose.
+2.  Laikas, praleistas produktų puslapiuose vidutiniškai nepriklauso nuo
+    to, ar sesija fiksuota savaitgalį, ar ne.
+3.  Tik pavieniai regionai išsiskiria laiko, praleisto produktų
+    puslapiuose prasme, tačiau bendrai paėmus labai panašus atsako
+    vidurkis visuose lygmenyse.
 
 ```{r fig.cap="Stulpeliniai grafikai tarp kokybinių kovariančių ir laiko, praleisto produktų puslapiuose tiriamoje internetinėje parduotuvėje\\label{fig:barchart}"}
 var_labels2 <- c(
