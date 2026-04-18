@@ -9,6 +9,10 @@ library(caret)
 
 ```{r}
 set.seed(1234)
+
+df <- df %>% 
+  select( -c("ProductRelated") )
+
 train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.75, list = FALSE)
 train_df <- df[train_idx, ]
 test_df <- df[-train_idx, ]
@@ -21,52 +25,169 @@ test_df <- df[-train_idx, ]
 df_values <- 3:15
 cv_folds  <- createFolds(train_df$ProductRelated_Duration, k = 5)
 
-# Geriausio df parinkimas per kryžminę patikrą (B-Spline)
-bs_cv_rmse <- sapply(df_values, function(d) {
+# Exclude target and primary spline predictor
+exclude_vars <- c("ProductRelated_Duration")
+
+candidate_vars <- names(train_df)[
+  sapply(train_df, is.numeric) &
+  !names(train_df) %in% exclude_vars
+]
+
+# Grid search: best covariate + best df (number of knots)
+cv_results <- expand.grid(var = candidate_vars, df = df_values, stringsAsFactors = FALSE)
+
+cv_results$rmse <- mapply(function(var, d) {
   fold_rmse <- sapply(cv_folds, function(idx) {
-    tr <- train_df[-idx, ]
+    tr  <- train_df[-idx, ]
     val <- train_df[idx, ]
-    m <- lm(ProductRelated_Duration ~ bs(ProductRelated, df = d,
-                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
-                 Administrative + PageValues + VisitorType + Weekend, data = tr)
+    
+    # Pure b-spline model — no additive linear terms
+    formula_str <- paste0(
+      "ProductRelated_Duration ~ bs(", var,
+      ", df = ", d,
+      ", Boundary.knots = c(min(tr$", var, ") - 0.001, max(tr$", var, ") * 1.01))"
+    )
+    
+    m    <- lm(as.formula(formula_str), data = tr)
     pred <- predict(m, newdata = val)
     sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
   })
   mean(fold_rmse)
-})
+}, cv_results$var, cv_results$df)
 
-best_bs_df <- df_values[which.min(bs_cv_rmse)]
-cat("Geriausias B-Spline df:", best_bs_df, "\n")
+# Pick the single best combination
+best_idx      <- which.min(cv_results$rmse)
+best_bs_var   <- cv_results$var[best_idx]
+best_bs_df    <- cv_results$df[best_idx]
+
+cat("Best B-Spline covariate:", best_bs_var, "\n")
+cat("Best B-Spline df:       ", best_bs_df,  "\n")
+
 ```
 
 ```{r}
-# Geriausio df parinkimas per kryžminę patikrą (Natural Spline)
-ns_cv_rmse <- sapply(df_values, function(d) {
-  fold_rmse <- sapply(cv_folds, function(idx) {
-    tr <- train_df[-idx, ]
-    val <- train_df[idx, ]
-    m <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = d,
-                 Boundary.knots = c(0, max(df$ProductRelated) * 10)) +
-                 Administrative + PageValues + VisitorType + Weekend, data = tr)
-    pred <- predict(m, newdata = val)
-    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
-  })
-  mean(fold_rmse)
-})
-
-best_ns_df <- df_values[which.min(ns_cv_rmse)]
-cat("Geriausias Natural Spline df:", best_ns_df, "\n")
-```
-
-```{r}
-bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 3), data = train_df)
+bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 4), data = train_df)
 summary(bs_model)
 ```
 
 ```{r}
-ns_model <- lm(ProductRelated_Duration ~ ns(ProductRelated, df = best_ns_df), data = train_df)
+# df yra kiek mazgų turės spline
+df_values <- 3:15
+cv_folds  <- createFolds(train_df$ProductRelated_Duration, k = 5)
+
+# Exclude target and primary spline predictor
+exclude_vars <- c("ProductRelated_Duration", "ProductRelated")
+
+candidate_vars <- names(train_df)[
+  sapply(train_df, is.numeric) &
+  !names(train_df) %in% exclude_vars
+]
+
+# Grid search: best covariate + best df (number of knots)
+cv_results <- expand.grid(var = candidate_vars, df = df_values, stringsAsFactors = FALSE)
+
+cv_results$rmse <- mapply(function(var, d) {
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    tr  <- train_df[-idx, ]
+    val <- train_df[idx, ]
+    
+    # Pure b-spline model — no additive linear terms
+    formula_str <- paste0(
+      "ProductRelated_Duration ~ ns(", var,
+      ", df = ", d,
+      ", Boundary.knots = c(min(tr$", var, ") - 0.001, max(tr$", var, ") * 1.01))"
+    )
+    
+    m    <- lm(as.formula(formula_str), data = tr)
+    pred <- predict(m, newdata = val)
+    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
+  })
+  mean(fold_rmse)
+}, cv_results$var, cv_results$df)
+
+# Pick the single best combination
+best_idx      <- which.min(cv_results$rmse)
+best_ns_var   <- cv_results$var[best_idx]
+best_ns_df    <- cv_results$df[best_idx]
+
+cat("Geriausia normalaus splaino kovariantė:", best_ns_var, "\n")
+cat("Geriausias mazgų skaičius:       ", best_ns_df,  "\n")
+
+```
+
+```{r}
+ns_model <- lm(ProductRelated_Duration ~ ns(Administrative_Duration, df = 4), data = train_df)
 
 summary(ns_model)
+```
+
+```{r}
+# df yra kiek mazgų turės spline
+df_values <- 3:15
+cv_folds  <- createFolds(train_df$ProductRelated_Duration, k = 5)
+
+exclude_vars <- c("ProductRelated_Duration", "ProductRelated")
+candidate_vars <- names(train_df)[
+  sapply(train_df, is.numeric) &
+  !names(train_df) %in% exclude_vars
+]
+
+lambda_values <- 10^seq(-6, 0, length.out = 30)
+
+# Grid search: covariate + df + lambda
+cv_results <- expand.grid(
+  var    = candidate_vars,
+  df     = df_values,
+  lambda = lambda_values,
+  stringsAsFactors = FALSE
+)
+
+cv_results$rmse <- mapply(function(var, d, lam) {
+  fold_rmse <- sapply(cv_folds, function(idx) {
+    tr  <- train_df[-idx, ]
+    val <- train_df[idx, ]
+
+    m <- tryCatch(
+      smooth.spline(tr[[var]], tr$ProductRelated_Duration, df = d, lambda = lam),
+      error = function(e) NULL
+    )
+
+    if (is.null(m)) return(NA)
+
+    pred <- predict(m, x = val[[var]])$y
+    sqrt(mean((val$ProductRelated_Duration - pred)^2, na.rm = TRUE))
+  })
+  mean(fold_rmse, na.rm = TRUE)
+}, cv_results$var, cv_results$df, cv_results$lambda)
+
+# Pick the single best combination
+best_idx       <- which.min(cv_results$rmse)
+best_ns_var    <- cv_results$var[best_idx]
+best_ns_df     <- cv_results$df[best_idx]
+best_ns_lambda <- cv_results$lambda[best_idx]
+
+cat("Geriausia glodžiųjų splainų kovariantė:", best_ns_var,    "\n")
+cat("Geriausias glodžiųjų splainų mazgų skaičius:", best_ns_df,     "\n")
+cat("Geriausia lambda vertė:", best_ns_lambda, "\n")
+
+```
+```{r}
+ss_model <- smooth.spline(train_df$Administrative_Duration, train_df$ProductRelated_Duration, df = 3, lambda=0.003290345)
+
+pred     <- predict(ss_model, x = train_df$Administrative_Duration)$y
+actual   <- train_df$ProductRelated_Duration
+
+residuals <- actual - pred
+ss_res    <- sum(residuals^2, na.rm = TRUE)
+ss_tot    <- sum((actual - mean(actual, na.rm = TRUE))^2, na.rm = TRUE)
+
+r_squared <- 1 - ss_res / ss_tot
+rmse      <- sqrt(mean(residuals^2, na.rm = TRUE))
+
+cat("R-squared:", round(r_squared, 4), "\n")
+cat("RMSE:     ", round(rmse, 4),      "\n")
+cat("df used:  ", ss_model$df,         "\n")
+cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
 # GAM modelis
@@ -244,6 +365,7 @@ eval_metrics <- function(actual, predicted) {
   rmse <- sqrt(mean((actual - predicted)^2))
   r2 <- cor(actual, predicted)^2
   mae <- mean(abs(actual - predicted))
+  mape <- mean(abs(actual - predicted)) # TODO: MAPE
   c(RMSE = round(rmse, 2), R2 = round(r2, 4), MAE = round(mae, 2))
 }
 
