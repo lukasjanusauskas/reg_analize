@@ -3,6 +3,7 @@ library(splines)
 library(ggplot2)
 library(mgcv)
 library(caret)
+library(gam)
 ```
 
 # Duomenų padalijimas
@@ -190,7 +191,11 @@ cat("df used:  ", ss_model$df,         "\n")
 cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
-# GAM modelis
+# GAM modeliai
+
+Pirmame GAM modelyje kiekvienam skaitiniam kintamajam taikomi glodinantys splainai, o konkrečiai – thin plate regression splines. Tai yra numatytasis splainų tipas, naudojamas mgcv pakete. Šie splainai pasižymi tuo, kad nereikalauja iš anksto parinkti mazgų (angl. knots) vietų – jų forma automatiškai nustatoma iš duomenų. 
+
+Antru atveju sudaromas modelis, kuriame naudojami du skirtingi netiesinių ryšių modeliavimui skirti metodai. Daliai kintamųjų taikomi regresiniai splainai, kurių sudėtingumas yra nustatomas iš anksto per laisvės laipsnių parametrą. Kitai kintamųjų daliai taikoma lokali regresija.
 
 ```{r}
 # gam_model <- gam(ProductRelated_duration ~ 
@@ -212,7 +217,7 @@ cat("lambda:   ", ss_model$lambda,     "\n")
 # TRAIN MAE: 848.67 seconds
 # TEST  MAE: 918.06 seconds
 
-gam_model <- gam(ProductRelated_Duration ~
+gam_model <- mgcv::gam(ProductRelated_Duration ~
                    s(Administrative) +
                    s(Administrative_Duration) +
                    s(Informational) +
@@ -224,6 +229,18 @@ gam_model <- gam(ProductRelated_Duration ~
                  VisitorType + Weekend,
                  data = train_df, method = "REML")
 
+gam_model_2 <- gam::gam(ProductRelated_Duration ~
+                   gam::s(Administrative, df = 5) +
+                   gam::lo(Administrative_Duration, span = 0.7) +
+                   gam::s(Informational, df = 5) +
+                   gam::lo(Informational_Duration, span = 0.7) +
+                   gam::s(PageValues) +
+                   gam::s(BounceRates)+
+                   gam::s(ExitRates) +
+                   Month + TrafficType + SpecialDay +
+                 VisitorType + Weekend,
+                 data = train_df)
+
 # R-sq.(adj) =  0.485   Deviance explained = 48.9%
 # TRAIN RMSE: 1585.81 
 # TEST  RMSE: 1827.46 
@@ -233,45 +250,13 @@ gam_model <- gam(ProductRelated_Duration ~
 ```
 
 ```{r}
-summary(gam_model)
+plot(gam_model , se = TRUE , col = "red")
 ```
 
 ```{r}
-gam.check(gam_model)
+plot.Gam(gam_model_2, se = TRUE , col = "green")
 ```
 
-```{r}
-train_preds_log <- predict(gam_model, newdata = train_df)
-test_preds_log  <- predict(gam_model, newdata = test_df)
-
-train_preds_real <- expm1(train_preds_log)
-test_preds_real  <- expm1(test_preds_log)
-
-train_actual_real <- train_df$ProductRelated_Duration
-test_actual_real  <- test_df$ProductRelated_Duration
-
-rmse_train <- sqrt(mean((train_actual_real - train_preds_real)^2))
-rmse_test  <- sqrt(mean((test_actual_real - test_preds_real)^2))
-
-mae_train <- mean(abs(train_actual_real - train_preds_real))
-mae_test  <- mean(abs(test_actual_real - test_preds_real))
-
-cat("TRAIN RMSE:", round(rmse_train, 2), "\n")
-cat("TEST  RMSE:", round(rmse_test, 2), "\n\n")
-cat("TRAIN MAE:", round(mae_train, 2), "seconds\n")
-cat("TEST  MAE:", round(mae_test, 2), "seconds\n")
-```
-
-```{r}
-ggplot(data = data.frame(actual = test_actual_real, pred = test_preds_real), 
-       aes(x = actual, y = pred)) +
-  geom_point(alpha = 0.3) +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Test Set: Predicted vs. Actual Duration",
-       x = "Actual Duration (sec)",
-       y = "Predicted Duration (sec)") +
-  theme_minimal()
-```
 
 # Lokalios regresijos modelis
 
@@ -363,7 +348,7 @@ loess_model <- loess(ProductRelated_Duration ~ PC1, data = X_tr_pca, span = best
 ```{r}
 eval_metrics <- function(actual, predicted) {
   rmse <- sqrt(mean((actual - predicted)^2))
-  r2 <- cor(actual, predicted)^2
+  r2 <- 1 - sum((actual - predicted)^2) / sum((actual - mean(actual))^2)
   mae <- mean(abs(actual - predicted))
   
   smape <- mean(
@@ -397,15 +382,17 @@ clamp_predict <- function(model, newdata, train_data) {
 bs_pred <- clamp_predict(bs_model, test_df, train_df)
 ns_pred <- clamp_predict(ns_model, test_df, train_df)
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
+gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 
 rezultatai <- data.frame(
-  Modelis = c("B-Spline", "Natural Spline", "GAM", "Lokalioji regresija"),
+  Modelis = c("B-Spline", "Natural Spline", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
   rbind(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
-    eval_metrics(test_df$ProductRelated_Duration, loess_pred)
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2)
   )
 )
 
