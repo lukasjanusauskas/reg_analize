@@ -84,7 +84,7 @@ bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 8), da
 # summary(bs_model)
 ```
 
-```{r}
+```{r fig.width=11, fig.height=6}
 cooksd_bs_model <- cooks.distance(bs_model)
 plot(cooksd_bs_model, pch=19, cex=0.8,
      col=rgb(0.2, 0.4, 0.8, alpha=0.6),
@@ -175,7 +175,7 @@ cv_results %>%
 ns_model <- lm(ProductRelated_Duration ~ ns(BounceRates, df = 8), data = train_df)
 ```
 
-```{r}
+```{r fig.width=11, fig.height=6}
 cooksd_ns_model <- cooks.distance(ns_model)
 plot(cooksd_ns_model, pch=19, cex=0.8,
      col=rgb(0.2, 0.4, 0.8, alpha=0.6),
@@ -286,7 +286,7 @@ rmse      <- sqrt(mean(residuals^2, na.rm = TRUE))
 # cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
-```{r}
+```{r fig.width=11, fig.height=6}
 plot(residuals,
      pch = 19, cex = 0.8,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
@@ -297,11 +297,14 @@ abline(h = 0, col = "gray", lwd = 2)
 abline(h = c(-3, 3) * sd(residuals), col = "red", lwd = 2, lty = 2)
 
 plot(train_df$BounceRates, train_df$ProductRelated_Duration,
-     main = "Glodžiojo splaino modelio gerumo patikrinimas",
-     xlab = "BounceRates", 
-     ylab = "ProductRelated_Duration",
-     pch = 19, cex = 0.6, col = rgb(0.2, 0.4, 0.8, alpha = 0.3))
-lines(predict(ss_model, x = train_df$BounceRates)$y, col = "red", lwd = 2)
+     main = "Glodaus spline modelio gerumo patikrinimas",
+     xlab = "BounceRates", ylab = "ProductRelated_Duration")
+
+sorted_x <- sort(train_df$BounceRates)
+predictions <- predict(ss_model, x = sorted_x)$y
+
+lines(sorted_x, predictions,
+      col = "red", lwd = 2)
 ```
 
 # GAM modeliai
@@ -382,8 +385,10 @@ target <- "ProductRelated_Duration"
 X_train <- train_df |> select(-all_of(target)) |> select(where(is.numeric))
 y_train <- train_df[[target]]
 
-span_values   <- seq(0.1, 0.9, by = 0.1)
-pcaComp_values <- 1:3
+# span_values   <- seq(0.1, 0.9, by = 0.1)
+span_values   <- seq(0.8, 0.9, by = 0.1)
+# pcaComp_values <- 1:3
+pcaComp_values <- 2
 
 grid_results <- expand.grid(span = span_values, pcaComp = pcaComp_values)
 grid_results$RMSE <- NA
