@@ -351,17 +351,6 @@ gam_model <- mgcv::gam(ProductRelated_Duration ~
                  VisitorType + Weekend,
                  data = train_df, method = "REML")
 
-gam_model_2 <- gam::gam(ProductRelated_Duration ~
-                   gam::s(Administrative, df = 5) +
-                   gam::lo(Administrative_Duration, span = 0.7) +
-                   gam::s(Informational, df = 5) +
-                   gam::lo(Informational_Duration, span = 0.7) +
-                   gam::s(PageValues) +
-                   gam::s(BounceRates)+
-                   gam::s(ExitRates) +
-                   Month + TrafficType + SpecialDay +
-                 VisitorType + Weekend,
-                 data = train_df)
 
 # R-sq.(adj) =  0.485   Deviance explained = 48.9%
 # TRAIN RMSE: 1585.81 
@@ -573,7 +562,6 @@ rezultatai <- data.frame(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
-    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
     eval_metrics(test_df$ProductRelated_Duration, loess_pred),
     ss_metrics
   )
