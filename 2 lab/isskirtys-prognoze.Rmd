@@ -1,4 +1,5 @@
-Tolimesniuose žingsniuose 
+Kadangi išskirčių nėra daug ir jos nėra tendencingos mes jas išimsime ir toliau 
+modeliai bus tikrinami be jų.
 
 ```{r}
 resid_gam_model <- resid(gam_model, newdata=df, type="pearson")
@@ -37,19 +38,6 @@ gam_model_interact <- mgcv::gam(ProductRelated_Duration ~
                  VisitorType + Weekend,
                  data = train_df, method = "REML")
 
-gam_model_2_interact <- gam::gam(ProductRelated_Duration ~
-                   gam::s(Administrative, df = 5) +
-                   gam::lo(Administrative_Duration, span = 0.7) +
-                   gam::s(Informational, df = 5) +
-                   gam::lo(Informational_Duration, span = 0.7) +
-                   gam::s(PageValues) +
-                   gam::s(BounceRates)+
-                   gam::s(ExitRates) +
-                   gam::s(BounceExit) +
-                   Month + TrafficType + SpecialDay +
-                 VisitorType + Weekend,
-                 data = train_df)
-
 eval_metrics <- function(actual, predicted) {
   rmse <- sqrt(mean((actual - predicted)^2))
   r2 <- 1 - sum((actual - predicted)^2) / sum((actual - mean(actual))^2)
@@ -87,10 +75,8 @@ bs_pred <- clamp_predict(bs_model, test_df, train_df)
 ns_pred <- clamp_predict(ns_model, test_df, train_df)
 ss_pred <- clamp_predict(ss_model, test_df, train_df)$y
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
-gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 gam_pred_inter <- clamp_predict(gam_model_interact, test_df, train_df)
-gam_pred_inter_2 <- clamp_predict(gam_model_2_interact, test_df, train_df)
 
 rezultatai <- data.frame(
   Modelis = c(
@@ -98,89 +84,45 @@ rezultatai <- data.frame(
     "Naturalusis splainas",
     "Glodusis splainas",
     "GAM",
-    "GAM splainai + lokali",
-    "Lokalioji regresija",
-    "GAM su sąveikomis",
-    "GAM splaina + lokali + sąveikos"),
+    "Lokalioji regresija"
+    ),
   rbind(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
     eval_metrics(test_df$ProductRelated_Duration, ss_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
-    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
-    eval_metrics(test_df$ProductRelated_Duration, loess_pred),
-    eval_metrics(test_df$ProductRelated_Duration, gam_pred_inter),
-    eval_metrics(test_df$ProductRelated_Duration, gam_pred_inter_2)
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred)
   )
 )
 
 knitr::kable(rezultatai,
-             col.names = c("Modelis", "RMSE", "R²", "MAE", "SMAPE (%)"),
+             col.names = c("Modelis", "RMSE", "R²", "MAE", "SMAPE"),
              caption   = "Modelių palyginimas testavimo aibėje\\label{tab:metrics-final}")
 ```
 
 
+Lentelėje \ref{tab:metrics-final} pateiktos modelio tikslumo metrikos, tarp kurių yra SMAPE lygus 
+$\text{sMAPE} = \frac{1}{n}\sum_{i=1}^{n} \frac{|y_i - \hat{y}_i|}{(|y_i| + |\hat{y}_i|) / 2} \times 100$.
+
+Matome, kad glodžiojo splaino ir lokalioji regresija yra prastesnės už vidurkį, 
+kadangi jų $R^2$ įvertis yra mažesnis už nulį.
+Toliau pastebime, kad kiti splaino modeliai yra nelabai tikslūs, kadangi jų $R^2$ 
+reikšmės yra nedidelės, MAE ir SMAPE yra didesnės.
+
+Galiausiai, GAM modelis yra geriausia, turintis patį didžiausią $R^2$ siekiantį virš $0,56$.
+Taigi toliau tirsime tik GAM modelį.
+
 ### Požymių reikšmingumas
 
-
-```{r}
-gam_sum <- summary(gam_model)
-
-parametric_table <- as.data.frame(gam_sum$p.table)[, 3:4]
-
-parametric_table[[2]] <- ifelse(parametric_table[[2]] < 0.001, "<0.001", sprintf("%.4f", parametric_table[[2]]))
-
-knitr::kable(
-  parametric_table,
-  digits = 4,
-  caption = "Kategorinių kintamųjų reikšmingumo lentelė\\label{tab:p_table_gam}",
-  col.names = c("t statistika", "p reikšmė")
-)
-```
-
-```{r}
-smooth_table <- as.data.frame(gam_sum$s.table)[, 3:4]
-rownames(smooth_table) <- gsub("s\\(|\\)", "", rownames(smooth_table))
-
-smooth_table[[2]] <- ifelse(smooth_table[[2]] < 0.001, "<0.001", sprintf("%.4f", smooth_table[[2]]))
-
-# Smooth terms table
-knitr::kable(
-  as.data.frame(smooth_table),
-  digits = 4,
-  caption = "Kiekybinių kintamųjų reikšmingumo lentelė\\label{tab:s_table_gam}",
-  col.names = c("t statistika", "p reikšmė")
-)
-```
-
-Iš \ref{tab:p_table_gam} lentelės matome, kad su 0,05 patikimumo lygmeniu kintamasis
-„Savaitgalis“ ir „Speciali diena“ yra nereikšmingi.
-Tačiau apmokius GAM modelį išėmus šiuos kintamuosius $R^2$ pamažėjo nuo 0,55 iki 0,41, 
-o MAE metrika pakilo nuo 873,32 iki 897,77, taigi galutiniame modelyje visi šie kintamieji liks.
-
-```{r, include=FALSE}
-gam_model_parsimonuos <- mgcv::gam(
-  ProductRelated_Duration ~
-  s(Administrative) +
-  s(Administrative_Duration) +
-  s(Informational) +
-  s(Informational_Duration) +
-  s(PageValues) +
-  s(BounceRates)+
-  s(ExitRates) +
-  s(BounceExit) +
-  Month + TrafficType + VisitorType,
-data = train_df, method = "REML")
-
-gam_pars_pred <- clamp_predict(gam_model_parsimonuos, test_df, train_df)
-gam_pars_metrics <- eval_metrics(test_df$ProductRelated_Duration, gam_pars_pred)
-gam_pars_metrics[2]
-gam_pars_metrics[3]
-```
+Toliau tyrėme požymių reikšmingumą, tam naudojome lentelę, pateiktą priede.
+Pastebime, kad kiekviena kovariantė yra reikšminga, taigi mes negalime išimti kintamųjų.
 
 ### Prognozė
 
-
+Matome, kad sklaida taškų aplink tiesę, reprezentuojančią tikrų ir prognozuojamų 
+taškų lygybę, didėja didėjant atsako reikšmėms.
+Taip pat didžiausias atitrūkimas nuo šios tiesės yra ties didžiausiomis atsako reikšmėmis.
+Taigi, taisant toliau šį modelį reikia turėti omenyje didžiausias atsako reikšmes.
 
 ```{r}
 ggplot(data.frame(predicted = gam_pars_pred, actual = test_df$ProductRelated_Duration),
