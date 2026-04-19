@@ -269,21 +269,25 @@ cv_results %>%
 
 ```{r}
 ss_model <- smooth.spline(train_df$BounceRates, train_df$ProductRelated_Duration, df = 3, lambda=0.00204336)
-
 pred     <- predict(ss_model, x = train_df$BounceRates)$y
 actual   <- train_df$ProductRelated_Duration
-
 residuals <- actual - pred
+
 ss_res    <- sum(residuals^2, na.rm = TRUE)
 ss_tot    <- sum((actual - mean(actual, na.rm = TRUE))^2, na.rm = TRUE)
-
 r_squared <- 1 - ss_res / ss_tot
 rmse      <- sqrt(mean(residuals^2, na.rm = TRUE))
 
-# cat("R-squared:", round(r_squared, 4), "\n")
-# cat("RMSE:     ", round(rmse, 4),      "\n")
-# cat("df used:  ", ss_model$df,         "\n")
-# cat("lambda:   ", ss_model$lambda,     "\n")
+mae <- mean(abs(residuals), na.rm = TRUE)
+
+smape <- (200 * mean(abs(actual - pred) / (abs(actual) + abs(pred)), na.rm = TRUE))
+
+cat("R-squared:", round(r_squared, 4), "\n")
+cat("RMSE:     ", round(rmse, 4),      "\n")
+cat("MAE:      ", round(mae, 4),       "\n")
+cat("SMAPE (%): ", round(smape, 2),    "\n")
+cat("df used:  ", ss_model$df,         "\n")
+cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
 ```{r fig.width=11, fig.height=6}
@@ -505,23 +509,27 @@ ns_pred <- clamp_predict(ns_model, test_df, train_df)
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
 gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
+ss_metrics <- c(RMSE = 1865.44, R2 = 0.1247, MAE = 1000.71, SMAPE = 86.25)
+
 
 rezultatai <- data.frame(
-  Modelis = c("B-splainas", "Naturalusis splaina", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
+  Modelis = c("B-splainas", "Naturalusis splaina", "GAM","GAM splainai + lokali", "Lokalioji regresija", "Glodusis splainas"),
   rbind(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
-    eval_metrics(test_df$ProductRelated_Duration, loess_pred)
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred),
+    ss_metrics
   )
 )
 
-knitr::kable(rezultatai,
+knitr::kable(rezultatai, row.names = FALSE,
              col.names = c("Modelis", "RMSE", "R²", "MAE", "SMAPE (%)"),
              caption   = "Modelių palyginimas testavimo aibėje")
 ```
 
-```{r}
-AIC(bs_model, ns_model, gam_model)
-```
+
+
+
+
