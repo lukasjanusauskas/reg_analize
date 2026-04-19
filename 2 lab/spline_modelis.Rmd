@@ -218,10 +218,6 @@ best_ns_var    <- cv_results$var[best_idx]
 best_ns_df     <- cv_results$df[best_idx]
 best_ns_lambda <- cv_results$lambda[best_idx]
 
-cat("Geriausia glodžiųjų splainų kovariantė:", best_ns_var,    "\n")
-cat("Geriausias glodžiųjų splainų mazgų skaičius:", best_ns_df,     "\n")
-cat("Geriausia lambda vertė:", best_ns_lambda, "\n")
-
 ```
 
 ```{r}
@@ -389,10 +385,6 @@ best_row  <- grid_results[which.min(grid_results$RMSE), ]
 best_span    <- best_row$span
 best_pcaComp <- best_row$pcaComp
 
-cat("Geriausias span:   ", best_span, "\n")
-cat("Geriausias pcaComp:", best_pcaComp, "\n")
-cat("RMSE:              ", round(best_row$RMSE, 4), "\n")
-
 
 
 ggplot(grid_results, aes(x = span, y = RMSE, color = factor(pcaComp))) +
@@ -420,6 +412,9 @@ plot(X_tr_pca$PC1, X_tr_pca$ProductRelated_Duration,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.3),
      main = "Lokalioji regresija: modelio tinkamumas",
      xlab = "PC1", ylab = "ProductRelated_Duration")
+
+sorted_idx <- order(X_tr_pca$PC1)
+sorted_pc1 <- X_tr_pca$PC1[sorted_idx]
 
 lines(sorted_pc1, predictions,
       col = "red", lwd = 2)
@@ -454,7 +449,7 @@ resid_gam1_full <- actual_full - predict(gam_model, newdata = df)
 pearson_bs_full <- resid_bs_full / (summary(bs_model)$sigma)
 pearson_ns_full <- resid_ns_full / (summary(ns_model)$sigma)
 pearson_smooth_full <- resid_smooth_full / sd(residuals_smooth)
-pearson_loess_full <- resid_loess_full / sigma_hat
+pearson_loess_full <- resid_loess_full / sd(resid_loess_full)
 pearson_gam1_full <- resid_gam1_full / sd(resid_gam1_full) 
 
 n_full <- nrow(df)

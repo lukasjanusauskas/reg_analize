@@ -3,5 +3,6 @@ rmd_files: [
   "0-titulinis.Rmd",
   "1-duomenu-paruosimas.Rmd",
   "spline_modelis.Rmd",
+  "isskirtys-prognoze.Rmd",
   "appendix.Rmd"
 ]
