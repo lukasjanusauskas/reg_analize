@@ -1,5 +1,4 @@
-Kadangi išskirčių nėra daug ir jos nėra tendencingos mes jas išimsime ir toliau 
-modeliai bus tikrinami be jų.
+Kadangi išskirčių nėra daug ir jos nėra tendencingos mes jas išimsime ir toliau modeliai bus tikrinami be jų.
 
 ```{r}
 resid_gam_model <- resid(gam_model, newdata=df, type="pearson")
@@ -14,12 +13,9 @@ test_df <- df[-train_idx, ]
 
 ### Modelio parinkimas
 
-Pagal prasmę, manome, kad neigiamos „Google analytics“ metrikas sudauginti būtų prasminga, 
-nes taip kombinuojame du aspektus prastos puslapių kokybės: išėjimo nepaspaudus nieko, 
-sesijos pabaigimo dėl to puslapio.
+Pagal prasmę, manome, kad neigiamos „Google analytics“ metrikas sudauginti būtų prasminga, nes taip kombinuojame du aspektus prastos puslapių kokybės: išėjimo nepaspaudus nieko, sesijos pabaigimo dėl to puslapio.
 
-Apmokytus modelius su sąveikomis palyginame kartu su pradiniais modeliais (splainų, 
-lokaliosios regresijos ir adityviaisiais modeliais) \ref{tab:metrics-final} lentelėje.
+Apmokytus modelius su sąveikomis palyginame kartu su pradiniais modeliais (splainų, lokaliosios regresijos ir adityviaisiais modeliais) \ref{tab:metrics-final} lentelėje.
 
 ```{r}
 train_df$BounceExit <- train_df$BounceRates * train_df$ExitRates
@@ -100,49 +96,36 @@ knitr::kable(rezultatai,
              caption   = "Modelių palyginimas testavimo aibėje\\label{tab:metrics-final}")
 ```
 
+Lentelėje \ref{tab:metrics-final} pateiktos modelio tikslumo metrikos, tarp kurių yra SMAPE lygus $\text{sMAPE} = \frac{1}{n}\sum_{i=1}^{n} \frac{|y_i - \hat{y}_i|}{(|y_i| + |\hat{y}_i|) / 2} \times 100$.
 
-Lentelėje \ref{tab:metrics-final} pateiktos modelio tikslumo metrikos, tarp kurių yra SMAPE lygus 
-$\text{sMAPE} = \frac{1}{n}\sum_{i=1}^{n} \frac{|y_i - \hat{y}_i|}{(|y_i| + |\hat{y}_i|) / 2} \times 100$.
+Matome, kad glodžiojo splaino ir lokalioji regresija yra prastesnės už vidurkį, kadangi jų $R^2$ įvertis yra mažesnis už nulį. Toliau pastebime, kad kiti splaino modeliai yra nelabai tikslūs, kadangi jų $R^2$ reikšmės yra nedidelės, MAE ir SMAPE yra didesnės.
 
-Matome, kad glodžiojo splaino ir lokalioji regresija yra prastesnės už vidurkį, 
-kadangi jų $R^2$ įvertis yra mažesnis už nulį.
-Toliau pastebime, kad kiti splaino modeliai yra nelabai tikslūs, kadangi jų $R^2$ 
-reikšmės yra nedidelės, MAE ir SMAPE yra didesnės.
-
-Galiausiai, GAM modelis yra geriausia, turintis patį didžiausią $R^2$ siekiantį virš $0,56$.
-Taigi toliau tirsime tik GAM modelį.
+Galiausiai, GAM modelis yra geriausia, turintis patį didžiausią $R^2$ siekiantį virš $0,56$. Taigi toliau tirsime tik GAM modelį.
 
 ### Požymių reikšmingumas
 
-Toliau tyrėme požymių reikšmingumą, tam naudojome lentelę, pateiktą A priede.
-Pastebime, kad kiekviena kovariantė yra reikšminga, taigi mes negalime išimti kintamųjų.
+Toliau tyrėme požymių reikšmingumą, tam naudojome lentelę, pateiktą A priede. Pastebime, kad kiekviena kovariantė yra reikšminga, taigi mes negalime išimti kintamųjų.
 
 ### Interpretacija
 
-Iš grafikų matome, kad didžiausią įtaką daro aplankytų administracinių puslapių skaičius, informacinių puslapių skaičius ir juose praleistas laikas. 
-Kiti faktoriai daro kelis kartus mažesnę įtaką.
+Iš grafikų matome (žr. \ref{fig:efektai} pav.), kad didžiausią įtaką daro aplankytų administracinių puslapių skaičius, informacinių puslapių skaičius ir juose praleistas laikas. Kiti faktoriai daro kelis kartus mažesnę įtaką.
 
-```{r fig.width=11, fig.height=9, dev="png"}
+```{r fig.width=11, fig.height=9, dev="png", fig.cap = "GAM modelio daliniai efektai\\label{fig:efektai"}
 oldpar <- par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
 plot(gam_model, se = TRUE, col = "red", scale = 0, pages = 1)
 par(oldpar)
 ```
 
-
 ### Prognozė
 
-Matome, kad sklaida taškų aplink tiesę, reprezentuojančią tikrų ir prognozuojamų 
-taškų lygybę, didėja didėjant atsako reikšmėms.
-Taip pat didžiausias atitrūkimas nuo šios tiesės yra ties didžiausiomis atsako reikšmėmis.
-Taigi, taisant toliau šį modelį reikia turėti omenyje didžiausias atsako reikšmes.
+Matome iš \ref{fig:PCA_SPAN} pav., kad sklaida taškų aplink tiesę, reprezentuojančią tikrų ir prognozuojamų taškų lygybę, didėja didėjant atsako reikšmėms. Taip pat didžiausias atitrūkimas nuo šios tiesės yra ties didžiausiomis atsako reikšmėmis. Taigi, taisant toliau šį modelį reikia turėti omenyje didžiausias atsako reikšmes.
 
-```{r}
+```{r, fig.cap = "GAM modelio prognozių tikslumas (prognozuotos ir tikrosios reikšmės)\\label{fig:progn"}
 ggplot(data.frame(predicted = gam_pred, actual = test_df$ProductRelated_Duration),
        aes(x = predicted, y = actual)) +
   geom_point(alpha = 0.3) +
   geom_abline(slope = 1, intercept = 0, color = "red", linewidth = 1) +
   labs(x = "Prognozuotos reikšmės", y = "Tikrosios reikšmės",
-       title = "Prognozuotos vs tikrosios reikšmės") +
+       title = "Prognozuotos ir tikrosios reikšmės") +
   theme_minimal()
 ```
-
