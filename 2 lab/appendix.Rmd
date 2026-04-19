@@ -1,3 +1,9 @@
+# Išvados
+
+1. GAM modelis yra tiksliausias iš netiesinės regresijos modelių taikant juos prognozuoti produktų puslapiuose praleistą laiką. Pasiekiamas $R^2$ matas didesnis už 0,5.
+2. GAM modelio pagrindinė yda yra negebėjimas prognozuoti didesnių atsako reikšmių.
+3. Visos kovariantės, paduotos iš turimo duomenų rinkinio, su 0,05 patikimumo lygmeniu reikšmingos.
+
 # Šaltinių sąrašas
 
 ::: {#refs}
@@ -6,6 +12,38 @@
 \pagebreak
 
 # A priedas {.unnumbered}
+
+
+```{r}
+gam_sum <- summary(gam_model)
+
+parametric_table <- as.data.frame(gam_sum$p.table)[, 3:4]
+
+parametric_table[[2]] <- ifelse(parametric_table[[2]] < 0.001, "<0.001", sprintf("%.4f", parametric_table[[2]]))
+
+knitr::kable(
+  parametric_table,
+  digits = 4,
+  caption = "Kategorinių kintamųjų reikšmingumo lentelė\\label{tab:p_table_gam}",
+  col.names = c("t statistika", "p reikšmė")
+)
+```
+
+```{r}
+smooth_table <- as.data.frame(gam_sum$s.table)[, 3:4]
+rownames(smooth_table) <- gsub("s\\(|\\)", "", rownames(smooth_table))
+
+smooth_table[[2]] <- ifelse(smooth_table[[2]] < 0.001, "<0.001", sprintf("%.4f", smooth_table[[2]]))
+
+# Smooth terms table
+knitr::kable(
+  as.data.frame(smooth_table),
+  digits = 4,
+  caption = "Kiekybinių kintamųjų reikšmingumo lentelė\\label{tab:s_table_gam}",
+  col.names = c("t statistika", "p reikšmė")
+)
+```
+
 
 ## DI naudojimas
 
