@@ -20,7 +20,7 @@ test_df <- df[-train_idx, ]
 
 ## B-splainas
 
-B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome \ref(tab:bspline_rmse) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
+B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome\~\@ref(tab:best-rmse-table) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
 
 ```{r warning=FALSE}
 # df yra kiek mazgų turės spline
@@ -306,7 +306,7 @@ lines(predict(ss_model, x = train_df$BounceRates)$y, col = "red", lwd = 2)
 
 # GAM modeliai
 
-Pirmame GAM modelyje kiekvienam skaitiniam kintamajam taikomi glodinantys splainai, o konkrečiai – thin plate regression splines. Tai yra numatytasis splainų tipas, naudojamas mgcv pakete. Šie splainai pasižymi tuo, kad nereikalauja iš anksto parinkti mazgų (angl. knots) vietų – jų forma automatiškai nustatoma iš duomenų. 
+Pirmame GAM modelyje kiekvienam skaitiniam kintamajam taikomi glodinantys splainai, o konkrečiai – thin plate regression splines. Tai yra numatytasis splainų tipas, naudojamas mgcv pakete. Šie splainai pasižymi tuo, kad nereikalauja iš anksto parinkti mazgų (angl. knots) vietų – jų forma automatiškai nustatoma iš duomenų.
 
 Antru atveju sudaromas modelis, kuriame naudojami du skirtingi netiesinių ryšių modeliavimui skirti metodai. Daliai kintamųjų taikomi regresiniai splainai, kurių sudėtingumas yra nustatomas iš anksto per laisvės laipsnių parametrą. Kitai kintamųjų daliai taikoma lokali regresija.
 
@@ -370,8 +370,11 @@ plot(gam_model , se = TRUE , col = "red")
 plot.Gam(gam_model_2, se = TRUE , col = "green")
 ```
 
-
 # Lokalios regresijos modelis
+
+Lokaliosios regresijos modelis sudarytas dviem etapais. Siekiant padidinti modelio našumą ir išvengti kintamųjų pertekliaus, skaitiniai kintamieji pirmiausia standartizuoti, o jų dimensiškumas sumažintas taikant pagrindinių komponenčių analizę (*PCA*)
+
+Optimali hiperparametrų kombinacija – pagrindinių komponenčių skaičius (nuo 1 iki 4) ir glodinimo parametras (nuo 0,1 iki 0,9 su 0,1 žingsniu) – parinkta naudojant kryžminį patikrinimą (angl. *cross-validation*), minimizuojant vidutinę kvadratinę paklaidą (RMSE). Tiksliausi rezultatai gauti modelio konfigūracijoje naudojant dvi pagrindines komponentes ir 0,9 glodinimo parametrą.
 
 ```{r}
 target <- "ProductRelated_Duration"
