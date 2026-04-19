@@ -20,7 +20,7 @@ test_df <- df[-train_idx, ]
 
 ## B-splainas
 
-B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome~\@ref(tab:best-rmse-table) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
+B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome \ref(tab:bspline_rmse) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
 
 ```{r warning=FALSE}
 # df yra kiek mazgų turės spline
@@ -62,25 +62,57 @@ best_idx      <- which.min(cv_results$rmse)
 best_bs_var   <- cv_results$var[best_idx]
 best_bs_df    <- cv_results$df[best_idx]
 
-cat("Best B-Spline covariate:", best_bs_var, "\n")
-cat("Best B-Spline df:       ", best_bs_df,  "\n")
+# cat("Best B-Spline covariate:", best_bs_var, "\n")
+# cat("Best B-Spline df:       ", best_bs_df,  "\n")
 
-```
-
-```{r b-spline-rmse}
-cv_results %>%
-  arrange(rmse) %>%
-  distinct(var, .keep_all = TRUE)
 ```
 
 ```{r}
-bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 4), data = train_df)
-summary(bs_model)
+cv_results %>%
+  arrange(rmse) %>%
+  distinct(var, .keep_all = TRUE) %>%
+  knitr::kable(
+    col.names = c("Kintamasis", "df", "RMSE"),
+    caption = "B-splaino kryžminės validacijos rezultatai\\label{tab:bspline_rmse}",
+    digits = 2,
+    booktabs = TRUE
+  )
+```
+
+```{r warning=FALSE}
+bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 8), data = train_df)
+# summary(bs_model)
+```
+
+```{r}
+cooksd_bs_model <- cooks.distance(bs_model)
+plot(cooksd_bs_model, pch=19, cex=0.8,
+     col=rgb(0.2, 0.4, 0.8, alpha=0.6),
+     main="B-splainas: Kuko matas", ylab="Reikšmė")
+abline(h = 1, col="red", lwd=3, lty=2)
+
+pearson_residuals <- residuals(bs_model, type = "pearson")
+
+plot(pearson_residuals,
+     pch = 19, cex = 0.8,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
+     main = "B-splainas: Pirsono liekanos", 
+     ylab = "Pirsono liekanos",
+     xlab = "Indeksas")
+abline(h = 0, col = "gray", lwd = 2)
+abline(h = c(-3, 3) * sd(pearson_residuals), col = "red", lwd = 2, lty = 2)
+
+plot(train_df$Administrative_Duration, train_df$ProductRelated_Duration,
+     main = "B-splaino modelio gerumo patikrinimas",
+     xlab = "Administrative_Duration", ylab = "ProductRelated_Duration")
+lines(sort(train_df$Administrative_Duration), 
+      fitted(bs_model)[order(train_df$Administrative_Duration)],
+      col = "red", lwd = 2)
 ```
 
 ## Natūralus splainas
 
-Natūralus splainas turi tam tikras taisykles, dėl kurių šio splaino modelio kraštai yra tiesiški.~\cite{nspline} Kaip ir b-splaino modelio atvejo, mes ieškome tokios kovariantės ir mazgų skaičiaus, kad gautume mažiausią RSME. \ref{n-spline-rmse} lentelės rezultatai rodo, kad mažiausias RSME gautas su „BounceRates“ ir 8 mazgais. Skirtingai nei~\ref{b-spline-rmse} lentelėje, kur geriausi rezultatai gauti su administracinių puslapių peržiūrios laiku, su natūralių splainų modeliu šių puslapių peržiūrų laikas yra tik penktoje vietoje iš aštuonių. Prasčiausi rezultatai vėl gauti su specialiųjų dienų kintamuoju.
+Natūralus splainas turi tam tikras taisykles, dėl kurių šio splaino modelio kraštai yra tiesiški. \cite{nspline} Kaip ir b-splaino modelio atvejo, mes ieškome tokios kovariantės ir mazgų skaičiaus, kad gautume mažiausią RSME. \ref{tab:nspline_rmse} lentelės rezultatai rodo, kad mažiausias RSME gautas su „BounceRates“ ir 8 mazgais. Skirtingai nei \ref{tab:bspline_rmse} lentelėje, kur geriausi rezultatai gauti su administracinių puslapių peržiūrios laiku, su natūralių splainų modeliu šių puslapių peržiūrų laikas yra tik penktoje vietoje iš aštuonių. Prasčiausi rezultatai vėl gauti su specialiųjų dienų kintamuoju.
 
 ```{r}
 # df yra kiek mazgų turės spline
@@ -122,25 +154,56 @@ best_idx      <- which.min(cv_results$rmse)
 best_ns_var   <- cv_results$var[best_idx]
 best_ns_df    <- cv_results$df[best_idx]
 
-cat("Geriausia normalaus splaino kovariantė:", best_ns_var, "\n")
-cat("Geriausias mazgų skaičius:       ", best_ns_df,  "\n")
+# cat("Geriausia normalaus splaino kovariantė:", best_ns_var, "\n")
+# cat("Geriausias mazgų skaičius:       ", best_ns_df,  "\n")
 
 ```
 
-```{r n-spline-rmse}
+```{r}
 cv_results %>%
   arrange(rmse) %>%
-  distinct(var, .keep_all = TRUE)
+  distinct(var, .keep_all = TRUE) %>%
+  knitr::kable(
+    col.names = c("Kintamasis", "df", "RMSE"),
+    caption = "Normalaus splaino kryžminės validacijos rezultatai\\label{tab:nspline_rmse}",
+    digits = 2,
+    booktabs = TRUE
+  )
 ```
 
 ```{r}
 ns_model <- lm(ProductRelated_Duration ~ ns(BounceRates, df = 8), data = train_df)
-
-summary(ns_model)
 ```
+
+```{r}
+cooksd_ns_model <- cooks.distance(ns_model)
+plot(cooksd_ns_model, pch=19, cex=0.8,
+     col=rgb(0.2, 0.4, 0.8, alpha=0.6),
+     main="B-splainas: Kuko matas", ylab="Reikšmė")
+abline(h = 1, col="red", lwd=3, lty=2)
+
+pearson_residuals <- residuals(ns_model, type = "pearson")
+
+plot(pearson_residuals,
+     pch = 19, cex = 0.8,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
+     main = "B-splainas: Pirsono liekanos", 
+     ylab = "Pirsono liekanos",
+     xlab = "Indeksas")
+abline(h = 0, col = "gray", lwd = 2)
+abline(h = c(-3, 3) * sd(pearson_residuals), col = "red", lwd = 2, lty = 2)
+
+plot(train_df$BounceRates, train_df$ProductRelated_Duration,
+     main = "B-splaino modelio gerumo patikrinimas",
+     xlab = "BounceRates", ylab = "ProductRelated_Duration")
+lines(sort(train_df$BounceRates), 
+      fitted(ns_model)[order(train_df$BounceRates)],
+      col = "red", lwd = 2)
+```
+
 ## Glodusis splainas
 
-Skirtingai nei b-splainai, kurie reguliuoja lankstumą fiksuodami konkretų mazgų skaičių, glodieji splaiai mazgus išdėsto kiekviename unikaliame duomenų stebėjime, o modelio sudėtingumą valdo per reguliarizavimo (lamda) parametrą. Šį kart geriausiai rezultatai gauti su „Administrative_Duration“ kintamuoju ir lamda = 0.0085  reikšme (žr~\ref{tr-spline-rmse}.
+Skirtingai nei b-splainai, kurie reguliuoja splainą pagal konkretų mazgų skaičių, glodieji splaiai mazgus išdėsto kiekviename unikaliame duomenų stebėjime, o modelio sudėtingumą valdo per reguliarizavimo (lamda) parametrą. Šį kart geriausiai rezultatai gauti su „Administrative_Duration“ kintamuoju ir lamda = 0.0085  reikšme (žr. \ref{tab:trspline_rmse} lentelę).
 
 ```{r}
 # df yra kiek mazgų turės spline
@@ -192,16 +255,22 @@ cat("Geriausia lambda vertė:", best_ns_lambda, "\n")
 
 ```
 
-```{r tr-spline-rmse}
+```{r}
 cv_results %>%
   arrange(rmse) %>%
-  distinct(var, .keep_all = TRUE)
+  distinct(var, .keep_all = TRUE) %>%
+  knitr::kable(
+    col.names = c("Kintamasis", "df", "lamda", "RMSE"),
+    caption = "Glodžiojo splaino kryžminės validacijos rezultatai\\label{tab:trspline_rmse}",
+    digits = 5,
+    booktabs = TRUE
+  )
 ```
 
 ```{r}
-ss_model <- smooth.spline(train_df$Administrative_Duration, train_df$ProductRelated_Duration, df = 3, lambda=0.003290345)
+ss_model <- smooth.spline(train_df$BounceRates, train_df$ProductRelated_Duration, df = 3, lambda=0.00204336)
 
-pred     <- predict(ss_model, x = train_df$Administrative_Duration)$y
+pred     <- predict(ss_model, x = train_df$BounceRates)$y
 actual   <- train_df$ProductRelated_Duration
 
 residuals <- actual - pred
@@ -211,10 +280,28 @@ ss_tot    <- sum((actual - mean(actual, na.rm = TRUE))^2, na.rm = TRUE)
 r_squared <- 1 - ss_res / ss_tot
 rmse      <- sqrt(mean(residuals^2, na.rm = TRUE))
 
-cat("R-squared:", round(r_squared, 4), "\n")
-cat("RMSE:     ", round(rmse, 4),      "\n")
-cat("df used:  ", ss_model$df,         "\n")
-cat("lambda:   ", ss_model$lambda,     "\n")
+# cat("R-squared:", round(r_squared, 4), "\n")
+# cat("RMSE:     ", round(rmse, 4),      "\n")
+# cat("df used:  ", ss_model$df,         "\n")
+# cat("lambda:   ", ss_model$lambda,     "\n")
+```
+
+```{r}
+plot(residuals,
+     pch = 19, cex = 0.8,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
+     main = "Glodusis splainas: Pirsono liekanos", 
+     ylab = "Pirsono liekanos",
+     xlab = "Indeksas")
+abline(h = 0, col = "gray", lwd = 2)
+abline(h = c(-3, 3) * sd(residuals), col = "red", lwd = 2, lty = 2)
+
+plot(train_df$BounceRates, train_df$ProductRelated_Duration,
+     main = "Glodžiojo splaino modelio gerumo patikrinimas",
+     xlab = "BounceRates", 
+     ylab = "ProductRelated_Duration",
+     pch = 19, cex = 0.6, col = rgb(0.2, 0.4, 0.8, alpha = 0.3))
+lines(predict(ss_model, x = train_df$BounceRates)$y, col = "red", lwd = 2)
 ```
 
 # GAM modeliai
@@ -407,18 +494,20 @@ clamp_predict <- function(model, newdata, train_data) {
 
 bs_pred <- clamp_predict(bs_model, test_df, train_df)
 ns_pred <- clamp_predict(ns_model, test_df, train_df)
+ss_pred <- clamp_predict(ss_model, test_df, train_df)
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
 gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 
 rezultatai <- data.frame(
-  Modelis = c("B-Spline", "Natural Spline", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
+  Modelis = c("B-splainas", "Naturalusis splaina", "Glodusis splainas", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
   rbind(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
+    eval_metrics(test_df$ProductRelated_Duration, ss_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
     eval_metrics(test_df$ProductRelated_Duration, loess_pred),
-    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2)
   )
 )
 
