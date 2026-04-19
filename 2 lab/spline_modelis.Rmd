@@ -91,16 +91,16 @@ plot(cooksd_bs_model, pch=19, cex=0.8,
      main="B-splainas: Kuko matas", ylab="Reikšmė")
 abline(h = 1, col="red", lwd=3, lty=2)
 
-pearson_residuals <- residuals(bs_model, type = "pearson")
+pearson_residuals_bs <- residuals(bs_model, type = "pearson")
 
-plot(pearson_residuals,
+plot(pearson_residuals_bs / sd(pearson_residuals_bs),
      pch = 19, cex = 0.8,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
      main = "B-splainas: Pirsono liekanos", 
      ylab = "Pirsono liekanos",
      xlab = "Indeksas")
 abline(h = 0, col = "gray", lwd = 2)
-abline(h = c(-3, 3) * sd(pearson_residuals), col = "red", lwd = 2, lty = 2)
+abline(h = c(-3, 3), col = "red", lwd = 2, lty = 2)
 
 plot(train_df$Administrative_Duration, train_df$ProductRelated_Duration,
      main = "B-splaino modelio gerumo patikrinimas",
@@ -108,6 +108,8 @@ plot(train_df$Administrative_Duration, train_df$ProductRelated_Duration,
 lines(sort(train_df$Administrative_Duration), 
       fitted(bs_model)[order(train_df$Administrative_Duration)],
       col = "red", lwd = 2)
+
+
 ```
 
 ## Natūralus splainas
@@ -182,16 +184,16 @@ plot(cooksd_ns_model, pch=19, cex=0.8,
      main="B-splainas: Kuko matas", ylab="Reikšmė")
 abline(h = 1, col="red", lwd=3, lty=2)
 
-pearson_residuals <- residuals(ns_model, type = "pearson")
+pearson_residuals_ns <- residuals(ns_model, type = "pearson")
 
-plot(pearson_residuals,
+plot(pearson_residuals_ns,
      pch = 19, cex = 0.8,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
      main = "B-splainas: Pirsono liekanos", 
      ylab = "Pirsono liekanos",
      xlab = "Indeksas")
 abline(h = 0, col = "gray", lwd = 2)
-abline(h = c(-3, 3) * sd(pearson_residuals), col = "red", lwd = 2, lty = 2)
+abline(h = c(-3, 3) * sd(pearson_residuals_ns), col = "red", lwd = 2, lty = 2)
 
 plot(train_df$BounceRates, train_df$ProductRelated_Duration,
      main = "B-splaino modelio gerumo patikrinimas",
@@ -271,14 +273,14 @@ cv_results %>%
 ss_model <- smooth.spline(train_df$BounceRates, train_df$ProductRelated_Duration, df = 3, lambda=0.00204336)
 pred     <- predict(ss_model, x = train_df$BounceRates)$y
 actual   <- train_df$ProductRelated_Duration
-residuals <- actual - pred
+residuals_smooth <- actual - pred
 
-ss_res    <- sum(residuals^2, na.rm = TRUE)
+ss_res    <- sum(residuals_smooth^2, na.rm = TRUE)
 ss_tot    <- sum((actual - mean(actual, na.rm = TRUE))^2, na.rm = TRUE)
 r_squared <- 1 - ss_res / ss_tot
-rmse      <- sqrt(mean(residuals^2, na.rm = TRUE))
+rmse      <- sqrt(mean(residuals_smooth^2, na.rm = TRUE))
 
-mae <- mean(abs(residuals), na.rm = TRUE)
+mae <- mean(abs(residuals_smooth), na.rm = TRUE)
 
 smape <- (200 * mean(abs(actual - pred) / (abs(actual) + abs(pred)), na.rm = TRUE))
 
@@ -291,14 +293,14 @@ cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
 ```{r fig.width=11, fig.height=6}
-plot(residuals,
+plot(residuals_smooth,
      pch = 19, cex = 0.8,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
      main = "Glodusis splainas: Pirsono liekanos", 
      ylab = "Pirsono liekanos",
      xlab = "Indeksas")
 abline(h = 0, col = "gray", lwd = 2)
-abline(h = c(-3, 3) * sd(residuals), col = "red", lwd = 2, lty = 2)
+abline(h = c(-3, 3) * sd(residuals_smooth), col = "red", lwd = 2, lty = 2)
 
 plot(train_df$BounceRates, train_df$ProductRelated_Duration,
      main = "Glodaus spline modelio gerumo patikrinimas",
@@ -579,7 +581,55 @@ rezultatai <- data.frame(
 
 knitr::kable(rezultatai, row.names = FALSE,
              col.names = c("Modelis", "RMSE", "R²", "MAE", "SMAPE (%)"),
-             caption   = "Modelių palyginimas testavimo aibėje")
+             caption = "Modelių palyginimas testavimo aibėje")
+```
+
+
+```{r}
+actual_full <- df$ProductRelated_Duration
+
+# B-splainas ir naturalusis splainas
+resid_bs_full <- actual_full - predict(bs_model, newdata = df)
+resid_ns_full <- actual_full - predict(ns_model, newdata = df)
+
+# Glodusis splainas
+resid_smooth_full <- actual_full - predict(ss_model, x = df$BounceRates)$y
+
+# Lokalioji regresija
+X_full_pca <- predict(preproc, df)
+resid_loess_full <- actual_full - predict(loess_model, newdata = X_full_pca)
+
+# GAM
+resid_gam1_full <- actual_full - predict(gam_model, newdata = df)
+resid_gam2_full <- actual_full - predict(gam_model_2, newdata = df)
+
+pearson_bs_full <- resid_bs_full / (summary(bs_model)$sigma)
+pearson_ns_full <- resid_ns_full / (summary(ns_model)$sigma)
+pearson_smooth_full <- resid_smooth_full / sd(residuals_smooth)
+pearson_loess_full <- resid_loess_full / sigma_hat
+pearson_gam1_full <- resid_gam1_full / sigma_gam1
+pearson_gam2_full <- resid_gam2_full / sigma_gam2
+
+n_full <- nrow(df)
+
+outlier_table <- data.frame(
+  Modelis = c("B-splainas", "Naturalusis splainas", "Glodusis splainas",
+              "Lokalioji regresija", "GAM", "GAM + lokali"),
+  Išskirtys = c(
+    sum(abs(pearson_bs_full) >= 3),
+    sum(abs(pearson_ns_full) >= 3),
+    sum(abs(pearson_smooth_full) >= 3),
+    sum(abs(pearson_loess_full) >= 3),
+    sum(abs(pearson_gam1_full) >= 3),
+    sum(abs(pearson_gam2_full) >= 3)
+  )
+)
+
+outlier_table$Dalis <- paste0(format(
+  round(outlier_table$Išskirtys / n_full * 100, 2),
+  decimal.mark = ","), " %")
+
+kable(outlier_table, caption = "Modelių išskirtys visame duomenų rinkinyje pagal Pirsono liekanų kriterijų\\label{tab:pearson_counts_full}")
 ```
 
 
