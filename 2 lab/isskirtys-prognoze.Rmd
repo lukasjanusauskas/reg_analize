@@ -1,0 +1,194 @@
+Tolimesniuose žingsniuose 
+
+```{r}
+resid_gam_model <- resid(gam_model, newdata=df, type="pearson")
+resid_gam_mask <- abs(resid_gam_model / sd(resid_gam_model)) >= 3
+
+df <- df[!resid_gam_mask,]
+
+train_idx <- createDataPartition(df$ProductRelated_Duration, p = 0.75, list = FALSE)
+train_df <- df[train_idx, ]
+test_df <- df[-train_idx, ]
+```
+
+### Modelio parinkimas
+
+Pagal prasmę, manome, kad neigiamos „Google analytics“ metrikas sudauginti būtų prasminga, 
+nes taip kombinuojame du aspektus prastos puslapių kokybės: išėjimo nepaspaudus nieko, 
+sesijos pabaigimo dėl to puslapio.
+
+Apmokytus modelius su sąveikomis palyginame kartu su pradiniais modeliais (splainų, 
+lokaliosios regresijos ir adityviaisiais modeliais) \ref{tab:metrics-final} lentelėje.
+
+```{r}
+train_df$BounceExit <- train_df$BounceRates * train_df$ExitRates
+test_df$BounceExit <- test_df$BounceRates * test_df$ExitRates
+
+gam_model_interact <- mgcv::gam(ProductRelated_Duration ~
+                   s(Administrative) +
+                   s(Administrative_Duration) +
+                   s(Informational) +
+                   s(Informational_Duration) +
+                   s(PageValues) +
+                   s(BounceRates)+
+                   s(ExitRates) +
+                   s(BounceExit) +
+                   Month + TrafficType + SpecialDay +
+                 VisitorType + Weekend,
+                 data = train_df, method = "REML")
+
+gam_model_2_interact <- gam::gam(ProductRelated_Duration ~
+                   gam::s(Administrative, df = 5) +
+                   gam::lo(Administrative_Duration, span = 0.7) +
+                   gam::s(Informational, df = 5) +
+                   gam::lo(Informational_Duration, span = 0.7) +
+                   gam::s(PageValues) +
+                   gam::s(BounceRates)+
+                   gam::s(ExitRates) +
+                   gam::s(BounceExit) +
+                   Month + TrafficType + SpecialDay +
+                 VisitorType + Weekend,
+                 data = train_df)
+
+eval_metrics <- function(actual, predicted) {
+  rmse <- sqrt(mean((actual - predicted)^2))
+  r2 <- 1 - sum((actual - predicted)^2) / sum((actual - mean(actual))^2)
+  mae <- mean(abs(actual - predicted))
+  
+  smape <- mean(
+    abs(actual - predicted) / ((abs(actual) + abs(predicted)) / 2)
+  ) * 100
+  
+  c(
+    RMSE = round(rmse, 2),
+    R2 = round(r2, 4),
+    MAE = round(mae, 2),
+    SMAPE = round(smape, 2)
+  )
+}
+
+# Jei po prognozavimo atsiranda NA reikšmės, faktorių reikšmes reikia pakeisti į mokymo duomenų intervalą
+clamp_predict <- function(model, newdata, train_data) {
+  pred <- predict(model, newdata = newdata)
+  na_idx <- is.na(pred)
+  if (any(na_idx)) {
+    num_vars <- names(Filter(is.numeric, train_data))
+    newdata_clamped <- newdata
+    for (var in num_vars) {
+      rng <- range(train_data[[var]], na.rm = TRUE)
+      newdata_clamped[[var]] <- pmax(pmin(newdata[[var]], rng[2]), rng[1])
+    }
+    pred[na_idx] <- predict(model, newdata = newdata_clamped)[na_idx]
+  }
+  pred
+}
+
+bs_pred <- clamp_predict(bs_model, test_df, train_df)
+ns_pred <- clamp_predict(ns_model, test_df, train_df)
+ss_pred <- clamp_predict(ss_model, test_df, train_df)$y
+gam_pred <- clamp_predict(gam_model, test_df, train_df)
+gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
+loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
+gam_pred_inter <- clamp_predict(gam_model_interact, test_df, train_df)
+gam_pred_inter_2 <- clamp_predict(gam_model_2_interact, test_df, train_df)
+
+rezultatai <- data.frame(
+  Modelis = c(
+    "B-splainas", 
+    "Naturalusis splainas",
+    "Glodusis splainas",
+    "GAM",
+    "GAM splainai + lokali",
+    "Lokalioji regresija",
+    "GAM su sąveikomis",
+    "GAM splaina + lokali + sąveikos"),
+  rbind(
+    eval_metrics(test_df$ProductRelated_Duration, bs_pred),
+    eval_metrics(test_df$ProductRelated_Duration, ns_pred),
+    eval_metrics(test_df$ProductRelated_Duration, ss_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_inter),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_inter_2)
+  )
+)
+
+knitr::kable(rezultatai,
+             col.names = c("Modelis", "RMSE", "R²", "MAE", "SMAPE (%)"),
+             caption   = "Modelių palyginimas testavimo aibėje\\label{tab:metrics-final}")
+```
+
+
+### Požymių reikšmingumas
+
+
+```{r}
+gam_sum <- summary(gam_model)
+
+parametric_table <- as.data.frame(gam_sum$p.table)[, 3:4]
+
+parametric_table[[2]] <- ifelse(parametric_table[[2]] < 0.001, "<0.001", sprintf("%.4f", parametric_table[[2]]))
+
+knitr::kable(
+  parametric_table,
+  digits = 4,
+  caption = "Kategorinių kintamųjų reikšmingumo lentelė\\label{tab:p_table_gam}",
+  col.names = c("t statistika", "p reikšmė")
+)
+```
+
+```{r}
+smooth_table <- as.data.frame(gam_sum$s.table)[, 3:4]
+rownames(smooth_table) <- gsub("s\\(|\\)", "", rownames(smooth_table))
+
+smooth_table[[2]] <- ifelse(smooth_table[[2]] < 0.001, "<0.001", sprintf("%.4f", smooth_table[[2]]))
+
+# Smooth terms table
+knitr::kable(
+  as.data.frame(smooth_table),
+  digits = 4,
+  caption = "Kiekybinių kintamųjų reikšmingumo lentelė\\label{tab:s_table_gam}",
+  col.names = c("t statistika", "p reikšmė")
+)
+```
+
+Iš \ref{tab:p_table_gam} lentelės matome, kad su 0,05 patikimumo lygmeniu kintamasis
+„Savaitgalis“ ir „Speciali diena“ yra nereikšmingi.
+Tačiau apmokius GAM modelį išėmus šiuos kintamuosius $R^2$ pamažėjo nuo 0,55 iki 0,41, 
+o MAE metrika pakilo nuo 873,32 iki 897,77, taigi galutiniame modelyje visi šie kintamieji liks.
+
+```{r, include=FALSE}
+gam_model_parsimonuos <- mgcv::gam(
+  ProductRelated_Duration ~
+  s(Administrative) +
+  s(Administrative_Duration) +
+  s(Informational) +
+  s(Informational_Duration) +
+  s(PageValues) +
+  s(BounceRates)+
+  s(ExitRates) +
+  s(BounceExit) +
+  Month + TrafficType + VisitorType,
+data = train_df, method = "REML")
+
+gam_pars_pred <- clamp_predict(gam_model_parsimonuos, test_df, train_df)
+gam_pars_metrics <- eval_metrics(test_df$ProductRelated_Duration, gam_pars_pred)
+gam_pars_metrics[2]
+gam_pars_metrics[3]
+```
+
+### Prognozė
+
+
+
+```{r}
+ggplot(data.frame(predicted = gam_pars_pred, actual = test_df$ProductRelated_Duration),
+       aes(x = predicted, y = actual)) +
+  geom_point(alpha = 0.3) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linewidth = 1) +
+  labs(x = "Prognozuotos reikšmės", y = "Tikrosios reikšmės",
+       title = "Prognozuotos vs tikrosios reikšmės") +
+  theme_minimal()
+```
+
