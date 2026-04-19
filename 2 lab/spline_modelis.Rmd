@@ -20,7 +20,7 @@ test_df <- df[-train_idx, ]
 
 ## B-splainas
 
-B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome \ref{tab:bspline_rmse) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
+B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome \\ref{tab:bspline_rmse) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
 
 ```{r warning=FALSE}
 # df yra kiek mazgų turės spline
@@ -83,8 +83,6 @@ cv_results %>%
 bs_model <- lm(ProductRelated_Duration ~ bs(Administrative_Duration, df = 8), data = train_df)
 # summary(bs_model)
 ```
-
-
 
 ```{r fig.width=11, fig.height=6}
 plot(train_df$Administrative_Duration, train_df$ProductRelated_Duration,
@@ -160,7 +158,6 @@ cv_results %>%
 ns_model <- lm(ProductRelated_Duration ~ ns(BounceRates, df = 8), data = train_df)
 ```
 
-
 ```{r fig.width=11, fig.height=6}
 plot(train_df$BounceRates, train_df$ProductRelated_Duration,
      main = "B-splaino modelio gerumo patikrinimas",
@@ -172,7 +169,7 @@ lines(sort(train_df$BounceRates),
 
 ## Glodusis splainas
 
-Skirtingai nei b-splainai, kurie reguliuoja splainą pagal konkretų mazgų skaičių, glodieji splaiai mazgus išdėsto kiekviename unikaliame duomenų stebėjime, o modelio sudėtingumą valdo per reguliarizavimo (lamda) parametrą. Šį kart geriausiai rezultatai gauti su „Administrative_Duration“ kintamuoju ir lamda = 0.0085  reikšme (žr. \ref{tab:trspline_rmse} lentelę).
+Skirtingai nei b-splainai, kurie reguliuoja splainą pagal konkretų mazgų skaičių, glodieji splaiai mazgus išdėsto kiekviename unikaliame duomenų stebėjime, o modelio sudėtingumą valdo per reguliarizavimo (lamda) parametrą. Šį kart geriausiai rezultatai gauti su „Administrative_Duration“ kintamuoju ir lamda = 0.0085 reikšme (žr. \ref{tab:trspline_rmse} lentelę).
 
 ```{r}
 # df yra kiek mazgų turės spline
@@ -255,7 +252,6 @@ smape <- (200 * mean(abs(actual - pred) / (abs(actual) + abs(pred)), na.rm = TRU
 # cat("lambda:   ", ss_model$lambda,     "\n")
 ```
 
-
 ```{r fig.width=11, fig.height=6}
 plot(train_df$BounceRates, train_df$ProductRelated_Duration,
      main = "Glodaus spline modelio gerumo patikrinimas",
@@ -315,26 +311,20 @@ gam_model <- mgcv::gam(ProductRelated_Duration ~
 # TEST  MAE: 850.64 seconds
 ```
 
-```{r}
-plot(gam_model , se = TRUE , col = "red")
-```
-
 # Lokalios regresijos modelis
 
 Lokaliosios regresijos modelis sudarytas dviem etapais. Siekiant padidinti modelio našumą ir išvengti kintamųjų pertekliaus, skaitiniai kintamieji pirmiausia standartizuoti, o jų dimensiškumas sumažintas taikant pagrindinių komponenčių analizę (*PCA*)
 
-Optimali hiperparametrų kombinacija – pagrindinių komponenčių skaičius (nuo 1 iki 4) ir glodinimo parametras (nuo 0,1 iki 0,9 su 0,1 žingsniu) – parinkta naudojant kryžminį patikrinimą (angl. *cross-validation*), minimizuojant vidutinę kvadratinę paklaidą (RMSE). Tiksliausi rezultatai gauti modelio konfigūracijoje naudojant dvi pagrindines komponentes ir 0,9 glodinimo parametrą.
+Optimali hiperparametrų kombinacija – pagrindinių komponenčių skaičius (nuo 1 iki 4) ir glodinimo parametras (nuo 0,1 iki 0,9 su 0,1 žingsniu) – parinkta naudojant kryžminį patikrinimą (angl. *cross-validation*), minimizuojant vidutinę kvadratinę paklaidą (RMSE) (žr. \ref{fig:PCA_SPAN} pav.). Tiksliausi rezultatai gauti modelio konfigūracijoje naudojant dvi pagrindines komponentes ir 0,9 glodinimo parametrą.
 
-```{r}
+```{r, fig.cap="RMSE priklausomybė nuo span ir PCA komponenčių skaičiaus\\label{fig:PCA_SPAN}"}
 target <- "ProductRelated_Duration"
 
 X_train <- train_df |> select(-all_of(target)) |> select(where(is.numeric))
 y_train <- train_df[[target]]
 
-# span_values   <- seq(0.1, 0.9, by = 0.1)
-span_values   <- seq(0.8, 0.9, by = 0.1)
-# pcaComp_values <- 1:3
-pcaComp_values <- 2
+span_values   <- seq(0.1, 0.9, by = 0.1)
+pcaComp_values <- 1:4
 
 grid_results <- expand.grid(span = span_values, pcaComp = pcaComp_values)
 grid_results$RMSE <- NA
@@ -390,8 +380,8 @@ best_pcaComp <- best_row$pcaComp
 ggplot(grid_results, aes(x = span, y = RMSE, color = factor(pcaComp))) +
   geom_line() +
   geom_point() +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Span", y = "RMSE", color = "pcaComp") +
+  scale_y_log10() +
+  labs(x = "Span", y = "RMSE (log)", color = "pcaComp") +
   theme_minimal()
 ```
 
@@ -406,7 +396,7 @@ X_test_pca <- predict(preproc, test_df)
 loess_model <- loess(ProductRelated_Duration ~ PC1, data = X_tr_pca, span = best_span)
 ```
 
-```{r fig.width=11, fig.height=6}
+```{r fig.width=11, fig.height=6, fig.cap="Lokalioji regresija: modelio tinkamumas prognozuojant bendrą laiką (sekundėmis), kurį lankytojas praleido parduodamų daiktų puslapiuose\\label{fig:PCA_SPAN}"}
 plot(X_tr_pca$PC1, X_tr_pca$ProductRelated_Duration,
      pch = 19, cex = 0.5,
      col = rgb(0.2, 0.4, 0.8, alpha = 0.3),
@@ -419,7 +409,6 @@ sorted_pc1 <- X_tr_pca$PC1[sorted_idx]
 lines(sorted_pc1, predictions,
       col = "red", lwd = 2)
 ```
-
 
 ## Išskirtys
 
