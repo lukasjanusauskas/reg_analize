@@ -468,6 +468,59 @@ X_test_pca <- predict(preproc, test_df)
 loess_model <- loess(ProductRelated_Duration ~ PC1, data = X_tr_pca, span = best_span)
 ```
 
+```{r fig.width=11, fig.height=6}
+# --- Residuals ---
+fitted_vals <- loess_model$fitted
+raw_resid   <- loess_model$residuals
+n           <- length(raw_resid)
+p           <- loess_model$enp          # effective number of parameters
+
+# --- Cook's Distance approximation ---
+# sigma^2 estimate
+sigma2 <- sum(raw_resid^2) / (n - p)
+
+# Leverage approximation: uniform h_i ≈ p/n
+h_i <- rep(p / n, n)
+
+# Cook's D ≈ (e_i^2 / (p * sigma2)) * (h_i / (1 - h_i)^2)
+cooksd_loess <- (raw_resid^2 / (p * sigma2)) * (h_i / (1 - h_i)^2)
+
+plot(cooksd_loess,
+     pch = 19, cex = 0.8,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.6),
+     main = "Lokalioji regresija: Kuko matas",
+     ylab = "Reikšmė")
+abline(h = 1, col = "red", lwd = 3, lty = 2)
+
+# --- Pearson residuals ---
+sigma_hat        <- sqrt(sigma2)
+pearson_residuals <- raw_resid / sigma_hat
+
+plot(pearson_residuals,
+     pch = 19, cex = 0.8,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.2),
+     main = "Lokalioji regresija: Pirsono liekanos",
+     ylab = "Pirsono liekanos",
+     xlab = "Indeksas")
+abline(h = 0,                                   col = "gray", lwd = 2)
+abline(h =  3, col = "red",  lwd = 2, lty = 2)
+abline(h = -3, col = "red",  lwd = 2, lty = 2)
+
+sorted_idx <- order(X_tr_pca$PC1)
+sorted_pc1 <- X_tr_pca$PC1[sorted_idx]
+
+predictions <- predict(loess_model, newdata = data.frame(PC1 = sorted_pc1))
+
+plot(X_tr_pca$PC1, X_tr_pca$ProductRelated_Duration,
+     pch = 19, cex = 0.5,
+     col = rgb(0.2, 0.4, 0.8, alpha = 0.3),
+     main = "Lokalioji regresija: modelio tinkamumas",
+     xlab = "PC1", ylab = "ProductRelated_Duration")
+
+lines(sorted_pc1, predictions,
+      col = "red", lwd = 2)
+```
+
 # Modelių palyginimas
 
 ```{r}
