@@ -20,7 +20,7 @@ test_df <- df[-train_idx, ]
 
 ## B-splainas
 
-B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome\~\@ref(tab:best-rmse-table) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
+B-splaino modeliui turėjome parinkti vieną optimalią kovariantę ir mazgų skaičių su kuriuo gauname mažiausią RSME. Geriausios kovariantės ieškojimui naudojame visus stulpelius išskyrus patį „ProductRelated_Duration“, kurį norime prognozuoti ir atmetus produktų puslapių peržiūrų skaičių, kadangi ši viena kovariantė per daug gerai įvertina praleistą laiką produktų puslapiuose. Mazgų galimas rėžis buvo nuo 3 iki 15, atkreipiant dėmesį, kad didelis mazgų skaičius gali reikšti modelio per didelį prisitaikymą prie duomenų (angl. over-fitting). Kaip matome \ref{tab:bspline_rmse) lentelėje, mažiausią RMSE gavome su „Administrative_Duration“ kovariante ir 8 mazgais, o prasčiausiai naudojant B-splaino modelį gauti rezultatai su specialios dienos kintamuoju. Taip pat, geri rezultatai gauti su „BounceRates“ kovariante.
 
 ```{r warning=FALSE}
 # df yra kiek mazgų turės spline
@@ -497,20 +497,18 @@ clamp_predict <- function(model, newdata, train_data) {
 
 bs_pred <- clamp_predict(bs_model, test_df, train_df)
 ns_pred <- clamp_predict(ns_model, test_df, train_df)
-ss_pred <- clamp_predict(ss_model, test_df, train_df)
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
 gam_pred_2 <- clamp_predict(gam_model_2, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 
 rezultatai <- data.frame(
-  Modelis = c("B-splainas", "Naturalusis splaina", "Glodusis splainas", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
+  Modelis = c("B-splainas", "Naturalusis splaina", "GAM","GAM splainai + lokali", "Lokalioji regresija"),
   rbind(
     eval_metrics(test_df$ProductRelated_Duration, bs_pred),
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
-    eval_metrics(test_df$ProductRelated_Duration, ss_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred_2),
-    eval_metrics(test_df$ProductRelated_Duration, loess_pred),
+    eval_metrics(test_df$ProductRelated_Duration, loess_pred)
   )
 )
 
