@@ -114,8 +114,20 @@ Taigi toliau tirsime tik GAM modelį.
 
 ### Požymių reikšmingumas
 
-Toliau tyrėme požymių reikšmingumą, tam naudojome lentelę, pateiktą priede.
+Toliau tyrėme požymių reikšmingumą, tam naudojome lentelę, pateiktą A priede.
 Pastebime, kad kiekviena kovariantė yra reikšminga, taigi mes negalime išimti kintamųjų.
+
+### Interpretacija
+
+Iš grafikų matome, kad didžiausią įtaką daro aplankytų administracinių puslapių skaičius, informacinių puslapių skaičius ir juose praleistas laikas. 
+Kiti faktoriai daro kelis kartus mažesnę įtaką.
+
+```{r fig.width=11, fig.height=9, dev="png"}
+oldpar <- par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
+plot(gam_model, se = TRUE, col = "red", scale = 0, pages = 1)
+par(oldpar)
+```
+
 
 ### Prognozė
 
@@ -125,7 +137,7 @@ Taip pat didžiausias atitrūkimas nuo šios tiesės yra ties didžiausiomis ats
 Taigi, taisant toliau šį modelį reikia turėti omenyje didžiausias atsako reikšmes.
 
 ```{r}
-ggplot(data.frame(predicted = gam_pars_pred, actual = test_df$ProductRelated_Duration),
+ggplot(data.frame(predicted = gam_pred, actual = test_df$ProductRelated_Duration),
        aes(x = predicted, y = actual)) +
   geom_point(alpha = 0.3) +
   geom_abline(slope = 1, intercept = 0, color = "red", linewidth = 1) +
