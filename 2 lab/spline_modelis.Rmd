@@ -71,12 +71,24 @@ best_bs_df    <- cv_results$df[best_idx]
 cv_results %>%
   arrange(rmse) %>%
   distinct(var, .keep_all = TRUE) %>%
+  mutate(var = dplyr::recode(var,
+    "Administrative_Duration" = "Administracinių puslapių trukmė",
+    "BounceRates"             = "Atšokimo dažnis",
+    "Informational_Duration"  = "Informacinių puslapių trukmė",
+    "Administrative"          = "Administraciniai puslapiai",
+    "PageValues"              = "Puslapio vertė",
+    "Informational"           = "Informaciniai puslapiai",
+    "ExitRates"               = "Išėjimo dažnis",
+    "SpecialDay"              = "Ypatinga diena"
+  )) %>%
+  mutate(across(where(is.numeric), ~ format(round(., 2), decimal.mark = ","))) %>%
   knitr::kable(
-    col.names = c("Kintamasis", "df", "RMSE"),
+    col.names = c("Kintamasis", "Mazgų skaičius", "RMSE"),
     caption = "B-splaino kryžminės validacijos rezultatai\\label{tab:bspline_rmse}",
-    digits = 2,
-    booktabs = TRUE
-  )
+    booktabs = TRUE,
+    format = "latex"
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"))
 ```
 
 ```{r warning=FALSE}
@@ -146,10 +158,20 @@ best_ns_df    <- cv_results$df[best_idx]
 cv_results %>%
   arrange(rmse) %>%
   distinct(var, .keep_all = TRUE) %>%
+  mutate(var = recode(var,
+    "Administrative_Duration" = "Administracinių puslapių trukmė",
+    "BounceRates"             = "Atšokimo dažnis",
+    "Informational_Duration"  = "Informacinių puslapių trukmė",
+    "Administrative"          = "Administraciniai puslapiai",
+    "PageValues"              = "Puslapio vertė",
+    "Informational"           = "Informaciniai puslapiai",
+    "ExitRates"               = "Išėjimo dažnis",
+    "SpecialDay"              = "Ypatinga diena"
+  )) %>%
+  mutate(across(where(is.numeric), ~ format(round(., 2), decimal.mark = ","))) %>%
   knitr::kable(
-    col.names = c("Kintamasis", "df", "RMSE"),
+    col.names = c("Kintamasis", "Mazgų skaičius", "RMSE"),
     caption = "Normalaus splaino kryžminės validacijos rezultatai\\label{tab:nspline_rmse}",
-    digits = 2,
     booktabs = TRUE
   )
 ```
@@ -221,10 +243,24 @@ best_ns_lambda <- cv_results$lambda[best_idx]
 cv_results %>%
   arrange(rmse) %>%
   distinct(var, .keep_all = TRUE) %>%
+  mutate(var = recode(var,
+    "Administrative_Duration" = "Administracinių puslapių trukmė",
+    "BounceRates"             = "Atšokimo dažnis",
+    "Informational_Duration"  = "Informacinių puslapių trukmė",
+    "Administrative"          = "Administraciniai puslapiai",
+    "PageValues"              = "Puslapio vertė",
+    "Informational"           = "Informaciniai puslapiai",
+    "ExitRates"               = "Išėjimo dažnis",
+    "SpecialDay"              = "Ypatinga diena"
+  )) %>%
+  mutate(across(where(is.numeric), ~ if_else(
+    . < 0.001,
+    "<0,001",
+    format(round(., 4), decimal.mark = ",")
+  ))) %>%
   knitr::kable(
-    col.names = c("Kintamasis", "df", "lamda", "RMSE"),
+    col.names = c("Kintamasis", "Mazgų skaičius", "Lambda", "RMSE"),
     caption = "Glodžiojo splaino kryžminės validacijos rezultatai\\label{tab:trspline_rmse}",
-    digits = 5,
     booktabs = TRUE
   )
 ```
