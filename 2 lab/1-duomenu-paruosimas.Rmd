@@ -323,13 +323,21 @@ ggplot(df_long, aes(x = value, y = ProductRelated_Duration)) +
     trans  = "log1p",
     breaks = c(0, 10, 100, 1000, 10000)
   ) +
-  labs(x = NULL, y = "Trukmė produktų puslapiuose") +
-  theme_minimal() +
+  labs(x = NULL, y = "Trukmė produktų puslapiuose (sek.)") +
+  theme_minimal(base_size = 18) +
   theme(
-    strip.text       = element_text(color = "black", face = "bold", size = 9),
+    strip.text       = element_text(color = "black", face = "bold", size = 20),
     panel.grid.minor = element_blank(),
-    axis.text        = element_text(size = 12)
+    axis.text.x      = element_text(hjust = 1, size = 16),
+    axis.text.y      = element_text(size = 16),
+    axis.title.y     = element_text(size = 18)
   )
+```
+
+```{r}
+ggsave("grafikas_sklaidos.svg", plot = last_plot(),
+       width = 12, height = 8, units = "in")
+
 ```
 
 ```{r}
@@ -383,8 +391,31 @@ boot_ci <- function(x, bound, R = 500) {
   ci$percent[bound]
 }
 
+# Month order for sorting
+month_levels <- c("Sau", "Vas", "Kov", "Bal", "Geg", "Bir",
+                  "Lie", "Rugp", "Rugs", "Spa", "Lap", "Gru")
+
+
+
 df_long2 <- df %>%
   mutate(across(all_of(col_subset2), as.factor)) %>%
+  # Translate VisitorType values
+  mutate(VisitorType = dplyr::recode(VisitorType,
+    "New_Visitor"       = "Naujas lank.",
+    "Other"             = "Kita",
+    "Returning_Visitor" = "Grįžtantis lank."
+  )) %>%
+  # Translate Weekend values
+  mutate(Weekend = dplyr::recode(Weekend,
+    "FALSE" = "Ne",
+    "TRUE"  = "Taip"
+  )) %>%
+  mutate(Month = dplyr::recode(Month,
+  "Jan" = "Sau", "Feb" = "Vas", "Mar" = "Kov",
+  "Apr" = "Bal", "May" = "Geg", "June" = "Bir",
+  "Jul" = "Lie", "Aug" = "Rugp", "Sep" = "Rugs",
+  "Oct" = "Spa", "Nov" = "Lap", "Dec" = "Gru"
+  )) %>%
   tidyr::pivot_longer(
     cols = all_of(col_subset2),
     names_to = "variable",
@@ -399,18 +430,31 @@ df_summary <- df_long2 %>%
     lower  = boot_ci(ProductRelated_Duration, 4),
     upper  = boot_ci(ProductRelated_Duration, 5),
     .groups = "drop"
-  )
+  ) %>%
+  # Apply correct month ordering only within the "Mėnuo" facet
+  mutate(value = case_when(
+    variable == "Mėnuo" ~ factor(value, levels = month_levels),
+    TRUE ~ factor(value)
+  ))
 
 ggplot(df_summary, aes(x = value, y = mean_y)) +
   geom_col(fill = "#2C3E50") +
   geom_errorbar(aes(ymin = lower, ymax = upper),
                 width = 0.3, color = "#E74C3C") +
   facet_wrap(~ variable, scales = "free_x", ncol = 3) +
-  labs(x = NULL, y = "Trukmė produktų puslapiuose") +
-  theme_minimal() +
+  labs(x = NULL, y = "Trukmė produktų puslapiuose (sek.)") +
+  theme_minimal(base_size = 18) +
   theme(
-    strip.text       = element_text(color = "black", face = "bold", size = 9),
+    strip.text       = element_text(color = "black", face = "bold", size = 20),
     panel.grid.minor = element_blank(),
-    axis.text.x      = element_text(angle = 45, hjust = 1, size = 7)
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 16),
+    axis.text.y      = element_text(size = 16),
+    axis.title.y     = element_text(size = 18)
   )
+```
+
+```{r}
+ggsave("grafikas.svg", plot = last_plot(),
+       width = 12, height = 8, units = "in")
+
 ```
