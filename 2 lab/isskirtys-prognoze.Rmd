@@ -1,6 +1,7 @@
 Kadangi išskirčių nėra daug ir jos nėra tendencingos mes jas išimsime ir toliau modeliai bus tikrinami be jų.
 
 ```{r}
+
 resid_gam_model <- resid(gam_model, newdata=df, type="pearson")
 resid_gam_mask <- abs(resid_gam_model / sd(resid_gam_model)) >= 3
 
@@ -30,6 +31,19 @@ gam_model_interact <- mgcv::gam(ProductRelated_Duration ~
                    s(BounceRates)+
                    s(ExitRates) +
                    s(BounceExit) +
+                   Month + TrafficType + SpecialDay +
+                 VisitorType + Weekend,
+                 data = train_df, method = "REML")
+
+
+gam_model <- mgcv::gam(ProductRelated_Duration ~
+                   s(Administrative) +
+                   s(Administrative_Duration) +
+                   s(Informational) +
+                   s(Informational_Duration) +
+                   s(PageValues) +
+                   s(BounceRates)+
+                   s(ExitRates) +
                    Month + TrafficType + SpecialDay +
                  VisitorType + Weekend,
                  data = train_df, method = "REML")
@@ -73,6 +87,7 @@ ss_pred <- clamp_predict(ss_model, test_df, train_df)$y
 gam_pred <- clamp_predict(gam_model, test_df, train_df)
 loess_pred <- clamp_predict(loess_model, X_test_pca, X_tr_pca)
 gam_pred_inter <- clamp_predict(gam_model_interact, test_df, train_df)
+gam_pred <- clamp_predict(gam_model, test_df, train_df)
 
 rezultatai <- data.frame(
   Modelis = c(
@@ -80,6 +95,7 @@ rezultatai <- data.frame(
     "Naturalusis splainas",
     "Glodusis splainas",
     "GAM",
+    "GAM su sąveikomis",
     "Lokalioji regresija"
     ),
   rbind(
@@ -87,6 +103,7 @@ rezultatai <- data.frame(
     eval_metrics(test_df$ProductRelated_Duration, ns_pred),
     eval_metrics(test_df$ProductRelated_Duration, ss_pred),
     eval_metrics(test_df$ProductRelated_Duration, gam_pred),
+    eval_metrics(test_df$ProductRelated_Duration, gam_pred_inter),
     eval_metrics(test_df$ProductRelated_Duration, loess_pred)
   )
 )

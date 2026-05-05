@@ -158,7 +158,7 @@ best_ns_df    <- cv_results$df[best_idx]
 cv_results %>%
   arrange(rmse) %>%
   distinct(var, .keep_all = TRUE) %>%
-  mutate(var = recode(var,
+  mutate(var = dplyr::recode(var,
     "Administrative_Duration" = "Administracinių puslapių trukmė",
     "BounceRates"             = "Atšokimo dažnis",
     "Informational_Duration"  = "Informacinių puslapių trukmė",
@@ -242,8 +242,9 @@ best_ns_lambda <- cv_results$lambda[best_idx]
 ```{r}
 cv_results %>%
   arrange(rmse) %>%
+  drop_na() %>% 
   distinct(var, .keep_all = TRUE) %>%
-  mutate(var = recode(var,
+  mutate(var = dplyr::recode(var,
     "Administrative_Duration" = "Administracinių puslapių trukmė",
     "BounceRates"             = "Atšokimo dažnis",
     "Informational_Duration"  = "Informacinių puslapių trukmė",
@@ -253,11 +254,9 @@ cv_results %>%
     "ExitRates"               = "Išėjimo dažnis",
     "SpecialDay"              = "Ypatinga diena"
   )) %>%
-  mutate(across(where(is.numeric), ~ if_else(
-    . < 0.001,
-    "<0,001",
-    format(round(., 4), decimal.mark = ",")
-  ))) %>%
+  mutate(
+    across(where(is.numeric), ~ format(round(.x, 5), decimal.mark = ","))
+  ) %>%
   knitr::kable(
     col.names = c("Kintamasis", "Mazgų skaičius", "Lambda", "RMSE"),
     caption = "Glodžiojo splaino kryžminės validacijos rezultatai\\label{tab:trspline_rmse}",
