@@ -75,7 +75,6 @@ ggsurvplot(fit, data = df)
 fit <- survfit(Surv(stag, event) ~ way, data = df)
 ggsurvplot(fit, data = df)
 
-
 # Diskretizuojam kikekybines kovariantes 
 numeric_cols <- df %>%
   select(stag, where(is.numeric)) %>% 
@@ -137,6 +136,8 @@ resid(model)
 # Homogeniškumo hipotezė #####################
 
 cox.zph(model)
+
+table(df$profession)
 
 # Su profesija p < 0.05 - neatitinka 
 
