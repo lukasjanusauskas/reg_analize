@@ -4,6 +4,7 @@ library("tidyr")
 library("dplyr")
 library(car)
 
+# duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
 
 # Duomenu pradine analize: tvarkymas, klaidos
@@ -150,4 +151,35 @@ cox.zph(model_no_prof)
 
 # Išėmus profesiją - all good
 
+# Tiesiniškumo tikrinimas
 
+kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety", "novator")
+
+res_martingale <- residuals(model_no_prof, type = "martingale")
+X <- as.matrix(df_no_prof[, kiekybiniai_kintamieji])
+b <- coef(model_no_prof)[kiekybiniai_kintamieji]
+
+par(mfrow = c(2, 3))
+
+# Liekanos ir kovariantės
+for (j in seq_along(kiekybiniai_kintamieji)) {
+  plot(X[, j], res_martingale,
+       xlab = kiekybiniai_kintamieji[j],
+       ylab = "Residuals")
+  abline(h = 0, lty = 2)
+  lines(lowess(X[, j], res_martingale, iter = 0), col = "red")
+}
+
+par(mfrow = c(2, 3))
+
+# Kompnentė + liekana ir kovariantės
+for (j in seq_along(kiekybiniai_kintamieji)) {
+  component_resid <- b[j] * X[, j] + res_martingale
+  plot(X[, j], component_resid,
+       xlab = kiekybiniai_kintamieji[j],
+       ylab = "Component + residual")
+  abline(lm(component_resid ~ X[, j]), lty = 2)
+  lines(lowess(X[, j], component_resid, iter = 0), col = "red")
+}
+
+par(mfrow = c(1, 1))
