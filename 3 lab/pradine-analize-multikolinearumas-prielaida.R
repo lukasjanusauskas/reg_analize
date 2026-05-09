@@ -29,9 +29,11 @@ colnames(df)
 # selfcontrol: Savikontrolės/sąžiningumo balas
 # anxiety: Neuroticizmo/nerimo balas
 # novator: Novatoriškumo/atvirumo patirčiai balas
-
+  
 
 summary(df)
+
+nrow(df)
 
 # Nepastebetos iskirtys
 
@@ -58,6 +60,51 @@ table(df$way)
 
 cols <- c("industry", "gender", "profession", "traffic", "coach", "head_gender", "greywage", "way")
 df[cols] <- lapply(df[cols], as.factor)
+
+# Identify numeric columns (excluding the event column)
+numeric_cols <- df %>%
+  select(-event) %>%                  # Step 1: drop event
+  select(where(is.numeric)) %>%       # Step 2: keep only numeric columns
+  colnames()
+
+# Reshape data to long format for faceting
+df_long <- df %>%
+  select(event, all_of(numeric_cols)) %>%
+  pivot_longer(
+    cols      = all_of(numeric_cols),
+    names_to  = "variable",
+    values_to = "value"
+  )
+
+# Plot
+ggplot(df_long, aes(x = factor(event), y = value, fill = factor(event))) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 1.5, alpha = 0.7) +
+  stat_summary(                        # <-- mean marker
+    fun       = mean,
+    geom      = "point",
+    shape     = 23,                    # diamond shape
+    size      = 3,
+    fill      = "#FF0000",             # bright red fill
+    color     = "black",               # black border for contrast
+    position  = position_dodge(0.75)
+  ) +
+  facet_wrap(~ variable, scales = "free_y") +
+  scale_fill_manual(
+    values = c("left" = "#E74C3C", "stayed" = "#2ECC71"),
+    labels = c("left" = "Left", "stayed" = "Stayed")
+  ) +
+  labs(
+    title = "Požymių pasiskirstymas pagal įvykį",
+    x     = "Įvykis",
+    y     = "Kintamojo vertė",
+    fill  = "Įvykis"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title      = element_text(face = "bold", hjust = 0.5),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
 
 # K-M kreivės ############################################
 # Bendra
