@@ -178,6 +178,38 @@ resid(model)
 
 # Išskirčių tyrimas ############################
 
+dfbeta <- residuals(model, type="dfbeta")
+
+# for (j in 1:49) {
+#   plot(dfbeta[, j],
+#        ylab=names(coef(model))[j])
+#   abline(h=0, lty=2)
+# }
+
+konstanta = 2 / sqrt(nrow(df))
+
+# Kiek stebėjimų viršija konstantą kiekvienam kintamajam
+exceeded <- abs(dfbeta) > konstanta
+
+# Procentai pagal kintamąjį
+pct_by_var <- colMeans(exceeded) * 100
+names(pct_by_var) <- names(coef(model))
+
+# Bent vienas kintamasis viršija
+pct_any <- mean(apply(exceeded, 1, any)) * 100
+
+cat("Procentas stebėjimų viršijančių konstantą pagal kintamąjį:\n")
+for (nm in names(pct_by_var)) {
+  cat(sprintf("  %-20s: %.1f%%\n", nm, pct_by_var[nm]))
+}
+cat(sprintf("\n  %-20s: %.1f%%\n", "Bent vienas", pct_any))
+
+outlier_idx  <- which(apply(exceeded, 1, any))
+
+df <- df[-outlier_idx, ]
+
+model <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
+
 
 #TODO: pridėti
 
