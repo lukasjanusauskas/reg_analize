@@ -291,7 +291,7 @@ summary(model)
 cox.zph(model)
 summary(model)
 
-interval_len <- 12
+interval_len <- 1
 
 max_time <- max(df_train$stag, na.rm = TRUE)
 
@@ -314,7 +314,7 @@ df_train_split <- survSplit(
 
 
 model_tv2 <- coxph(
-  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + strata(traffic) - traffic + strata(profession) - profession,
+  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + strata(profession) - profession + strata(industry) - industry + strata(traffic) - traffic + extraversion:stop + head_gender:stop + coach:stop + independ:stop,
   data = df_train_split,
   ties = "efron",
   x = TRUE
