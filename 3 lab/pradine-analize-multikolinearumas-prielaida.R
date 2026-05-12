@@ -3,9 +3,25 @@ library("survminer")
 library("tidyr")
 library("dplyr")
 library(car)
-
+library(StepReg)
+library(Rcmdr)
+library(RcmdrPlugin.survival)
 # duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
+
+table(df$traffic, df$event)
+table(df$industry, df$event)
+
+prof_counts <- table(df$profession)
+df <- df[df$profession %in% names(prof_counts[prof_counts >= 15]), ]
+df$profession <- droplevels(as.factor(df$profession))
+
+industry_counts <- table(df$industry)
+df <- df[df$industry %in% names(industry_counts[industry_counts >= 15]), ]
+df$industry <- droplevels(as.factor(df$industry))
+
+table(df$profession)
+table(df$industry)
 
 # Duomenu pradine analize: tvarkymas, klaidos
 
@@ -196,9 +212,26 @@ draw_numeric_discretized_km(df$selfcontrol, df$stag, df$event, col="Savikontrol�
 draw_numeric_discretized_km(df$anxiety, df$stag, df$event, col="Nerimas")
 draw_numeric_discretized_km(df$novator, df$stag, df$event, col="Novatoriškumas")
 
+#Mokymo testine aibe
+
+set.seed(5)
+
+train_prop <- 0.8
+
+train_idx <- df %>%
+  mutate(row_id = row_number()) %>%
+  group_by(event) %>%
+  sample_frac(train_prop) %>%
+  pull(row_id)
+
+df_train <- df[train_idx, ]
+df_test  <- df[-train_idx, ]
+table(df_train$traffic, df_train$event)
+
+
 # Multikolinearumo tyrimas ######################
 
-model <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
+model <- coxph(Surv(stag, event, type = "right") ~ ., data = df_train)
 vif(model)
 
 # aSGIF (GVIF^(1/(2*Df))) riba yra 2 - mes neturime kolinearumo
@@ -214,7 +247,7 @@ dfbeta <- residuals(model, type="dfbeta")
 #   abline(h=0, lty=2)
 # }
 
-konstanta = 2 / sqrt(nrow(df))
+konstanta = 2 / sqrt(nrow(df_train))
 
 # Kiek stebėjimų viršija konstantą kiekvienam kintamajam
 exceeded <- abs(dfbeta) > konstanta
@@ -234,15 +267,62 @@ cat(sprintf("\n  %-20s: %.1f%%\n", "Bent vienas", pct_any))
 
 outlier_idx  <- which(apply(exceeded, 1, any))
 
-df <- df[-outlier_idx, ]
+df_train <- df_train[-outlier_idx, ]
 
-model <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
+model <- coxph(Surv(stag, event, type = "right") ~ ., data = df_train)
+summary(model)
 
+#Steowise
+
+# formula <- Surv(stag,event, type = "right") ~ .
+# 
+# step_model <- stepwise(
+#   formula = formula,
+#   data = df_train,
+#   type = "cox",
+#   strategy = "backward",
+#   metric = "SL",
+#   sle = 0.1,
+#   sls = 0.1
+# )
+# final_model <- step_model$backward$SL
+# summary(final_model)
 # Homogeniškumo hipotezė #####################
-
 cox.zph(model)
+summary(model)
 
-table(df$profession)
+interval_len <- 12
+
+max_time <- max(df_train$stag, na.rm = TRUE)
+
+cuts <- seq(
+  from = interval_len,
+  to = max_time,
+  by = interval_len
+)
+
+cuts <- cuts[cuts < max_time]
+
+df_train_split <- survSplit(
+  Surv(stag, event) ~ .,
+  data = df_train,
+  cut = cuts,
+  start = "start",
+  end = "stop"
+)
+
+
+
+model_tv2 <- coxph(
+  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + strata(traffic) - traffic + strata(profession) - profession,
+  data = df_train_split,
+  ties = "efron",
+  x = TRUE
+)
+summary(model_tv2)
+cox.zph(model_tv2)
+
+table(df_train$industry, df_train$event)
 
 # Su profesija p < 0.05 - neatitinka 
 
@@ -251,7 +331,7 @@ table(df$profession)
 # 2. Sluoksniuoti (atskiros lygtys) - apie kovariantę daryti išvadų negalim. 
 #    Mums netinka
 
-cox.zph(model_no_prof)
+
 
 # Išėmus profesiją - all good
 
@@ -287,3 +367,4 @@ for (j in seq_along(kiekybiniai_kintamieji)) {
 }
 
 par(mfrow = c(1, 1))
+
