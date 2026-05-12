@@ -41,6 +41,33 @@ any( is.na(df) )
 
 # Nera praleistu reiksniu
 
+# sklaidos diagrama
+
+# Pivot the predictor variables into long format
+df_long <- df %>%
+  pivot_longer(
+    cols = c(age, extraversion, independ, selfcontrol, anxiety, novator),
+    names_to  = "variable",
+    values_to = "value"
+  )
+
+# Plot
+ggplot(df_long, aes(x = value, y = stag, color = factor(event))) +
+  geom_point(alpha = 0.6, size = 1.8) +
+  geom_smooth(method='lm') +
+  facet_wrap(~ variable, scales = "free_x") +
+  scale_color_brewer(palette = "Set1", name = "Event") +
+  labs(
+    x     = "Reikšmė",
+    y     = "Stažas"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.text       = element_text(face = "bold"),
+    legend.position  = "bottom"
+  )
+
+# Skirtingomis spalvomis cenzuruotus ir necenzutuotus
 
 table(df$event)
 cat( "Cenzūruotų duomenų dalis:", mean( 1-df$event ) )
@@ -123,6 +150,9 @@ ggsurvplot(fit, data = df)
 fit <- survfit(Surv(stag, event) ~ way, data = df)
 ggsurvplot(fit, data = df)
 
+fit <- survfit(Surv(stag, event) ~ profession, data = df)
+ggsurvplot(fit, data = df)
+
 # Diskretizuojam kikekybines kovariantes 
 numeric_cols <- df %>%
   select(stag, where(is.numeric)) %>% 
@@ -139,7 +169,6 @@ draw_numeric_discretized_km <- function(
 ) {
   breaks <- quantile(df_numeric_col, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = na.rm)
   
-  # Bug 1 fixed: assign the cut result
   df_numeric_col <- cut(df_numeric_col,
                         breaks         = breaks,
                         labels = c(
@@ -150,7 +179,6 @@ draw_numeric_discretized_km <- function(
                         ),
                         include.lowest = TRUE)
   
-  # Bug 2 fixed: build a local data frame
   temp_df <- data.frame(
     stag  = df_stag,
     event = df_event,
@@ -210,9 +238,6 @@ df <- df[-outlier_idx, ]
 
 model <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
 
-
-#TODO: pridėti
-
 # Homogeniškumo hipotezė #####################
 
 cox.zph(model)
@@ -221,16 +246,16 @@ table(df$profession)
 
 # Su profesija p < 0.05 - neatitinka 
 
-df_no_prof <- df%>% 
-  select(-c("profession"))
-  
-model_no_prof <- coxph(Surv(stag, event, type = "right") ~ ., data = df_no_prof)
+# Susitvarkyti su profesija taip:
+# 1. Įvesti sąveiką su laiku - kovariantė lieka
+# 2. Sluoksniuoti (atskiros lygtys) - apie kovariantę daryti išvadų negalim. 
+#    Mums netinka
 
 cox.zph(model_no_prof)
 
 # Išėmus profesiją - all good
 
-# Tiesiniškumo tikrinimas
+# Tiesiškumo tikrinimas
 
 kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety", "novator")
 
