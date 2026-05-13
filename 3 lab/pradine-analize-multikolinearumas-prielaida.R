@@ -6,6 +6,7 @@ library(car)
 library(StepReg)
 library(Rcmdr)
 library(RcmdrPlugin.survival)
+library(MASS)
 # duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
 
@@ -13,11 +14,11 @@ table(df$traffic, df$event)
 table(df$industry, df$event)
 
 prof_counts <- table(df$profession)
-df <- df[df$profession %in% names(prof_counts[prof_counts >= 15]), ]
+df <- df[df$profession %in% names(prof_counts[prof_counts >= 50]), ]
 df$profession <- droplevels(as.factor(df$profession))
 
 industry_counts <- table(df$industry)
-df <- df[df$industry %in% names(industry_counts[industry_counts >= 15]), ]
+df <- df[df$industry %in% names(industry_counts[industry_counts >= 50]), ]
 df$industry <- droplevels(as.factor(df$industry))
 
 table(df$profession)
@@ -274,19 +275,19 @@ summary(model)
 
 #Steowise
 
-# formula <- Surv(stag,event, type = "right") ~ .
-# 
-# step_model <- stepwise(
-#   formula = formula,
-#   data = df_train,
-#   type = "cox",
-#   strategy = "backward",
-#   metric = "SL",
-#   sle = 0.1,
-#   sls = 0.1
-# )
-# final_model <- step_model$backward$SL
-# summary(final_model)
+formula <- Surv(stag,event, type = "right") ~ .
+
+step_model <- StepReg::stepwise(
+  formula = formula,
+  data = df_train,
+  type = "cox",
+  strategy = "backward",
+  metric = "SL",
+  sle = 0.1,
+  sls = 0.1
+)
+final_model <- step_model$backward$SL
+summary(final_model)
 # Homogeniškumo hipotezė #####################
 cox.zph(model)
 summary(model)
@@ -314,15 +315,53 @@ df_train_split <- survSplit(
 
 
 model_tv2 <- coxph(
-  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + strata(profession) - profession + strata(industry) - industry + strata(traffic) - traffic + extraversion:stop + head_gender:stop + coach:stop + independ:stop,
+  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + profession:stop + industry:stop + traffic:stop + extraversion:stop + head_gender:stop + coach:stop + independ:stop,
   data = df_train_split,
   ties = "efron",
   x = TRUE
 )
+
+qs <- quantile(
+  df_train_split$novator,
+  probs = c(0, 0.25, 0.5, 0.75, 1),
+  na.rm = TRUE
+)
+
+qs <- unique(qs)
+
+df_train_split$novator_q <- cut(
+  df_train_split$novator,
+  breaks = qs,
+  include.lowest = TRUE,
+  labels = paste0("Q", seq_len(length(qs) - 1))
+)
+model_tv1 <- coxph(
+  Surv(start, stop, event) ~ 
+    strata(profession) +
+    strata(traffic) +
+    strata(novator_q) +
+    . - start - stop - event - profession - traffic - novator - novator_q - t_stop,
+  data = df_train_split,
+  ties = "efron",
+  x = TRUE,
+  control = coxph.control(iter.max = 100)
+)
+
+summary(model_tv1)
+
+table(df_train$industry,df_train$event)
+
+summary(model_tv1)
+cox.zph(model_tv1)
+
 summary(model_tv2)
 cox.zph(model_tv2)
 
 table(df_train$industry, df_train$event)
+
+step_model <- MASS::stepAIC(model_tv1, direction = "both")
+cox.zph(step_model)
+summary(step_model)
 
 # Su profesija p < 0.05 - neatitinka 
 
@@ -339,9 +378,9 @@ table(df_train$industry, df_train$event)
 
 kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety", "novator")
 
-res_martingale <- residuals(model_no_prof, type = "martingale")
-X <- as.matrix(df_no_prof[, kiekybiniai_kintamieji])
-b <- coef(model_no_prof)[kiekybiniai_kintamieji]
+res_martingale <- residuals(model_tv1, type = "martingale")
+X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
+b <- coef(model_tv1)[kiekybiniai_kintamieji]
 
 par(mfrow = c(2, 3))
 
