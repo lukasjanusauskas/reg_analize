@@ -4,11 +4,23 @@ library("tidyr")
 library("dplyr")
 library(car)
 library(StepReg)
-library(Rcmdr)
 library(RcmdrPlugin.survival)
 library(MASS)
+library(knitr)
 # duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
+
+df %>% 
+  mutate(
+    event = ifelse(event == 1, 'Paliko komp.', 'Pasiliko komp.'),
+    profession = iconv(profession, from = "latin1", to = "UTF-8")) %>% 
+  with(table(profession, event)) %>% 
+  kable(format='latex')
+
+df %>% 
+  mutate(event = ifelse(event == 1, 'Paliko komp.', 'Pasiliko komp.')) %>% 
+  with(table(industry, event)) %>%
+  kable(format='latex')
 
 table(df$traffic, df$event)
 table(df$industry, df$event)
@@ -69,20 +81,34 @@ df_long <- df %>%
   )
 
 # Plot
-ggplot(df_long, aes(x = value, y = stag, color = factor(event))) +
+df_long %>% 
+  mutate(
+    event = ifelse(event == 1, 'Paliko komp.', 'Pasiliko komp.'),
+    variable = case_when(
+      variable == "age"          ~ "Amžius",
+      variable == "extraversion" ~ "Ekstraversija",
+      variable == "independ"     ~ "Savarankiškumas",
+      variable == "selfcontrol"  ~ "Savikontrolė",
+      variable == "anxiety"      ~ "Nerimas",
+      variable == "novator"      ~ "Novatoriškas"
+    )
+  ) %>% 
+  ggplot(aes(x = value, y = stag, color = factor(event))) +
   geom_point(alpha = 0.6, size = 1.8) +
-  geom_smooth(method='lm') +
+  geom_smooth(method = 'lm') +
   facet_wrap(~ variable, scales = "free_x") +
-  scale_color_brewer(palette = "Set1", name = "Event") +
+  scale_color_brewer(palette = "Set1", name = "Įvykis") +
   labs(
-    x     = "Reikšmė",
-    y     = "Stažas"
+    x = "Reikšmė",
+    y = "Stažas"
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    strip.text       = element_text(face = "bold"),
-    legend.position  = "bottom"
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom"
   )
+
+ggsave('initial-anal-scatter-plot.png', dpi=750)
 
 # Skirtingomis spalvomis cenzuruotus ir necenzutuotus
 
