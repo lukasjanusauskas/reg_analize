@@ -152,14 +152,14 @@ df_long %>%
   filter(variable != "stag") %>% 
   mutate(
     event = ifelse(event == 1, 'Paliko komp.', 'Pasiliko komp.'),
-    # variable = case_when(
-    #   variable == "age"          ~ "Amžius",
-    #   variable == "extraversion" ~ "Ekstraversija",
-    #   variable == "independ"     ~ "Savarankiškumas",
-    #   variable == "selfcontrol"  ~ "Savikontrolė",
-    #   variable == "anxiety"      ~ "Nerimas",
-    #   variable == "novator"      ~ "Novatoriškas"
-    # )
+    variable = case_when(
+      variable == "age"          ~ "Amžius",
+      variable == "extraversion" ~ "Ekstraversija",
+      variable == "independ"     ~ "Savarankiškumas",
+      variable == "selfcontrol"  ~ "Savikontrolė",
+      variable == "anxiety"      ~ "Nerimas",
+      variable == "novator"      ~ "Novatoriškas"
+    )
   ) %>% 
 ggplot(., aes(x = factor(event), y = value, fill = factor(event))) +
   geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 1.5, alpha = 0.7) +
@@ -198,64 +198,110 @@ fit <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
 ggadjustedcurves(fit, data = df)
 
 # Pagal lyti
-fit <- survfit(Surv(stag, event) ~ gender, data = df)
-ggsurvplot(fit, data = df)
+plot_km_lietuviskai <- function(col, rename_col, rename_map) {
+  
+  df_grey <- df %>%
+    mutate(!!sym(col) := rename_map[.data[[col]]])
+  
+  df_grey <- df_grey %>% 
+    rename(!!sym(rename_col) := !!sym(col))
+  
+  df_grey[[rename_col]] <- as.factor(df_grey[[rename_col]])
+  
+  counts   <- table(df_grey[[rename_col]])
+  leg_labs <- paste0(
+    levels(df_grey[[rename_col]]),
+    " (n = ", counts[levels(df_grey[[rename_col]])], ")"
+  )
+  
+  formula <- as.formula(paste0("Surv(stag, event) ~ ", rename_col))
+  fit <- eval(substitute(
+    survfit(Surv(stag, event) ~ grp, data = df_grey),
+    list(grp = as.name(rename_col))
+  ))
+  
+  p <- ggsurvplot(
+    fit,
+    data         = df_grey,
+    legend       = c(0.65, 0.85),
+    legend.title = rename_col,
+    legend.labs  = leg_labs,
+    ggtheme      = theme_bw()
+  )
+  
+  p$plot <- p$plot + theme(
+    legend.text  = element_text(size = 18),
+    legend.title = element_text(size = 18),
+    axis.title.x = element_text(size = 18),
+    axis.text.x  = element_text(size = 14),
+    axis.title.y = element_text(size = 18),
+    axis.text.y  = element_text(size = 14)
+  )
+  
+  return(p)
+}
 
-ggsave('initial-anal-km-lytis.png', dpi=750)
-
-
-
-# Pagal algos apmokejima (grey - )
-df_grey <- df %>%
-  mutate(greywage = ifelse(greywage == 'grey', 'Neoficialus', 'Legalus')) %>%
-  rename("Atlyginimas" = greywage)
-
-df_grey$Atlyginimas <- as.factor(df_grey$Atlyginimas)
-
-annotation_text <- paste(
-  c(header, separator, rows),
-  collapse = "\n"
+p <- plot_km_lietuviskai(
+  col        = "greywage",
+  rename_col = "Atlyginimas",
+  rename_map = c("grey" = "Neoficialus", "white" = "Legalus")
 )
-
-counts    <- table(df_grey$Atlyginimas)
-leg_labs  <- paste0(levels(df_grey$Atlyginimas), " (n = ", counts[levels(df_grey$Atlyginimas)], ")")
-
-fit <- survfit(Surv(stag, event) ~ Atlyginimas, data = df_grey)
-
-p <- ggsurvplot(
-  fit,
-  data         = df_grey,
-  palette      = c("#E7B800", "#2E9FDF"),
-  legend       = c(0.65, 0.85),   # top-right (x, y) in 0-1 plot coordinates
-  legend.title = "Atlyginimas",
-  legend.labs  = leg_labs,         # "Legalus (n = 120)" / "Neoficialus (n = 95)"
-  ggtheme      = theme_bw()
-)
-
-p$plot <- p$plot + theme(legend.text = element_text(size = 18))
-
-p$plot <- p$plot + theme(
-  legend.text = element_text(size = 18),
-  legend.title = element_text(size = 18),
-  axis.title.x = element_text(size=18),
-  axis.text.x = element_text(size=14),
-  axis.title.y = element_text(size=18),
-  axis.text.y = element_text(size=14)
-)
-
 print(p)
-
 ggsave('initial-anal-km-atlyginimas.png', dpi=750)
 
 
+p <- plot_km_lietuviskai(
+  col        = "gender",
+  rename_col = "Lytis",
+  rename_map = c("m" = "Vyras", "f" = "Moteris")
+)
+print(p)
+ggsave('initial-anal-km-lytis.png', dpi=750)
 
+table(df$way)
 
-# 
-fit <- survfit(Surv(stag, event) ~ way, data = df)
-ggsurvplot(fit, data = df)
+p <- plot_km_lietuviskai(
+  col        = "way",
+  rename_col = "Važinėjimas",
+  rename_map = c("car" = "Automobiliu", "bus" = "Autobusu", "foot" = "Pėsčiomis")
+)
+print(p)
+ggsave('initVial-anal-km-vazinejima.png', dpi=750)
 
-fit <- survfit(Surv(stag, event) ~ profession, data = df)
-ggsurvplot(fit, data = df)
+table(df$profession)
+
+p <- plot_km_lietuviskai(
+  col        = "profession",
+  rename_col = "Professija",
+  rename_map = c("HR" = "PersonaloValdymas", "IT" = "IT", "Sales" = "Pardavimai")
+)
+print(p)
+ggsave('initVial-anal-km-profesija.png', dpi=750)
+
+table(df$industry)
+
+p <- plot_km_lietuviskai(
+  col        = "profession",
+  rename_col = "Professija",
+  rename_map = c("HR" = "PersonaloValdymas", "IT" = "IT", "Sales" = "Pardavimai")
+)
+print(p)
+ggsave('initVial-anal-km-profesija.png', dpi=750)
+
+p <- plot_km_lietuviskai(
+  col        = "industry",
+  rename_col = "Industrija",
+  rename_map = c(
+    "Banks"       = "Bankai",
+    "Consult"     = "Konsultacijos",
+    "etc"         = "Kita",
+    "IT"          = "IT",
+    "manufacture" = "Gamyba",
+    "Retail"      = "Mažmeninė prekyba"
+  )
+)
+print(p)
+ggsave("initVial-anal-km-industrija.png", dpi = 750)
 
 # Diskretizuojam kikekybines kovariantes 
 numeric_cols <- df %>%
@@ -272,30 +318,70 @@ draw_numeric_discretized_km <- function(
     na.rm = TRUE
 ) {
   breaks <- quantile(df_numeric_col, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = na.rm)
-  
-  df_numeric_col <- cut(df_numeric_col,
-                        breaks         = breaks,
-                        labels = c(
-                          paste0(col, "Q1"),
-                          paste0(col, "Q2"),
-                          paste0(col, "Q3"),
-                          paste0(col, "Q4")
-                        ),
-                        include.lowest = TRUE)
-  
+
+  df_numeric_col <- cut(
+    df_numeric_col,
+    breaks         = breaks,
+    labels         = c(
+      paste0(col, "Q1"),
+      paste0(col, "Q2"),
+      paste0(col, "Q3"),
+      paste0(col, "Q4")
+    ),
+    include.lowest = TRUE
+  )
+
   temp_df <- data.frame(
     stag  = df_stag,
     event = df_event,
-    group = df_numeric_col
+    Grupė = df_numeric_col
   )
   
-  fit <- survfit(Surv(stag, event) ~ group, data = temp_df)
-  ggsurvplot(fit, data = temp_df)
+  fit <- eval(substitute(
+    survfit(Surv(stag, event) ~ Grupė, data = temp_df)
+  ))
+  
+  p <- ggsurvplot(
+    fit,
+    data    = temp_df,
+    legend  = c(0.65, 0.85),
+    legend.labs = c(
+      paste0(col, 'Q1'),
+      paste0(col, 'Q2'),
+      paste0(col, 'Q3'),
+      paste0(col, 'Q4')
+    ),
+    theme   = theme_bw()
+  )
+   
+  p$plot <- p$plot + theme(
+    legend.text  = element_text(size = 18),
+    legend.title = element_blank(),
+    axis.title.x = element_text(size = 18),
+    axis.text.x  = element_text(size = 14),
+    axis.title.y = element_text(size = 18),
+    axis.text.y  = element_text(size = 14)
+  )
+  
+  return(p)
 }
 
 draw_numeric_discretized_km(df$age, df$stag, df$event, col="Amžius")
+ggsave("initial-anal-km-amzius.png", dpi = 750)
+
 draw_numeric_discretized_km(df$extraversion, df$stag, df$event, col="Extraversija")
+ggsave("initial-anal-km-ekstraversija.png", dpi = 750)
+
 draw_numeric_discretized_km(df$independ, df$stag, df$event, col="Savarankiškumas")
+ggsave("initial-anal-km-savarankiskumas.png", dpi = 750)
+
 draw_numeric_discretized_km(df$selfcontrol, df$stag, df$event, col="Savikontrolė")
+ggsave("initial-anal-km-savikontrole.png", dpi = 750)
+
 draw_numeric_discretized_km(df$anxiety, df$stag, df$event, col="Nerimas")
+ggsave("initial-anal-km-nerimas.png", dpi = 750)
+
 draw_numeric_discretized_km(df$novator, df$stag, df$event, col="Novatoriškumas")
+ggsave("initial-anal-km-novatoriskumas.png", dpi = 750)
+
+

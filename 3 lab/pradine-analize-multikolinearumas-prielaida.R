@@ -167,9 +167,24 @@ cox.zph(model_tv1)
 # summary(model_tv2)
 # cox.zph(model_tv2)
 
-table(df_train$industry, df_train$event)
 
-step_model <- MASS::stepAIC(model_tv1, direction = "both")
+model_tv3 <- coxph(
+  Surv(start, stop, event) ~ 
+    strata(profession) +
+    strata(traffic) +
+    strata(novator_q) +
+    . - start - stop - event - profession - traffic - novator - novator_q +
+    age:industry +
+    age:way,
+  data = df_train_split,
+  ties = "efron",
+  x = TRUE
+)
+
+summary(model_tv3)
+cox.zph(model_tv3)
+
+step_model <- MASS::stepAIC(model_tv3, direction = "both")
 cox.zph(step_model)
 summary(step_model)
 
