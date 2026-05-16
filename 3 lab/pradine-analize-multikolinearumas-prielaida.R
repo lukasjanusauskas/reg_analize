@@ -100,17 +100,7 @@ summary(model)
 
 formula <- Surv(stag,event, type = "right") ~ .
 
-step_model <- StepReg::stepwise(
-  formula = formula,
-  data = df_train,
-  type = "cox",
-  strategy = "backward",
-  metric = "SL",
-  sle = 0.1,
-  sls = 0.1
-)
-final_model <- step_model$backward$SL
-summary(final_model)
+
 # Homogeniškumo hipotezė #####################
 cox.zph(model)
 summary(model)
@@ -137,13 +127,6 @@ df_train_split <- survSplit(
 
 
 
-model_tv2 <- coxph(
-  Surv(start, stop, event) ~ . + novator:stop + selfcontrol:stop + profession:stop + industry:stop + traffic:stop + extraversion:stop + head_gender:stop + coach:stop + independ:stop,
-  data = df_train_split,
-  ties = "efron",
-  x = TRUE
-)
-
 qs <- quantile(
   df_train_split$novator,
   probs = c(0, 0.25, 0.5, 0.75, 1),
@@ -158,6 +141,11 @@ df_train_split$novator_q <- cut(
   include.lowest = TRUE,
   labels = paste0("Q", seq_len(length(qs) - 1))
 )
+
+df_train_split$profession <- factor(as.character(df_train_split$profession))
+df_train_split$traffic <- factor(as.character(df_train_split$traffic))
+df_train_split$novator_q <- factor(as.character(df_train_split$novator_q))
+
 model_tv1 <- coxph(
   Surv(start, stop, event) ~ 
     strata(profession) +
@@ -166,8 +154,7 @@ model_tv1 <- coxph(
     . - start - stop - event - profession - traffic - novator - novator_q,
   data = df_train_split,
   ties = "efron",
-  x = TRUE,
-  control = coxph.control(iter.max = 100)
+  x = TRUE
 )
 
 summary(model_tv1)
