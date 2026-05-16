@@ -120,8 +120,9 @@ cat( "Cenzūruotų duomenų dalis:", mean( 1-df$event ) )
 colnames(df)
 
 table(df$industry)
-table(df$gender)
 table(df$profession)
+
+table(df$gender)
 table(df$traffic)
 table(df$coach)
 table(df$head_gender)
@@ -133,13 +134,13 @@ df[cols] <- lapply(df[cols], as.factor)
 
 # Identify numeric columns (excluding the event column)
 numeric_cols <- df %>%
-  select(-event) %>%                  # Step 1: drop event
-  select(where(is.numeric)) %>%       # Step 2: keep only numeric columns
+  dplyr::select(-event) %>%                  # Step 1: drop event
+  dplyr::select(where(is.numeric)) %>%       # Step 2: keep only numeric columns
   colnames()
 
 # Reshape data to long format for faceting
 df_long <- df %>%
-  select(event, all_of(numeric_cols)) %>%
+  dplyr::select(event, all_of(numeric_cols)) %>%
   pivot_longer(
     cols      = all_of(numeric_cols),
     names_to  = "variable",
@@ -147,7 +148,20 @@ df_long <- df %>%
   )
 
 # Plot
-ggplot(df_long, aes(x = factor(event), y = value, fill = factor(event))) +
+df_long %>% 
+  filter(variable != "stag") %>% 
+  mutate(
+    event = ifelse(event == 1, 'Paliko komp.', 'Pasiliko komp.'),
+    # variable = case_when(
+    #   variable == "age"          ~ "Amžius",
+    #   variable == "extraversion" ~ "Ekstraversija",
+    #   variable == "independ"     ~ "Savarankiškumas",
+    #   variable == "selfcontrol"  ~ "Savikontrolė",
+    #   variable == "anxiety"      ~ "Nerimas",
+    #   variable == "novator"      ~ "Novatoriškas"
+    # )
+  ) %>% 
+ggplot(., aes(x = factor(event), y = value, fill = factor(event))) +
   geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 1.5, alpha = 0.7) +
   stat_summary(                        # <-- mean marker
     fun       = mean,
@@ -176,6 +190,8 @@ ggplot(df_long, aes(x = factor(event), y = value, fill = factor(event))) +
     legend.position = "bottom"
   )
 
+ggsave('initial-anal-box.png', dpi=750)
+
 # K-M kreivės ############################################
 # Bendra
 fit <- coxph(Surv(stag, event, type = "right") ~ ., data = df)
@@ -198,7 +214,7 @@ ggsurvplot(fit, data = df)
 
 # Diskretizuojam kikekybines kovariantes 
 numeric_cols <- df %>%
-  select(stag, where(is.numeric)) %>% 
+  dplyr::select(stag, where(is.numeric)) %>% 
   colnames()
 
 numeric_cols
@@ -366,7 +382,7 @@ model_tv1 <- coxph(
     strata(profession) +
     strata(traffic) +
     strata(novator_q) +
-    . - start - stop - event - profession - traffic - novator - novator_q - t_stop,
+    . - start - stop - event - profession - traffic - novator - novator_q,
   data = df_train_split,
   ties = "efron",
   x = TRUE,
@@ -380,23 +396,14 @@ table(df_train$industry,df_train$event)
 summary(model_tv1)
 cox.zph(model_tv1)
 
-summary(model_tv2)
-cox.zph(model_tv2)
+# summary(model_tv2)
+# cox.zph(model_tv2)
 
 table(df_train$industry, df_train$event)
 
 step_model <- MASS::stepAIC(model_tv1, direction = "both")
 cox.zph(step_model)
 summary(step_model)
-
-# Su profesija p < 0.05 - neatitinka 
-
-# Susitvarkyti su profesija taip:
-# 1. Įvesti sąveiką su laiku - kovariantė lieka
-# 2. Sluoksniuoti (atskiros lygtys) - apie kovariantę daryti išvadų negalim. 
-#    Mums netinka
-
-
 
 # Išėmus profesiją - all good
 
