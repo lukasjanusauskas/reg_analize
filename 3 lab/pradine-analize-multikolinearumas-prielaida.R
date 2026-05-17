@@ -169,6 +169,7 @@ cox.zph(model_tv1)
 
 table(df_train$industry, df_train$event)
 
+
 step_model <- MASS::stepAIC(model_tv1, direction = "both")
 cox.zph(step_model)
 summary(step_model)
@@ -207,4 +208,5 @@ for (j in seq_along(kiekybiniai_kintamieji)) {
 }
 
 par(mfrow = c(1, 1))
+
 
