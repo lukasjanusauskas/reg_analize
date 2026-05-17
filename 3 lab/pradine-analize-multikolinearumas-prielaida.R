@@ -1,12 +1,17 @@
+library(RcmdrPlugin.survival)
 library("survival")
 library("survminer")
 library("tidyr")
 library("dplyr")
 library(car)
 library(StepReg)
-library(RcmdrPlugin.survival)
 library(MASS)
 library(knitr)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(kableExtra)
+
 # duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
 
@@ -125,7 +130,13 @@ df_train_split <- survSplit(
   end = "stop"
 )
 
-
+df_test_split <- survSplit(
+  Surv(stag, event) ~ .,
+  data = df_test,
+  cut = cuts,
+  start = "start",
+  end = "stop"
+)
 
 qs <- quantile(
   df_train_split$novator,
@@ -142,9 +153,17 @@ df_train_split$novator_q <- cut(
   labels = paste0("Q", seq_len(length(qs) - 1))
 )
 
+df_test_split$novator_q <- cut(
+  df_test_split$novator,
+  breaks = qs,
+  include.lowest = TRUE,
+  labels = paste0("Q", seq_len(length(qs) - 1))
+)
+
 df_train_split$profession <- factor(as.character(df_train_split$profession))
 df_train_split$traffic <- factor(as.character(df_train_split$traffic))
 df_train_split$novator_q <- factor(as.character(df_train_split$novator_q))
+
 
 model_tv1 <- coxph(
   Surv(start, stop, event) ~ 
@@ -167,46 +186,140 @@ cox.zph(model_tv1)
 # summary(model_tv2)
 # cox.zph(model_tv2)
 
-table(df_train$industry, df_train$event)
+model_tv3 <- coxph(
+  Surv(start, stop, event) ~ 
+    strata(profession) +
+    strata(traffic) +
+    strata(novator_q) +
+    . - start - stop - event - profession - traffic - novator - novator_q +
+    age:industry +
+    age:way,
+  data = df_train_split,
+  ties = "efron",
+  x = TRUE
+)
 
 
-step_model <- MASS::stepAIC(model_tv1, direction = "both")
+summary(model_tv3)
+cox.zph(model_tv3)
+
+step_model <- MASS::stepAIC(model_tv3, direction = "both")
 cox.zph(step_model)
 summary(step_model)
+
+#Palyginimas
+
+get_concordance <- function(model) {
+  s <- summary(model)
+  
+  data.frame(
+    `Konkordancijos koeficientas` = round(unname(s$concordance[1]), 3),
+    `Standartinė paklaida` = round(unname(s$concordance[2]), 3),
+    check.names = FALSE
+  )
+}
+
+concordance_table <- bind_rows(
+  cbind(Modelis = "Modelis 1", get_concordance(model_tv1)),
+  cbind(Modelis = "Modelis 2", get_concordance(model_tv3)),
+  cbind(Modelis = "Modelis 3", get_concordance(step_model))
+)
+
+rownames(concordance_table) <- NULL
+
+latex_table <- concordance_table %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    caption = "Cox modelių konkordancijos koeficientų palyginimas",
+    label = "tab:cox_concordance",
+    align = c("l", "c", "c"),
+    row.names = FALSE
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "striped"),
+    full_width = FALSE
+  )
+
+save_kable(latex_table, file = "cox_concordance_table.tex")
+
 
 # Išėmus profesiją - all good
 
 # Tiesiškumo tikrinimas
 
-kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety", "novator")
-
-res_martingale <- residuals(model_tv1, type = "martingale")
+kiekybiniai_kintamieji <- c("age")
+res_martingale <- residuals(step_model, type = "martingale")
 X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
-b <- coef(model_tv1)[kiekybiniai_kintamieji]
+b <- coef(step_model)[kiekybiniai_kintamieji]
 
-par(mfrow = c(2, 3))
+vertimai <- c(
+  "age"          = "Amžius",
+  "extraversion" = "Ekstraversiškumas",
+  "independ"     = "Savarankiškumas",
+  "selfcontrol"  = "Sąžiningumas",
+  "anxiety"      = "Nerimastingumas",
+  "novator"      = "Novatoriškumas"
+)
 
-# Liekanos ir kovariantės
-for (j in seq_along(kiekybiniai_kintamieji)) {
-  plot(X[, j], res_martingale,
-       xlab = kiekybiniai_kintamieji[j],
-       ylab = "Residuals")
-  abline(h = 0, lty = 2)
-  lines(lowess(X[, j], res_martingale, iter = 0), col = "red")
-}
+res_martingale <- residuals(step_model, type = "martingale")
+X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
 
-par(mfrow = c(2, 3))
+lt_format <- function(x) format(x, big.mark = ".", decimal.mark = ",", scientific = FALSE)
 
-# Kompnentė + liekana ir kovariantės
-for (j in seq_along(kiekybiniai_kintamieji)) {
+plots <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
+  df_plot <- data.frame(x = X[, j], res = res_martingale)
+  
+  ggplot(df_plot, aes(x = x, y = res)) +
+    geom_point(size = 0.6, alpha = 0.5) +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_smooth(method = "loess", span = 0.75, se = FALSE,
+                color = "red", linewidth = 0.7) +
+    labs(x = vertimai[kiekybiniai_kintamieji[j]], y = "Martingalo liekanos") +
+    scale_x_continuous(labels = lt_format) +
+    scale_y_continuous(labels = lt_format) +
+    theme_bw(base_size = 9) +
+    theme(
+      panel.grid.minor = element_blank(),
+      axis.title = element_text(size = 8),
+      axis.text  = element_text(size = 7)
+    )
+})
+
+combined <- wrap_plots(plots, ncol = 1)
+
+ggsave("martingale-residuals.png", plot = combined,
+       width = 4, height = 4, dpi = 750, units = "in")
+
+plots_cr <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
   component_resid <- b[j] * X[, j] + res_martingale
-  plot(X[, j], component_resid,
-       xlab = kiekybiniai_kintamieji[j],
-       ylab = "Component + residual")
-  abline(lm(component_resid ~ X[, j]), lty = 2)
-  lines(lowess(X[, j], component_resid, iter = 0), col = "red")
-}
+  df_plot <- data.frame(x = X[, j], cr = component_resid)
+  df_plot <- na.omit(df_plot)
+  
+  lm_fit <- lm(cr ~ x, data = df_plot)
+  df_plot$lm_pred <- fitted(lm_fit)
+  
+  ggplot(df_plot, aes(x = x, y = cr)) +
+    geom_point(size = 0.6, alpha = 0.5) +
+    geom_line(aes(y = lm_pred), linetype = "dashed", linewidth = 0.6) +
+    geom_smooth(method = "loess", span = 0.75, se = FALSE,
+                color = "red", linewidth = 0.7) +
+    labs(x = vertimai[kiekybiniai_kintamieji[j]],
+         y = "Komponentė + liekana") +
+    scale_x_continuous(labels = lt_format) +
+    scale_y_continuous(labels = lt_format) +
+    theme_bw(base_size = 9) +
+    theme(
+      panel.grid.minor = element_blank(),
+      axis.title = element_text(size = 8),
+      axis.text  = element_text(size = 7)
+    )
+})
 
-par(mfrow = c(1, 1))
+combined_cr <- wrap_plots(plots_cr, ncol = 1)
+
+ggsave("component-residuals.png", plot = combined_cr,
+       width = 4, height = 4, dpi = 750, units = "in")
+
 
 
