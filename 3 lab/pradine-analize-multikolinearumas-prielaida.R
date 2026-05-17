@@ -1,10 +1,10 @@
+library(RcmdrPlugin.survival)
 library("survival")
 library("survminer")
 library("tidyr")
 library("dplyr")
 library(car)
 library(StepReg)
-library(RcmdrPlugin.survival)
 library(MASS)
 library(knitr)
 library(ggplot2)
@@ -128,7 +128,13 @@ df_train_split <- survSplit(
   end = "stop"
 )
 
-
+df_test_split <- survSplit(
+  Surv(stag, event) ~ .,
+  data = df_test,
+  cut = cuts,
+  start = "start",
+  end = "stop"
+)
 
 qs <- quantile(
   df_train_split$novator,
@@ -145,9 +151,20 @@ df_train_split$novator_q <- cut(
   labels = paste0("Q", seq_len(length(qs) - 1))
 )
 
+df_test_split$novator_q <- cut(
+  df_test_split$novator,
+  breaks = qs,
+  include.lowest = TRUE,
+  labels = paste0("Q", seq_len(length(qs) - 1))
+)
+
 df_train_split$profession <- factor(as.character(df_train_split$profession))
 df_train_split$traffic <- factor(as.character(df_train_split$traffic))
 df_train_split$novator_q <- factor(as.character(df_train_split$novator_q))
+
+df_test_split$profession <- factor(as.character(df_test_split$profession))
+df_test_split$traffic <- factor(as.character(df_test_split$traffic))
+df_test_split$novator_q <- factor(as.character(df_test_split$novator_q))
 
 model_tv1 <- coxph(
   Surv(start, stop, event) ~ 
@@ -195,10 +212,10 @@ summary(step_model)
 
 # Tiesiškumo tikrinimas
 
-kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety")
-res_martingale <- residuals(model_tv1, type = "martingale")
+kiekybiniai_kintamieji <- c("age")
+res_martingale <- residuals(step_model, type = "martingale")
 X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
-b <- coef(model_tv1)[kiekybiniai_kintamieji]
+b <- coef(step_model)[kiekybiniai_kintamieji]
 
 vertimai <- c(
   "age"          = "Amžius",
@@ -209,7 +226,7 @@ vertimai <- c(
   "novator"      = "Novatoriškumas"
 )
 
-res_martingale <- residuals(model_tv1, type = "martingale")
+res_martingale <- residuals(step_model, type = "martingale")
 X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
 
 lt_format <- function(x) format(x, big.mark = ".", decimal.mark = ",", scientific = FALSE)
@@ -233,12 +250,10 @@ plots <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
     )
 })
 
-combined <- wrap_plots(plots, ncol = 3)
+combined <- wrap_plots(plots, ncol = 1)
 
 ggsave("martingale-residuals.png", plot = combined,
-       width = 7, height = 4.5, dpi = 750, units = "in")
-
-par(mfrow = c(2, 3))
+       width = 4, height = 4, dpi = 750, units = "in")
 
 plots_cr <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
   component_resid <- b[j] * X[, j] + res_martingale
@@ -265,10 +280,9 @@ plots_cr <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
     )
 })
 
-combined_cr <- wrap_plots(plots_cr, ncol = 3)
+combined_cr <- wrap_plots(plots_cr, ncol = 1)
 
 ggsave("component-residuals.png", plot = combined_cr,
-       width = 7, height = 4.5, dpi = 750, units = "in")
+       width = 4, height = 4, dpi = 750, units = "in")
 
-par(mfrow = c(1, 1))
 
