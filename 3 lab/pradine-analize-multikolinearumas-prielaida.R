@@ -107,8 +107,74 @@ formula <- Surv(stag,event, type = "right") ~ .
 
 
 # Homogeniškumo hipotezė #####################
-cox.zph(model)
+tb1 <- cox.zph(model)
 summary(model)
+tb1
+
+save_cox_zph_tex <- function(
+    zph,
+    file = "cox_zph_table.tex",
+    caption = "Proporcingųjų rizikų prielaidos tikrinimas naudojant Schoenfeldo liekanas",
+    label = "cox_zph",
+    digits = 3
+) {
+  
+  escape_latex_custom <- function(x) {
+    x <- gsub("\\\\", "\\\\textbackslash{}", x)
+    x <- gsub("([#$%&_{}])", "\\\\\\1", x)
+    x <- gsub("~", "\\\\textasciitilde{}", x)
+    x <- gsub("\\^", "\\\\textasciicircum{}", x)
+    x
+  }
+  
+  fmt_num <- function(x, digits = 3) {
+    formatC(
+      x,
+      format = "f",
+      digits = digits,
+      decimal.mark = ","
+    )
+  }
+  
+  zph_table <- as.data.frame(zph$table) %>%
+    tibble::rownames_to_column("Kintamasis") %>%
+    dplyr::mutate(
+      Kintamasis = escape_latex_custom(Kintamasis),
+      chisq = fmt_num(chisq, digits),
+      df = as.integer(df),
+      p = ifelse(
+        p < 0.001,
+        "$<0,001$",
+        paste0("$", fmt_num(p, digits), "$")
+      )
+    )
+  
+  latex_table <- zph_table %>%
+    knitr::kable(
+      format = "latex",
+      booktabs = TRUE,
+      caption = caption,
+      label = label,
+      col.names = c("Kintamasis", "$\\chi^2$", "Laisvės laipsniai", "$p$ reikšmė"),
+      align = c("l", "c", "c", "c"),
+      escape = FALSE
+    ) %>%
+    kableExtra::kable_styling(
+      latex_options = c("hold_position", "striped"),
+      full_width = FALSE
+    )
+  
+  cat(latex_table, file = file)
+  
+  invisible(latex_table)
+}
+
+save_cox_zph_tex(
+  zph = tb1,
+  file = "cox_zph_model_tv1.tex",
+  caption = "Modelio PH prielaidos tikrinimas",
+  label = "tab:cox_zph_model_tv1"
+)
 
 interval_len <- 1
 
@@ -175,7 +241,13 @@ model_tv1 <- coxph(
   ties = "efron",
   x = TRUE
 )
-
+tb2 <- cox.zph(model_tv1)
+save_cox_zph_tex(
+  zph = tb2,
+  file = "cox_zph_model_tv2.tex",
+  caption = "Modelio PH prielaidos tikrinimas",
+  label = "tab:cox_zph_model_tv2"
+)
 summary(model_tv1)
 
 table(df_train$industry,df_train$event)
@@ -199,12 +271,27 @@ model_tv3 <- coxph(
   x = TRUE
 )
 
+tb3 <- cox.zph(model_tv3)
+
+save_cox_zph_tex(
+  zph = tb3,
+  file = "cox_zph_model_tv3.tex",
+  caption = "Modelio PH prielaidos tikrinimas",
+  label = "tab:cox_zph_model_tv3"
+)
+
 
 summary(model_tv3)
 cox.zph(model_tv3)
 
 step_model <- MASS::stepAIC(model_tv3, direction = "both")
-cox.zph(step_model)
+tb4 <- cox.zph(step_model)
+save_cox_zph_tex(
+  zph = tb4,
+  file = "cox_zph_model_tv4.tex",
+  caption = "Modelio PH prielaidos tikrinimas",
+  label = "tab:cox_zph_model_tv4"
+)
 summary(step_model)
 
 #Palyginimas
