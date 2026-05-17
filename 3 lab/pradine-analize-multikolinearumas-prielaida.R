@@ -212,10 +212,10 @@ summary(step_model)
 
 # Tiesiškumo tikrinimas
 
-kiekybiniai_kintamieji <- c("age")
-res_martingale <- residuals(step_model, type = "martingale")
+kiekybiniai_kintamieji <- c("age", "extraversion", "independ", "selfcontrol", "anxiety")
+res_martingale <- residuals(model_tv1, type = "martingale")
 X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
-b <- coef(step_model)[kiekybiniai_kintamieji]
+b <- coef(model_tv1)[kiekybiniai_kintamieji]
 
 vertimai <- c(
   "age"          = "Amžius",
@@ -226,11 +226,11 @@ vertimai <- c(
   "novator"      = "Novatoriškumas"
 )
 
-res_martingale <- residuals(step_model, type = "martingale")
+res_martingale <- residuals(model_tv1, type = "martingale")
 X <- as.matrix(df_train_split[, kiekybiniai_kintamieji])
 
 lt_format <- function(x) format(x, big.mark = ".", decimal.mark = ",", scientific = FALSE)
-
+par(mfrow = c(2, 3))
 plots <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
   df_plot <- data.frame(x = X[, j], res = res_martingale)
   
@@ -250,11 +250,11 @@ plots <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
     )
 })
 
-combined <- wrap_plots(plots, ncol = 1)
+combined <- wrap_plots(plots, ncol = 3)
 
 ggsave("martingale-residuals.png", plot = combined,
-       width = 4, height = 4, dpi = 750, units = "in")
-
+       width = 7, height = 4.5, dpi = 750, units = "in")
+par(mfrow = c(2, 3))
 plots_cr <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
   component_resid <- b[j] * X[, j] + res_martingale
   df_plot <- data.frame(x = X[, j], cr = component_resid)
@@ -280,9 +280,9 @@ plots_cr <- lapply(seq_along(kiekybiniai_kintamieji), function(j) {
     )
 })
 
-combined_cr <- wrap_plots(plots_cr, ncol = 1)
+combined_cr <- wrap_plots(plots_cr, ncol = 3)
 
 ggsave("component-residuals.png", plot = combined_cr,
-       width = 4, height = 4, dpi = 750, units = "in")
+       width = 7, height = 4.5, dpi = 750, units = "in")
 
 
