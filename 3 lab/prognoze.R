@@ -27,5 +27,5 @@ df_test_filtered <- na.omit(df_test_filtered[, vars_in_model])
 
 df_test_filtered$risk_score <- predict(step_model, newdata = df_test_filtered, type = "lp")
 
-test_concordance <- concordance(Surv(start, stop, event) ~ risk_score, data = df_test_filtered)
+test_concordance <- concordance(Surv(start, stop, event) ~ risk_score, data = df_test_filtered, reverse = TRUE)
 print(test_concordance)

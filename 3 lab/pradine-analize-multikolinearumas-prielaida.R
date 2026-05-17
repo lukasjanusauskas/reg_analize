@@ -9,6 +9,8 @@ library(MASS)
 library(knitr)
 library(ggplot2)
 library(patchwork)
+library(knitr)
+library(kableExtra)
 
 # duomenys iš https://www.kaggle.com/datasets/davinwijaya/employee-turnover?resource=download
 df <- read.csv('turnover.csv', header = TRUE)
@@ -162,9 +164,6 @@ df_train_split$profession <- factor(as.character(df_train_split$profession))
 df_train_split$traffic <- factor(as.character(df_train_split$traffic))
 df_train_split$novator_q <- factor(as.character(df_train_split$novator_q))
 
-df_test_split$profession <- factor(as.character(df_test_split$profession))
-df_test_split$traffic <- factor(as.character(df_test_split$traffic))
-df_test_split$novator_q <- factor(as.character(df_test_split$novator_q))
 
 model_tv1 <- coxph(
   Surv(start, stop, event) ~ 
@@ -187,7 +186,6 @@ cox.zph(model_tv1)
 # summary(model_tv2)
 # cox.zph(model_tv2)
 
-
 model_tv3 <- coxph(
   Surv(start, stop, event) ~ 
     strata(profession) +
@@ -201,12 +199,50 @@ model_tv3 <- coxph(
   x = TRUE
 )
 
+
 summary(model_tv3)
 cox.zph(model_tv3)
 
 step_model <- MASS::stepAIC(model_tv3, direction = "both")
 cox.zph(step_model)
 summary(step_model)
+
+#Palyginimas
+
+get_concordance <- function(model) {
+  s <- summary(model)
+  
+  data.frame(
+    `Konkordancijos koeficientas` = round(unname(s$concordance[1]), 3),
+    `Standartinė paklaida` = round(unname(s$concordance[2]), 3),
+    check.names = FALSE
+  )
+}
+
+concordance_table <- bind_rows(
+  cbind(Modelis = "Modelis 1", get_concordance(model_tv1)),
+  cbind(Modelis = "Modelis 2", get_concordance(model_tv3)),
+  cbind(Modelis = "Modelis 3", get_concordance(step_model))
+)
+
+rownames(concordance_table) <- NULL
+
+latex_table <- concordance_table %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    caption = "Cox modelių konkordancijos koeficientų palyginimas",
+    label = "tab:cox_concordance",
+    align = c("l", "c", "c"),
+    row.names = FALSE
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "striped"),
+    full_width = FALSE
+  )
+
+save_kable(latex_table, file = "cox_concordance_table.tex")
+
 
 # Išėmus profesiją - all good
 
@@ -284,5 +320,6 @@ combined_cr <- wrap_plots(plots_cr, ncol = 3)
 
 ggsave("component-residuals.png", plot = combined_cr,
        width = 7, height = 4.5, dpi = 750, units = "in")
+
 
 
